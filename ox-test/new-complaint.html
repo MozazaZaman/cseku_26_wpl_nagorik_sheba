@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>নতুন অভিযোগ — নাগরিক সেবা</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#17402F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/public.css">
+<link rel="stylesheet" href="css/portal.css">
+</head>
+<body data-lang="bn">
+
+<header class="pub-top">
+  <div class="bar">
+    <span class="pub-logo">ন</span><span class="pub-name" data-i18n="nc.title">নতুন অভিযোগ</span><span class="sp"></span>
+    <span class="lang-seg pub-lang"><button data-plang="bn">বাংলা</button><button data-plang="en">EN</button></span>
+    <a class="btn-cream" href="portal.html">← <span data-i18n="svc.back">পিছনে</span></a>
+  </div>
+</header>
+
+<main class="nc-wrap">
+  <div class="pt-label" style="margin-top:22px"><span data-i18n="portal.pick">ক্যাটাগরি বেছে নিন</span> <span class="muted" style="font-weight:600" data-i18n="nc.req">(প্রয়োজন)</span></div>
+  <div class="cat-grid nc-cats" id="ncCats"></div>
+
+  <div class="nc-grid">
+    <div>
+      <div class="pt-label" data-i18n="nc.desc">সমস্যার বিবরণ</div>
+      <textarea id="ncDesc" class="nc-ta" data-i18n-ph="nc.descPh" placeholder="যেমনঃ টিউলাতে বড় কান্নাবিহীন ধারাবাহিক আছে…"></textarea>
+      <span class="ferr" id="e-ncDesc"></span>
+      <div class="pt-label"><span data-i18n="nc.photo">ছবি</span> <span class="muted" style="font-weight:600" data-i18n="nc.req">(প্রয়োজন)</span></div>
+      <div id="ncPhotoBox"></div>
+      <span class="ferr" id="e-ncPhoto"></span>
+      <div class="ai-note" style="margin-top:12px"><span class="ai-tag">🤖</span><span data-i18n="report.aiNote">জমার আগে আপনার ছবি এআই দ্বারা যাচাই করা হবে</span></div>
+    </div>
+    <div>
+      <div class="pt-label" data-i18n="nc.loc">অবস্থান</div>
+      <button class="gps-btn" id="ncGps">📍 <span data-i18n="nc.gps">বর্তমান অবস্থান সনাক্ত করুন</span></button>
+      <div class="route-note">🤖 <span data-i18n="staff.agentRtr">Destination Router</span> → <b id="ncLgi">খুলনা সিটি কর্পোরেশন</b></div>
+      <div class="nc-map-card">
+        <div class="mh"><span data-i18n="nc.map">মানচিত্র প্রিভিউ</span> · Khulna</div>
+        <div id="ncMap"></div>
+      </div>
+      <div class="pt-label" data-i18n="nc.addr">ঠিকানা</div>
+      <input id="ncAddr" class="nc-inp" placeholder="যেমনঃ শিববাড়ি মোড়, কোতোয়ালি">
+      <span class="ferr" id="e-ncAddr"></span>
+    </div>
+  </div>
+
+  <button class="nc-submit" id="ncSubmit" data-i18n="nc.submit">জমা দিন</button>
+</main>
+
+<div id="toast" class="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/newcomplaint.js" defer></script>
+</body>
+</html>

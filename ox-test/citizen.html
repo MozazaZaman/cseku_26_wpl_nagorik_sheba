@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>নাগরিক সেবা — Citizen</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1E5240">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/citizen.css">
+</head>
+<body data-lang="en">
+<div id="phone">
+
+  <section id="v-splash" class="view splash">
+    <div class="splash-logo">
+      <svg width="86" height="86" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10" r="3.4" fill="#D9A441"/></svg>
+    </div>
+    <h1 class="splash-name">নাগরিক সেবা</h1>
+    <p class="splash-en">Nagorik Sheba</p>
+    <div class="splash-load"><span></span></div>
+  </section>
+
+  <section id="v-auth" class="view hidden">
+    <div class="auth-top"><div class="lang-seg"><button data-lang-btn="bn">বাংলা</button><button data-lang-btn="en">EN</button></div></div>
+    <div class="auth-body">
+      <svg width="58" height="58" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke="#1E5240" stroke-width="1.8"/><circle cx="12" cy="10" r="3.4" fill="#D9A441"/></svg>
+      <h2 data-i18n="login.welcome">Welcome</h2>
+      <p class="muted small" data-i18n="login.sub">Login to report and track civic issues</p>
+
+      <form id="f-phone" novalidate>
+        <label class="fld" style="margin-top:22px">
+          <span class="fld-name" data-i18n="login.phone">Phone Number</span>
+          <div style="display:flex;gap:8px">
+            <span class="cc">+880</span>
+            <input class="inp" id="phoneInp" type="tel" inputmode="numeric" maxlength="11" placeholder="01XXXXXXXXX" data-i18n-ph="login.phonePh">
+          </div>
+          <span class="ferr" id="e-phone"></span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit"><span data-i18n="login.sendOtp">Send OTP Code</span></button>
+        <button type="button" class="btn btn-ghost btn-block small" id="skipLogin" data-i18n="login.skip">Skip login (demo)</button>
+      </form>
+
+      <form id="f-otp" class="hidden" novalidate>
+        <p style="margin-top:20px;font-weight:600" data-i18n="login.otpTitle">Verify OTP</p>
+        <p class="muted small" ><span data-i18n="login.otpSub">Enter the 6-digit code sent via SMS to</span> <b id="otpPhone">+880…</b> · <a href="#" id="changeNum" data-i18n="login.change">change number</a></p>
+        <input class="inp otp-inp" id="otpInp" type="text" inputmode="numeric" maxlength="6" placeholder="••••••">
+        <span class="ferr" id="e-otp"></span>
+        <p class="hint">Demo OTP: <b>123456</b></p>
+        <button class="btn btn-primary btn-block" type="submit" style="margin-top:10px"><span data-i18n="login.verify">Verify &amp; Continue</span></button>
+      </form>
+
+      <a href="#" class="reg-link" id="regLink" data-i18n="register.link">New here? Register</a>
+    </div>
+    <div class="nid-note"><span class="ai-tag" style="color:#fff;opacity:.9" id="nidIcon"></span><span data-i18n="login.nid"></span></div>
+  </section>
+
+  <div id="shell" class="hidden">
+    <header id="ctop"></header>
+    <main id="cmain">
+
+      <section id="v-home" class="cview hidden"></section>
+      <section id="v-maptab" class="cview hidden"></section>
+      <section id="v-report" class="cview hidden"></section>
+      <section id="v-cases" class="cview hidden"></section>
+      <section id="v-detail" class="cview hidden"></section>
+      <section id="v-facilities" class="cview hidden"></section>
+      <section id="v-notifs" class="cview hidden"></section>
+      <section id="v-profile" class="cview hidden"></section>
+      <section id="v-success" class="cview hidden"></section>
+
+    </main>
+    <nav id="bnav">
+      <button data-tab="home" class="on"><span class="bi" data-ic="home"></span><span data-i18n="nav.home">Home</span></button>
+      <button data-tab="maptab"><span class="bi" data-ic="map"></span><span data-i18n="nav.map">Map</span></button>
+      <button data-tab="report" class="fab"><span class="bi" data-ic="plus"></span><span data-i18n="nav.report">Report</span></button>
+      <button data-tab="cases"><span class="bi" data-ic="case"></span><span data-i18n="nav.cases">My Cases</span></button>
+      <button data-tab="profile"><span class="bi" data-ic="user"></span><span data-i18n="nav.profile">Profile</span></button>
+    </nav>
+  </div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/citizen.js" defer></script>
+<script>
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+ addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

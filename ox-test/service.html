@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>সেবা — Nagorik Sheba</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#17402F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/public.css">
+</head>
+<body data-lang="bn">
+
+<header class="pub-top" id="pubHeader"></header>
+
+<section class="hero" style="padding-bottom:0">
+  <div class="svc-hero" id="svcHero" style="justify-content:center"></div>
+
+  <div class="locsearch">
+    <span class="lsic" data-ic="pin"></span>
+    <input id="locSearch" data-i18n-ph="svc.locPh" placeholder="এলাকা লিখুন… (যেমনঃ সোনাডাঙ্গা)" autocomplete="off">
+    <div class="ac-list hidden" id="acDrop"></div>
+  </div>
+  <p class="loc-label" id="resultLine"></p>
+
+  <div class="chiprow2" id="svcChips"></div>
+</section>
+
+<main class="pub-wrap">
+  <div class="pub-grid">
+    <div>
+      <div class="fac-list" id="facList"></div>
+    </div>
+    <div class="map-card">
+      <div class="mh"><span data-ic="map"></span><span data-i18n="pub.map">মানচিত্র</span> · Khulna</div>
+      <div id="svcMap"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="pub-foot">
+  <span data-i18n="pub.footer">পাবলিক সেবা ডিরেক্টরি · খুলনা সিটি কর্পোরেশন</span> ·
+  <a href="citizen.html" data-i18n="landing.citizen">নাগরিক অ্যাপ</a> ·
+  <a href="dashboard.html" data-i18n="pub.staff">স্টাফ পোর্টাল</a>
+</footer>
+
+<div id="toast" class="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/public.js" defer></script>
+<script>
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+ addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

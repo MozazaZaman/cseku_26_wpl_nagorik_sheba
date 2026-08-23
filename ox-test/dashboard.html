@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nagorik Sheba — Staff Dashboard</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body data-lang="en">
+
+<section id="d-login">
+  <div class="lg-card">
+    <div class="lg-emblem">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="10" r="3.2" fill="#D9A441"/></svg>
+    </div>
+    <div class="lang-seg lg-lang"><button data-lang-btn="bn">বাংলা</button><button data-lang-btn="en">EN</button></div>
+    <h1 data-i18n="dash.login">Staff Portal Login</h1>
+    <p class="lgi-line"><span data-i18n="dash.lgiLabel">Local Government Institution</span></p>
+    <div class="lgi-chip">🏛 Khulna City Corporation</div>
+    <form id="f-login" novalidate>
+      <label class="fld"><span class="fld-name" data-i18n="dash.email">Email</span>
+        <input class="inp" type="email" value="rahim.uddin@khulnacity.gov.bd"></label>
+      <label class="fld"><span class="fld-name" data-i18n="dash.pass">Password</span>
+        <input class="inp" type="password" value="••••••••"></label>
+      <button class="btn btn-primary btn-block" type="submit" data-i18n="dash.signIn">Sign In</button>
+    </form>
+    <div class="demo-box">
+      <p class="tiny muted" data-i18n="dash.demo">Demo accounts (any password):</p>
+      <div style="display:flex;gap:8px;margin-top:7px">
+        <button class="btn btn-outline btn-sm" data-role="staff" style="flex:1" data-i18n="dash.roleStaff">Sign in as Staff</button>
+        <button class="btn btn-outline btn-sm" data-role="supervisor" style="flex:1" data-i18n="dash.roleSup">Sign in as Supervisor</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="d-shell" class="hidden">
+  <aside id="sidebar">
+    <div class="sb-brand">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="10" r="3.2" fill="#D9A441"/></svg>
+      <div><b>Nagorik Sheba</b><span>LGI Portal</span></div>
+    </div>
+    <nav id="sb-nav">
+      <a data-route="overview" class="on"><span class="ni" data-ic="home"></span><span data-i18n="d.nav.overview">Dashboard</span></a>
+      <a data-route="complaints"><span class="ni" data-ic="case"></span><span data-i18n="d.nav.complaints">Complaints</span><em class="cnt" id="sbCnt"></em></a>
+      <a data-route="mapview"><span class="ni" data-ic="map"></span><span data-i18n="d.nav.map">Live Map</span></a>
+      <a data-route="analytics"><span class="ni" data-ic="chart"></span><span data-i18n="d.nav.analytics">Analytics</span></a>
+      <a data-route="facilities"><span class="ni" data-ic="build"></span><span data-i18n="d.nav.facilities">Facilities</span></a>
+      <a data-route="team" id="teamNav"><span class="ni" data-ic="team"></span><span data-i18n="d.nav.team">Team</span></a>
+      <a data-route="settings"><span class="ni" data-ic="gear"></span><span data-i18n="d.nav.settings">Settings</span></a>
+    </nav>
+    <div class="sb-foot">
+      <div class="me"><span class="avatar orange" id="meAv">RU</span><div><b id="meName">Rahim Uddin</b><span class="role-badge role-staff" id="meRole">Staff</span></div></div>
+      <button id="btnLogout" title="Logout"><span data-ic="logout"></span></button>
+    </div>
+  </aside>
+
+  <main id="d-main">
+    <header id="d-top">
+      <h2 id="d-title">Dashboard</h2>
+      <div class="dt-right">
+        <div class="lang-seg"><button data-dlang="bn">বাংলা</button><button data-dlang="en">EN</button></div>
+        <button class="btn btn-teal btn-sm" id="btnExportTop" data-i18n="d.dt.export">Export PDF</button>
+      </div>
+    </header>
+    <div id="d-content"></div>
+  </main>
+</div>
+
+<div id="printArea"></div>
+<div id="toast" class="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/dashboard.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>লগইন / সাইনআপ — নাগরিক সেবা</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#17402F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/public.css">
+<link rel="stylesheet" href="css/portal.css">
+</head>
+<body data-lang="bn">
+
+<header class="pub-top">
+  <div class="bar">
+    <span class="pub-logo">ন</span><span class="pub-name">নাগরিক সেবা</span><span class="sp"></span>
+    <span class="lang-seg pub-lang"><button data-plang="bn">বাংলা</button><button data-plang="en">EN</button></span>
+    <a class="btn-cream" href="index.html">←</a>
+  </div>
+</header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <span class="auth-logo">ন</span>
+    <h1>নাগরিক সেবা</h1>
+    <p class="sub" data-i18n="auth.sub">বাংলাদেশ ও স্মার্ট সিটির জন্য একটি প্ল্যাটফর্ম</p>
+
+    <div class="auth-tabs">
+      <button id="tabLogin" class="on" data-i18n="auth.tabLogin">লগইন</button>
+      <button id="tabSignup" data-i18n="auth.tabSignup">সাইনআপ</button>
+    </div>
+
+    <form id="fLogin" class="on" novalidate>
+      <label><span class="lb" data-i18n="auth.phoneUser">ফোন নম্বর বা ইউজারনেম</span>
+        <input id="liUser" placeholder="017XXXXXXXXX" autocomplete="username">
+        <span class="ferr" id="e-liUser"></span>
+      </label>
+      <label><span class="lb" data-i18n="auth.pass">পাসওয়ার্ড</span>
+        <input id="liPass" type="password" placeholder="••••••••" autocomplete="current-password">
+        <span class="ferr" id="e-liPass"></span>
+      </label>
+      <div id="liStaffBox" class="staff-box hidden">
+        <span class="staff-badge">🛡 <span data-i18n="staff.mode">স্টাফ মোড সনাক্ত হয়েছে</span></span>
+        <label style="margin-top:10px"><span class="lb" data-i18n="staff.lgiLbl">আপনার প্রতিষ্ঠান নির্বাচন করুন</span>
+          <select id="liLgi"></select>
+        </label>
+      </div>
+      <button class="btn-forest" type="submit" data-i18n="auth.loginBtn">লগইন করুন</button>
+      <p class="auth-demo" data-i18n="auth.demo">ডেমোঃ যেকোনো সঠিক নম্বর + পাসওয়ার্ড (৪+ অক্ষর)</p>
+      <p class="auth-demo" style="color:#A87F2E" data-i18n="staff.demo">স্টাফ ডেমো: ফোন 01722222222 + “staff” দিয়ে শুরু হওয়া পাসওয়ার্ড</p>
+    </form>
+
+    <form id="fSignup" novalidate>
+      <label><span class="lb" data-i18n="auth.name">পূর্ণ নাম</span>
+        <input id="suName" data-i18n-ph="auth.namePh" placeholder="যেমনঃ গিয়াস উদ্দিন">
+        <span class="ferr" id="e-suName"></span>
+      </label>
+      <label><span class="lb" data-i18n="auth.phone">ফোন নম্বর</span>
+        <input id="suPhone" placeholder="017XXXXXXXXX" inputmode="numeric" autocomplete="tel">
+        <span class="ferr" id="e-suPhone"></span>
+      </label>
+      <label><span class="lb" data-i18n="auth.area">এলাকা / থানা</span>
+        <select id="suArea"></select>
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label><span class="lb" data-i18n="auth.pass">পাসওয়ার্ড</span>
+          <input id="suPass" type="password" placeholder="••••••••">
+          <span class="ferr" id="e-suPass"></span>
+        </label>
+        <label><span class="lb" data-i18n="auth.confirm">পাসওয়ার্ড নিশ্চিত করুন</span>
+          <input id="suPass2" type="password" placeholder="••••••••">
+          <span class="ferr" id="e-suPass2"></span>
+        </label>
+      </div>
+      <label><span class="lb" data-i18n="auth.nid">এনআইডি নম্বর (ঐচ্ছিক)</span>
+        <input id="suNid" placeholder="১৯৯০XXXXXX">
+      </label>
+      <div id="suStaffBox" class="staff-box hidden">
+        <span class="staff-badge">🛡 <span data-i18n="staff.mode">স্টাফ মোড সনাক্ত হয়েছে</span></span>
+        <label style="margin-top:10px"><span class="lb" data-i18n="staff.lgiLbl">আপনার প্রতিষ্ঠান নির্বাচন করুন</span>
+          <select id="suLgi"></select>
+        </label>
+      </div>
+      <button class="btn-forest" type="submit" data-i18n="auth.signupBtn">সাইনআপ করুন</button>
+      <p class="auth-terms" data-i18n="auth.terms">সাইনআপ করলে আপনি নাগরিক ব্যবহারের নীতিমালায় সম্মত হচ্ছেন।</p>
+    </form>
+  </div>
+  <p class="auth-foot"><a href="index.html">← <span data-i18n="pub.title">জরুরি সেবা খুঁজুন</span></a></p>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="js/i18n.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/auth.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>আমার পোর্টাল — নাগরিক সেবা</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#17402F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/public.css">
+<link rel="stylesheet" href="css/portal.css">
+</head>
+<body data-lang="bn">
+
+<header class="pub-top">
+  <div class="bar">
+    <span class="pub-logo">ন</span><span class="pub-name">নাগরিক সেবা</span><span class="sp"></span>
+    <span id="ptUser" style="font-size:13px;font-weight:600;opacity:.9;margin-right:4px"></span>
+    <button class="btn-cream" id="ptLogout" data-i18n="common.logout">লগআউট</button>
+  </div>
+</header>
+
+<div class="pt-main">
+  <nav class="pt-side" id="ptNav">
+    <a data-view="home" class="on"><span class="em">🏠</span><span data-i18n="portal.mHome">হোম</span></a>
+    <a data-view="new"><span class="em">📝</span><span data-i18n="portal.mNew">নতুন অভিযোগ</span></a>
+    <a data-view="mine"><span class="em">📍</span><span data-i18n="portal.mMine">আমার অভিযোগ</span></a>
+    <a data-view="search"><span class="em">🔍</span><span data-i18n="portal.mSearch">অভিযোগ খুঁজুন</span></a>
+    <a data-view="emer"><span class="em">🏛</span><span data-i18n="portal.mEmer">জরুরি সেবা</span></a>
+  </nav>
+  <main class="pt-body" id="ptBody"></main>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="js/i18n.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/portal.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+flowchart TD
+    A["Citizen submits complaint<br/>Photo + text + GPS location"] --> B["Agent 1 — Photo verifier<br/>Checks image is real, relevant, not fake"]
+    B -- Fake/irrelevant --> C["Rejected<br/>Notify citizen"]
+    B -- Verified --> D["Agent 2 — Classifier<br/>Road / Water / Gas / Power / Sanitation"]
+    D --> E["Agent 3 — Duplicate checker<br/>GPS radius scan for similar complaints"]
+    E -- Duplicate --> F["Merged<br/>Vote count +1"]
+    E -- Unique --> G["Agent 4 — Priority ranker<br/>Severity + vote count + time elapsed"]
+    G --> H["Agent 5 — Destination router<br/>Maps category → Which area the location belong to"]
+    H -- Routed to --> I["City Corporation"]
+    H -- Routed to --> J["Pouroshova"]
+    H -- Routed to --> K["Union porishod"]
+    I --> N["Staff dashboard<br/>Assigned complaints → track → resolve"]
+    J --> N
+    K --> N
+    N --> O["Complaint resolved<br/>Citizen notified via SMS/app"]

@@ -81,6 +81,57 @@ Demo staff accounts (seeded departments): phone `0188000000`–`0188000006`, pas
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch naming, commit conventions, and PR review rules.
 
+## Acknowledgements
+
+We would like to express our sincere gratitude to the following individuals,
+tools, and organizations whose support and resources made this project possible.
+
+**Academic Supervision**
+- We are deeply grateful to **Dr. Kazi Masudul Alam**, Professor, CSE
+  Discipline, Khulna University, Khulna, for supervising this project as part
+  of the *Web Programming and Mobile App Development* course. His guidance,
+  critical feedback, and high expectations pushed us to think beyond
+  conventional project ideas and build something with real-world impact for
+  the people of Bangladesh.
+
+**Institution**
+- **Khulna University, CSE Discipline, Khulna** 
+
+**Team**
+- **Mozaza** — AI pipeline design, backend architecture, ER diagram, system
+  flowchart, and project documentation.
+- **Md. Tawfiqul Islam** — Frontend development, UI wireframes, database
+  schema design, and use case diagrams.
+
+**Tools and Technologies**
+- [FastAPI](https://fastapi.tiangolo.com/) — Backend API framework
+- [Next.js](https://nextjs.org/) — Citizen and staff frontend framework
+- [PostgreSQL](https://www.postgresql.org/) + [PostGIS](https://postgis.net/)
+  — Spatial database for GPS-based complaint routing
+- [Leaflet.js](https://leafletjs.com/) — Open-source map rendering
+- [OpenStreetMap](https://www.openstreetmap.org/) — Free map tile provider
+- [HuggingFace Transformers](https://huggingface.co/) — NLP model for
+  complaint text classification
+- [Barikoi API](https://barikoi.com/) — Bangladesh-specific geocoding and
+  address resolution
+- [Cloudinary](https://cloudinary.com/) — Cloud-based photo storage and
+  delivery
+- [GitHub](https://github.com/) — Version control, project board, and
+  collaborative development
+
+**Inspiration**
+- Inspired by the civic technology movement in South Asia and the urgent need
+  for transparent, accountable, and AI-assisted public service delivery in
+  Bangladesh.
+- Referenced [SeeClickFix](https://seeclickfix.com/) and
+  [FixMyStreet](https://www.fixmystreet.com/) as global precedents for
+  citizen-driven civic complaint platforms.
+
+**Open Source Community**
+- We acknowledge the broader open-source community whose freely available
+  libraries, datasets, and documentation made the development of this
+  application significantly more accessible for a two-person university team.
+
 ## Roadmap
 
 - [x] **Week 1 — Initiation & SRS**: scope/objectives/roles, SRS draft, GitHub repo + contribution guidelines, README + initial task list

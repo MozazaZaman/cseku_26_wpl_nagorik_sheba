@@ -135,7 +135,7 @@ tools, and organizations whose support and resources made this project possible.
 ## Roadmap
 
 - [x] **Week 1 — Initiation & SRS**: scope/objectives/roles, SRS draft, GitHub repo + contribution guidelines, README + initial task list
-- [ ] **Week 2 — Design & Planning**: UI wireframes, architecture documentation (ER diagrams, flowcharts), GitHub Projects board
+- [X] **Week 2 — Design & Planning**: UI wireframes, architecture documentation (ER diagrams, flowcharts), GitHub Projects board
 - [ ] **Week 3–4 — Development Sprint 1**: core modules (auth, navigation, basic UI), Copilot-assisted scaffolding, unit tests, PR-based peer review
 - [ ] **Week 5–6 — Development Sprint 2**: CRUD operations, forms, API integration, sprint velocity tracking, retrospectives
 

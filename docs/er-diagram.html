@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nagorik Sheba — ER Diagram</title>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#1a2340',
+      primaryTextColor: '#e6ecff',
+      primaryBorderColor: '#5b8cff',
+      lineColor: '#8b9cc9',
+      secondaryColor: '#141a30',
+      tertiaryColor: '#0d1122',
+      fontSize: '15px'
+    },
+    er: { useMaxWidth: true, layoutDirection: 'TB', minEntityWidth: 190 }
+  });
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(91,140,255,.18), transparent 60%),
+      radial-gradient(1000px 500px at -10% 110%, rgba(167,108,255,.15), transparent 60%),
+      #070b16;
+    color: #e6ecff; padding: 48px 24px;
+  }
+  .wrap { max-width: 1250px; margin: 0 auto; }
+  .badge {
+    display:inline-block; letter-spacing:.35em; font-size:11px; font-weight:700;
+    color:#7ea4ff; border:1px solid rgba(126,164,255,.35); border-radius:999px; padding:7px 18px;
+    background:rgba(126,164,255,.08); text-transform:uppercase;
+  }
+  h1 {
+    margin: 18px 0 6px; font-size: 40px;
+    background: linear-gradient(90deg,#7ea4ff,#c58bff 55%,#ff8bc2);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  p.sub { color:#93a3c8; margin-bottom: 36px; font-size:15px; }
+  .card {
+    background: rgba(20,26,48,.72);
+    border: 1px solid rgba(126,164,255,.18);
+    border-radius: 22px; padding: 34px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.45);
+    overflow-x: auto;
+  }
+  .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; }
+  .chip { font-size:12.5px; color:#b9c6e8; background:rgba(126,164,255,.09);
+    border:1px solid rgba(126,164,255,.22); padding:8px 14px; border-radius:999px; }
+  footer { margin-top:34px; color:#66738f; font-size:12.5px; text-align:center; }
+  @media print { body{background:#fff;color:#000} .card{box-shadow:none;border-color:#ccc} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">Nagorik Sheba · Database Design</span>
+  <h1>Entity Relationship Diagram</h1>
+  <p class="sub">Transparent Municipal Complaint Management — Citizens, Complaints, Votes, Authorities, Staff &amp; Agentic Pipeline Audit</p>
+
+  <div class="card">
+<pre class="mermaid">
+erDiagram
+    USERS ||--o{ COMPLAINTS : "submits (1:N)"
+    USERS ||--o{ VOTES : "casts (1:N)"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    COMPLAINTS ||--o{ VOTES : "receives (M:N via votes)"
+    COMPLAINTS |o--o| COMPLAINTS : "duplicate_of (merge)"
+    AUTHORITIES ||--o{ STAFF : "employs"
+    AUTHORITIES ||--o{ COMPLAINTS : "routed to (Agent 5)"
+    STAFF |o--o{ COMPLAINTS : "handles / labels"
+    COMPLAINTS ||--o{ STATUS_HISTORY : "audit trail"
+    COMPLAINTS ||--o{ AGENT_LOGS : "processed by agents"
+    COMPLAINTS ||--o{ NOTIFICATIONS : "triggers"
+
+    USERS {
+        int user_id PK
+        string full_name
+        string email UK
+        string phone
+        string password_hash
+        string role "citizen or staff"
+        datetime created_at
+    }
+    AUTHORITIES {
+        int authority_id PK
+        string name
+        string type "CITY_CORP | POUROSHOVA | UNION"
+        real min_lat
+        real max_lat
+        real min_lng
+        real max_lng
+        string phone
+    }
+    STAFF {
+        int staff_id PK
+        string full_name
+        string email UK
+        string password_hash
+        string department "road|electricity|water|gas|sanitation"
+        int authority_id FK
+    }
+    COMPLAINTS {
+        int complaint_id PK
+        int user_id FK
+        int authority_id FK
+        int assigned_staff_id FK "nullable"
+        int duplicate_of_id FK "self ref, nullable"
+        string title
+        text description
+        string category "road|electricity|water|gas|sanitation"
+        string image_url "optional photo"
+        real latitude
+        real longitude
+        string status "submitted|verified|rejected|merged|in_process|resolved"
+        real priority_score
+        int vote_count
+        int eta_hours "deadline by staff"
+        datetime created_at
+        datetime resolved_at
+    }
+    VOTES {
+        int vote_id PK
+        int user_id FK
+        int complaint_id FK
+        datetime created_at
+    }
+    EMERGENCY_SERVICES {
+        int service_id PK
+        string name
+        string type "fire|police|wasa|lged|desa|titas_gas|toilet"
+        string phone
+        string address
+        real latitude
+        real longitude
+    }
+    STATUS_HISTORY {
+        int history_id PK
+        int complaint_id FK
+        string old_status
+        string new_status
+        text note
+        string changed_by
+        datetime changed_at
+    }
+    NOTIFICATIONS {
+        int notification_id PK
+        int user_id FK
+        int complaint_id FK "nullable"
+        string title
+        text message
+        bool is_read
+        datetime created_at
+    }
+    AGENT_LOGS {
+        int log_id PK
+        int complaint_id FK "nullable"
+        string agent_name "verifier|classifier|dedup|ranker|router"
+        string decision
+        text input_summary
+        text output_summary
+        datetime created_at
+    }
+</pre>
+  </div>
+
+  <div class="legend">
+    <span class="chip">🔑 No login needed → EMERGENCY_SERVICES + public complaint browsing</span>
+    <span class="chip">📝 Submit complaint → requires USER account</span>
+    <span class="chip">📍 Agent-5 routes via AUTHORITY GPS bounds</span>
+    <span class="chip">♻️ Duplicate complaint ⇒ becomes a VOTE on the original</span>
+    <span class="chip">🔒 status = in_process ⇒ voting locked + alert shown</span>
+    <span class="chip">🏷️ Staff labels: in_process / done (+ETA)</span>
+  </div>
+
+  <footer>Nagorik Sheba · Web Programming &amp; Mobile Application Project · ER Diagram v1.0 — open this file and press Ctrl+P to save as PDF</footer>
+</div>
+</body>
+</html>

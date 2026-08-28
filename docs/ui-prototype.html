@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nagorik Sheba — UI Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#05070f; --panel:#0b1020; --accent:#5b8cff; --accent2:#a76cff; --accent3:#ff6cb5;
+    --mint:#2dd4bf; --amber:#fbbf24; --rose:#fb7185;
+    --grad:linear-gradient(92deg,#5b8cff,#a76cff 52%,#ff6cb5);
+    --line:rgba(255,255,255,.09);
+  }
+  body { background:var(--bg); color:#e6ecff; font-family:'Inter',system-ui,sans-serif; overflow-x:hidden; }
+  h1,h2,h3,.display { font-family:'Sora','Inter',sans-serif; }
+  ::selection{ background:rgba(91,140,255,.35) }
+  body::before{
+    content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(1100px 520px at 75% -8%, rgba(91,140,255,.20), transparent 60%),
+      radial-gradient(900px 480px at -10% 40%, rgba(167,108,255,.16), transparent 60%),
+      radial-gradient(900px 500px at 105% 95%, rgba(255,108,181,.13), transparent 60%);
+  }
+  /* ---------- top bar ---------- */
+  header{ position:sticky; top:0; z-index:50; backdrop-filter:blur(18px);
+    background:rgba(5,7,15,.75); border-bottom:1px solid var(--line); }
+  .hwrap{ max-width:1200px; margin:auto; display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px; gap:16px; flex-wrap:wrap;}
+  .brand{ display:flex; align-items:center; gap:11px; font-family:'Sora'; font-weight:800; font-size:19px; color:#fff;}
+  .logo{ width:38px;height:38px;border-radius:11px;background:var(--grad); display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .tabs{ display:flex; gap:7px; flex-wrap:wrap;}
+  .tab{ border:1px solid var(--line); background:rgba(255,255,255,.03); color:#94a3b8; cursor:pointer;
+    padding:9px 16px; border-radius:999px; font-size:13px; font-weight:600; transition:.25s; font-family:'Inter';}
+  .tab:hover{ color:#e6ecff; border-color:rgba(255,255,255,.28)}
+  .tab.on{ background:linear-gradient(92deg,rgba(91,140,255,.22),rgba(255,108,181,.18));
+    color:#fff; border-color:rgba(123,124,255,.55); box-shadow:0 6px 24px -8px rgba(123,108,255,.55);}
+  main{ max-width:1200px; margin:auto; padding:30px 22px 80px; }
+  .note{ text-align:center; color:#66738f; font-size:12.5px; margin-top:26px;}
+  .screen{ display:none; animation:fadeUp .45s ease both; }
+  .screen.on{ display:block; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:none} }
+  /* ---------- shared ---------- */
+  .glass{ background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:20px; backdrop-filter:blur(14px);}
+  .gtext{ background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .btnp{ display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; color:#fff; font-weight:700;
+    padding:12px 24px; border-radius:13px; background:var(--grad); box-shadow:0 12px 34px -12px rgba(124,108,255,.8);
+    font-family:'Inter'; font-size:14px; transition:.25s;}
+  .btnp:hover{ transform:translateY(-2px) }
+  .btng{ display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:#e6ecff;font-weight:600;padding:12px 22px;
+    border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);font-family:'Inter';font-size:14px;transition:.25s;}
+  .btng:hover{ background:rgba(255,255,255,.1) }
+  .chip{ display:inline-block; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600;
+    border:1px solid var(--line); background:rgba(255,255,255,.04); color:#94a3b8;}
+  .chip.hot{ border-color:rgba(91,140,255,.55); background:rgba(91,140,255,.15); color:#fff;}
+  .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; font-size:11px; font-weight:700;}
+  .b-sub{ background:rgba(56,189,248,.14); color:#7dd3fc; border:1px solid rgba(56,189,248,.35);}
+  .b-ver{ background:rgba(167,139,250,.14); color:#c4b5fd; border:1px solid rgba(167,139,250,.35);}
+  .b-wip{ background:rgba(251,191,36,.13); color:#fcd34d; border:1px solid rgba(251,191,36,.35);}
+  .b-res{ background:rgba(45,212,191,.13); color:#5eead4; border:1px solid rgba(45,212,191,.35);}
+  .dot{ width:6px;height:6px;border-radius:50%;}
+  /* ---------- browser frame ---------- */
+  .frame{ border:1px solid var(--line); border-radius:22px; overflow:hidden; background:rgba(11,16,32,.65); box-shadow:0 40px 90px -30px rgba(0,0,0,.75);}
+  .fbar{ display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02);}
+  .fdot{ width:11px;height:11px;border-radius:50%;}
+  .url{ margin-left:12px; flex:1; background:rgba(255,255,255,.05); border-radius:9px; padding:7px 14px;
+    font-size:12px; color:#7d8aa8; border:1px solid var(--line);}
+  .inner{ padding:26px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="brand"><div class="logo">🏙️</div> Nagorik<span class="gtext">Sheba</span>&nbsp;<span style="font-size:11px;color:#66738f;font-weight:500;letter-spacing:.2em;">UI PROTOTYPE</span></div>
+    <div class="tabs">
+      <button class="tab on" data-s="s-landing">Landing</button>
+      <button class="tab" data-s="s-explore">Explore &amp; Vote</button>
+      <button class="tab" data-s="s-submit">Report Issue</button>
+      <button class="tab" data-s="s-emergency">Emergency</button>
+      <button class="tab" data-s="s-detail">Complaint Detail</button>
+      <button class="tab" data-s="s-staff">Staff Console</button>
+      <button class="tab" data-s="s-mobile">📱 Mobile App</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= LANDING ================= -->
+<section class="screen on" id="s-landing">
+  <div class="frame">
+    <div class="fbar">
+      <span class="fdot" style="background:#ff5f57"></span><span class="fdot" style="background:#febc2e"></span><span class="fdot" style="background:#28c840"></span>
+      <div class="url">nagoriksheba.bd — Transparent Municipal Complaint Management</div>
+    </div>
+    <div class="inner">
+      <div style="text-align:center; padding:34px 10px 44px;">
+        <div class="chip hot" style="letter-spacing:.25em; text-transform:uppercase;">● Agentic Civic Platform</div>
+        <h1 style="font-size:52px; line-height:1.08; font-weight:800; margin-top:22px; color:#fff;">
+          Your city, <span class="gtext">fixed</span> one<br/>complaint at a time
+        </h1>
+        <p style="color:#94a3b8; max-width:640px; margin:18px auto 0; font-size:16px; line-height:1.65;">
+          Nagorik Sheba routes your municipal complaints to the right authority using an AI agent pipeline —
+          transparent, duplicate-free and deadline-tracked.
+        </p>
+        <div style="margin-top:30px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <button class="btnp">Report an Issue</button>
+          <button class="btng">Explore Issues</button>
+          <button class="btng" style="border-color:rgba(251,113,133,.4); color:#fda4af;">🚨 Emergency Services</button>
+        </div>
+        <div class="glass" style="margin-top:46px; padding:30px; display:grid; grid-template-columns:repeat(4,1fr); gap:18px;">
+          <div><div class="display" style="font-size:32px;font-weight:800;">7</div><div style="font-size:11px;letter-spacing:.2em;color:#66738f;text-transform:uppercase;margin-top:4px;">Reports Filed</div></div>
+          <div><div class="display" style="font-size:32px;font-weight:800;color:#5eead4;">1</div><div style="font-size:11px;letter-spacing:.2em;color:#66738f;text-transform:uppercase;margin-top:4px;">Resolved</div></div>
+          <div><div class="display" style="font-size:32px;font-weight:800;color:#fcd34d;">1</div><div style="font-size:11px;letter-spacing:.2em;color:#66738f;text-transform:uppercase;margin-top:4px;">In Process</div></div>
+          <div><div class="display gtext" style="font-size:32px;font-weight:800;">2,373</div><div style="font-size:11px;letter-spacing:.2em;color:#66738f;text-transform:uppercase;margin-top:4px;">Citizen Votes</div></div>
+        </div>
+      </div>
+
+      <h2 style="text-align:center; font-size:30px; font-weight:800; margin:40px 0 8px;">Five agents work on every report</h2>
+      <p style="text-align:center;color:#94a3b8;">Verify → Classify → De-duplicate → Prioritize → Route</p>
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-top:34px;">
+        <div class="glass" style="padding:20px;"><div style="font-size:26px">🛡️</div><h3 style="font-size:14px;margin-top:10px;">Photo Verifier</h3><p style="font-size:12px;color:#8899bb;line-height:1.6;margin-top:6px;">Rejects fake or irrelevant photos &amp; spam text.</p></div>
+        <div class="glass" style="padding:20px;"><div style="font-size:26px">🏷️</div><h3 style="font-size:14px;margin-top:10px;">Classifier</h3><p style="font-size:12px;color:#8899bb;line-height:1.6;margin-top:6px;">Auto-tags road / water / gas / power / sanitation.</p></div>
+        <div class="glass" style="padding:20px;"><div style="font-size:26px">♻️</div><h3 style="font-size:14px;margin-top:10px;">Duplicate Checker</h3><p style="font-size:12px;color:#8899bb;line-height:1.6;margin-top:6px;">GPS radius scan — similar reports become votes.</p></div>
+        <div class="glass" style="padding:20px;"><div style="font-size:26px">📈</div><h3 style="font-size:14px;margin-top:10px;">Priority Ranker</h3><p style="font-size:12px;color:#8899bb;line-height:1.6;margin-top:6px;">Ranks by severity, votes and time elapsed.</p></div>
+        <div class="glass" style="padding:20px;"><div style="font-size:26px">🧭</div><h3 style="font-size:14px;margin-top:10px;">Destination Router</h3><p style="font-size:12px;color:#8899bb;line-height:1.6;margin-top:6px;">City Corp, Pouroshova or Union Parishad.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EXPLORE ================= -->
+<section class="screen" id="s-explore">
+  <div class="frame">
+    <div class="fbar">
+      <span class="fdot" style="background:#ff5f57"></span><span class="fdot" style="background:#febc2e"></span><span class="fdot" style="background:#28c840"></span>
+      <div class="url">nagoriksheba.bd/explore — Explore citizen issues</div>
+    </div>
+    <div class="inner">
+      <h1 style="font-size:32px;font-weight:800;">Explore <span class="gtext">citizen issues</span></h1>
+      <p style="color:#94a3b8;margin-top:8px;">Found your problem here? Upvote it instead of re-reporting — votes raise priority.</p>
+      <div class="glass" style="padding:18px; margin-top:22px;">
+        <input disabled placeholder="🔍 Search issues, e.g. pothole, garbage, water…" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:13px 16px;color:#e6ecff;font-size:14px;font-family:'Inter';"/>
+        <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="chip hot">All</span><span class="chip">🛣️ Road</span><span class="chip">⚡ Electricity</span>
+          <span class="chip">💧 Water</span><span class="chip">🔥 Gas</span><span class="chip">🧹 Sanitation</span>
+          <span style="width:1px;background:var(--line);margin:0 6px;"></span>
+          <span class="chip hot">All Active</span><span class="chip">In Process</span><span class="chip">Resolved</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px;">
+        <div class="glass" style="padding:18px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="chip">🛣️ ROAD</span><span class="badge b-ver"><span class="dot" style="background:#c4b5fd"></span>Sent</span></div>
+          <h3 style="font-size:15px;margin-top:12px;line-height:1.45;">Deep pothole on Fuller Road is causing accidents</h3>
+          <p style="font-size:12.5px;color:#8899bb;margin-top:8px;line-height:1.6;">Very deep pothole near Fuller Road crossing. Two motorbikes already had accidents…</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
+            <span style="font-size:11px;color:#66738f;">by Rahim Ahmed</span>
+            <span class="btnp" style="padding:7px 14px;font-size:12px;">▲ Upvote · 4</span>
+          </div>
+        </div>
+        <div class="glass" style="padding:18px; border-color:rgba(251,191,36,.35);">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="chip">⚡ ELECTRICITY</span><span class="badge b-wip"><span class="dot" style="background:#fcd34d"></span>In Process · ETA 48h</span></div>
+          <h3 style="font-size:15px;margin-top:12px;line-height:1.45;">Electric pole leaning dangerously over footpath</h3>
+          <p style="font-size:12.5px;color:#8899bb;margin-top:8px;line-height:1.6;">Pole badly tilted after storm near TSC. Live wires exposed — dangerous for students…</p>
+          <div style="background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.3);border-radius:11px;padding:9px 13px;margin-top:12px;font-size:12px;color:#fcd34d;font-weight:600;">
+            ⏳ The problem solving is in progress
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:12px;padding-top:12px;">
+            <span style="font-size:11px;color:#66738f;">by Karima Begum</span>
+            <span class="btng" style="padding:7px 14px;font-size:12px;cursor:not-allowed;color:#fcd34d;">🔒 In Process · 6</span>
+          </div>
+        </div>
+        <div class="glass" style="padding:18px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="chip">💧 WATER</span><span class="badge b-res"><span class="dot" style="background:#5eead4"></span>Resolved</span></div>
+          <h3 style="font-size:15px;margin-top:12px;line-height:1.45;">Water logging drains overflowing at Nilkhet</h3>
+          <p style="font-size:12.5px;color:#8899bb;margin-top:8px;line-height:1.6;">Drainage overflowing at Nilkhet intersection. Mosquitoes breeding, whole area smells…</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;">
+            <span style="font-size:11px;color:#66738f;">by Joya Chowdhury</span>
+            <span class="chip" style="color:#5eead4;border-color:rgba(45,212,191,.35);">▲ 4 votes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SUBMIT ================= -->
+<section class="screen" id="s-submit">
+  <div class="frame">
+    <div class="fbar">
+      <span class="fdot" style="background:#ff5f57"></span><span class="fdot" style="background:#febc2e"></span><span class="fdot" style="background:#28c840"></span>
+      <div class="url">nagoriksheba.bd/submit — Report an issue (login required)</div>
+    </div>
+    <div class="inner" style="display:grid;grid-template-columns:1.2fr 1fr;gap:22px;">
+      <div>
+        <h1 style="font-size:30px;font-weight:800;">Report an <span class="gtext">issue</span></h1>
+        <p style="color:#94a3b8;margin:8px 0 18px;font-size:13.5px;">Voice or text + photo + exact location. Agents handle verification &amp; routing.</p>
+        <div class="glass" style="padding:20px;">
+          <label style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#8899bb;font-weight:700;">Title *</label>
+          <div class="glass" style="margin-top:8px;padding:13px 16px;font-size:14px;">Deep pothole near Baitul Mukarram north gate</div>
+          <label style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#8899bb;font-weight:700;display:block;margin-top:16px;">Describe the problem *</label>
+          <div class="glass" style="margin-top:8px;padding:13px 16px;font-size:13.5px;color:#c7d2ea;line-height:1.6;">Huge pothole has formed near the north gate. Rickshaws overturn here almost daily after rain. It has been getting worse for two weeks…</div>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:16px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 0 8px rgba(91,140,255,.12);">🎤</div>
+            <div><b style="font-size:13.5px;">Listening… speak now</b><br/><span style="font-size:11.5px;color:#5b8cff;">Language: বাংলা (tap to switch)</span></div>
+          </div>
+        </div>
+        <div class="glass" style="padding:20px;margin-top:16px;">
+          <div style="border:2px dashed rgba(255,255,255,.16);border-radius:14px;padding:26px;text-align:center;color:#8899bb;font-size:13px;">
+            📷<br/>Tap to add a photo of the problem <span class="chip" style="margin-left:8px;">optional</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="glass" style="padding:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:13px;">📍 Exact location *</b><span class="chip hot" style="cursor:pointer;">Use my GPS</span></div>
+          <div style="height:210px;border-radius:14px;margin-top:12px;position:relative;overflow:hidden;border:1px solid var(--line);
+               background:radial-gradient(circle at 30% 40%, #16204a, #0a0e1d 70%);">
+            <div style="position:absolute;inset:0;opacity:.25;background-image:linear-gradient(rgba(148,163,184,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.3) 1px,transparent 1px);background-size:38px 38px;"></div>
+            <div style="position:absolute;left:46%;top:42%;font-size:30px;filter:drop-shadow(0 6px 12px rgba(255,108,181,.6));">📌</div>
+            <div style="position:absolute;bottom:10px;left:12px;font-size:11px;color:#66738f;">23.73362, 90.39417 — tap map to adjust pin</div>
+          </div>
+        </div>
+        <div style="background:rgba(45,212,191,.09);border:1px solid rgba(45,212,191,.3);border-radius:16px;padding:16px;margin-top:16px;">
+          <b style="color:#5eead4;font-size:13.5px;">✅ Verified &amp; sent!</b>
+          <p style="color:#94a3b8;font-size:12.5px;margin-top:6px;line-height:1.6;">Agents processed your report and routed it to <b style="color:#fff;">Dhaka South City Corporation</b>. Ticket #8 · priority 21.4</p>
+        </div>
+        <div style="background:rgba(91,140,255,.08);border:1px solid rgba(91,140,255,.3);border-radius:16px;padding:16px;margin-top:12px;">
+          <b style="color:#93b4ff;font-size:13.5px;">🗳️ Similar report merged as vote</b>
+          <p style="color:#94a3b8;font-size:12.5px;margin-top:6px;line-height:1.6;">A similar complaint exists 84 m away — your submission was counted as a vote. No duplicates in the system.</p>
+        </div>
+        <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:16px;padding:16px;margin-top:12px;">
+          <b style="color:#fcd34d;font-size:13.5px;">⏳ The problem solving is in progress</b>
+          <p style="color:#94a3b8;font-size:12.5px;margin-top:6px;line-height:1.6;">You cannot vote or re-report an issue already being solved by the authority.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EMERGENCY ================= -->
+<section class="screen" id="s-emergency">
+  <div class="frame">
+    <div class="fbar">
+      <span class="fdot" style="background:#ff5f57"></span><span class="fdot" style="background:#febc2e"></span><span class="fdot" style="background:#28c840"></span>
+      <div class="url">nagoriksheba.bd/emergency — no login required 🌐 public</div>
+    </div>
+    <div class="inner">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;">
+        <div>
+          <h1 style="font-size:32px;font-weight:800;">Emergency <span class="gtext">services near you</span></h1>
+          <p style="color:#94a3b8;margin-top:8px;">Open to every citizen — no account needed. Distances update from live GPS.</p>
+        </div>
+        <span class="btng">📍 Refresh my location</span>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="chip hot">🏙️ All</span><span class="chip">🚒 Fire Service</span><span class="chip">🚓 Police</span>
+        <span class="chip">🚰 WASA</span><span class="chip">🏗️ LGED</span><span class="chip">💡 DESA</span>
+        <span class="chip">🔥 Titas Gas</span><span class="chip">🚻 Public Toilet</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:20px;margin-top:20px;">
+        <div style="height:430px;border-radius:18px;border:1px solid var(--line);position:relative;overflow:hidden;background:radial-gradient(circle at 60% 35%, #17204a, #090d1a 72%);">
+          <div style="position:absolute;inset:0;opacity:.22;background-image:linear-gradient(rgba(148,163,184,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.35) 1px,transparent 1px);background-size:42px 42px;"></div>
+          <span style="position:absolute;left:47%;top:44%;font-size:24px;">🧍</span>
+          <span style="position:absolute;left:24%;top:22%;font-size:22px;">🚒</span>
+          <span style="position:absolute;left:70%;top:30%;font-size:22px;">🚓</span>
+          <span style="position:absolute;left:33%;top:68%;font-size:22px;">🚻</span>
+          <span style="position:absolute;left:63%;top:63%;font-size:22px;">💡</span>
+          <div style="position:absolute;bottom:12px;left:14px;font-size:11px;color:#66738f;">Live Leaflet map · dark CARTO tiles</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <div class="glass" style="padding:15px;display:flex;gap:14px;align-items:center;">
+            <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,107,87,.16);display:flex;align-items:center;justify-content:center;font-size:21px;">🚒</div>
+            <div style="flex:1;min-width:0;"><b style="font-size:14px;">Ramna Fire Station</b><br/><span style="font-size:12px;color:#8899bb;">102 / +880-2-223355566</span></div>
+            <div style="text-align:right;"><b class="display" style="font-size:17px;">650 m</b><br/><span style="font-size:10px;color:#66738f;letter-spacing:.1em;">TAP TO CALL</span></div>
+          </div>
+          <div class="glass" style="padding:15px;display:flex;gap:14px;align-items:center;">
+            <div style="width:46px;height:46px;border-radius:13px;background:rgba(91,140,255,.16);display:flex;align-items:center;justify-content:center;font-size:21px;">🚓</div>
+            <div style="flex:1;"><b style="font-size:14px;">Ramna Model Thana</b><br/><span style="font-size:12px;color:#8899bb;">999</span></div>
+            <div style="text-align:right;"><b class="display" style="font-size:17px;">900 m</b><br/><span style="font-size:10px;color:#66738f;">TAP TO CALL</span></div>
+          </div>
+          <div class="glass" style="padding:15px;display:flex;gap:14px;align-items:center;">
+            <div style="width:46px;height:46px;border-radius:13px;background:rgba(45,212,191,.15);display:flex;align-items:center;justify-content:center;font-size:21px;">🚻</div>
+            <div style="flex:1;"><b style="font-size:14px;">Public Toilet — Shahbagh</b><br/><span style="font-size:12px;color:#8899bb;">+8801811000001</span></div>
+            <div style="text-align:right;"><b class="display" style="font-size:17px;">195 m</b><br/><span style="font-size:10px;color:#66738f;">TAP TO CALL</span></div>
+          </div>
+          <div class="glass" style="padding:15px;display:flex;gap:14px;align-items:center;">
+            <div style="width:46px;height:46px;border-radius:13px;background:rgba(167,108,255,.16);display:flex;align-items:center;justify-content:center;font-size:21px;">💡</div>
+            <div style="flex:1;"><b style="font-size:14px;">DESA Distribution Office</b><br/><span style="font-size:12px;color:#8899bb;">16999</span></div>
+            <div style="text-align:right;"><b class="display" style="font-size:17px;">2.4 km</b><br/><span style="font-size:10px;color:#66738f;">TAP TO CALL</span></div>
+          </div>
+          <div class="glass" style="padding:15px;display:flex;gap:14px;align-items:center;">
+            <div style="width:46px;height:46px;border-radius:13px;background:rgba(251,113,133,.15);display:flex;align-items:center;justify-content:center;font-size:21px;">🔥</div>
+            <div style="flex:1;"><b style="font-size:14px;">Titas Gas Head Office</b><br/><span style="font-size:12px;color:#8899bb;">165</span></div>
+            <div style="text-align:right;"><b class="display" style="font-size:17px;">2.6 km</b><br/><span style="font-size:10px;color:#66738f;">TAP TO CALL</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DETAIL ================= -->
+<section class="screen" id="s-detail">
+  <div class="frame">
+    <div class="fbar">
+      <span class="fdot" style="background:#ff5f57"></span><span class="fdot" style="background:#febc2e"></span><span class="fdot" style="background:#28c840"></span>
+      <div class="url">nagoriksheba.bd/complaints/2 — full transparency view</div>
+    </div>
+    <div class="inner" style="display:grid;grid-template-columns:1.35fr 1fr;gap:22px;">
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div class="glass" style="padding:24px;">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span class="chip">⚡ ELECTRICITY</span><span class="badge b-wip"><span class="dot" style="background:#fcd34d"></span>In Process</span>
+            <span style="font-size:11.5px;color:#66738f;">Ticket #2 · ETA 48h</span>
+          </div>
+          <h1 style="font-size:23px;font-weight:800;margin-top:14px;">Electric pole leaning dangerously over footpath</h1>
+          <p style="font-size:12px;color:#66738f;margin-top:6px;">Reported by Karima Begum · assigned to Shirin Akter (electricity)</p>
+          <p style="color:#c7d2ea;font-size:14px;line-height:1.7;margin-top:14px;">An electric pole near TSC is badly tilted after the storm. Live wires are exposed. Very dangerous for students walking to class every morning.</p>
+          <div style="background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:12px 16px;margin-top:16px;color:#fcd34d;font-weight:600;font-size:13px;">⏳ The problem solving is in progress</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;">
+            <div><b class="display" style="font-size:26px;">▲ 6</b><br/><span style="font-size:10px;letter-spacing:.15em;color:#66738f;">CITIZEN VOTES</span></div>
+            <span class="btng" style="cursor:not-allowed;color:#fcd34d;">Voting locked while in process 🔒</span>
+          </div>
+        </div>
+        <div class="glass" style="padding:22px;">
+          <b class="display" style="font-size:16px;">Agent pipeline trace</b>
+          <p style="font-size:11.5px;color:#66738f;margin-top:3px;">Full transparency — every automated decision</p>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+            <div style="background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;">
+              <span style="font-size:12.5px;color:#93b4ff;font-weight:700;">🤖 Agent 01 · Photo Verifier</span><span class="chip" style="font-size:10px;padding:3px 9px;">image_accepted</span>
+            </div>
+            <div style="background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;">
+              <span style="font-size:12.5px;color:#93b4ff;font-weight:700;">🤖 Agent 02 · Classifier</span><span class="chip" style="font-size:10px;padding:3px 9px;">classified:electricity</span>
+            </div>
+            <div style="background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;">
+              <span style="font-size:12.5px;color:#93b4ff;font-weight:700;">🤖 Agent 05 · Router</span><span class="chip" style="font-size:10px;padding:3px 9px;">routed:CITY_CORPORATION</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div class="glass" style="padding:20px;">
+          <b style="font-size:13px;">Authority timeline</b>
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;gap:12px;"><div style="width:11px;height:11px;border-radius:50%;background:var(--grad);margin-top:4px;"></div><div style="padding-bottom:22px;"><b style="font-size:13px;">verified → <span class="gtext">in process</span></b><br/><span style="font-size:12px;color:#8899bb;">Repair crew scheduled within 48 hours.</span><br/><span style="font-size:11px;color:#55607a;">Shirin Akter (electricity)</span></div></div>
+            <div style="display:flex;gap:12px;"><div style="width:11px;height:11px;border-radius:50%;border:2px solid #3b4f85;margin-top:4px;"></div><div><b style="font-size:13px;color:#8899bb;">submitted → verified</b><br/><span style="font-size:11px;color:#55607a;">system-agent</span></div></div>
+          </div>
+        </div>
+        <div class="glass" style="padding:20px;font-size:13px;">
+          <b style="font-size:13px;">Routing</b>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px;color:#8899bb;">
+            <div style="display:flex;justify-content:space-between;"><span>Authority</span><b style="color:#fff;">Dhaka South City Corp</b></div>
+            <div style="display:flex;justify-content:space-between;"><span>Handling staff</span><b style="color:#fff;">Shirin Akter</b></div>
+            <div style="display:flex;justify-content:space-between;"><span>Priority score</span><b class="gtext">58.0</b></div>
+            <div style="display:flex;justify-content:space-between;"><span>Merged duplicates</span><b style="color:#fff;">2 reports</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STAFF ================= -->
+<section class="screen" id="s-staff">
+  <div class="frame">
+    <div class="fbar">
+      <span class="fdot" style="background:#ff5f57"></span><span class="fdot" style="background:#febc2e"></span><span class="fdot" style="background:#28c840"></span>
+      <div class="url">nagoriksheba.bd/staff — Authority console · login: shirin.city@nagorik.bd</div>
+    </div>
+    <div class="inner">
+      <div class="glass" style="padding:26px;position:relative;overflow:hidden;">
+        <span style="font-size:11px;letter-spacing:.3em;color:#5b8cff;font-weight:700;">CITY CORPORATION</span>
+        <h1 style="font-size:27px;font-weight:800;margin-top:6px;">Dhaka South City Corporation</h1>
+        <p style="color:#8899bb;font-size:13px;margin-top:4px;">Signed in as Shirin Akter · electricity department</p>
+        <div style="display:flex;gap:34px;margin-top:18px;align-items:center;flex-wrap:wrap;">
+          <div><b class="display" style="font-size:24px;">2</b><br/><span style="font-size:10.5px;color:#66738f;letter-spacing:.15em;">AWAITING ACTION</span></div>
+          <div><b class="display" style="font-size:24px;color:#fcd34d;">1</b><br/><span style="font-size:10.5px;color:#66738f;letter-spacing:.15em;">IN PROCESS</span></div>
+          <div><b class="display" style="font-size:24px;color:#5eead4;">1</b><br/><span style="font-size:10.5px;color:#66738f;letter-spacing:.15em;">COMPLETED</span></div>
+          <span class="chip hot" style="margin-left:auto;">Priority queue auto-ranked by Agent-04</span>
+        </div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="chip hot">🗂️ All</span><span class="chip">🛣️ Road</span><span class="chip">⚡ Electricity</span><span class="chip">💧 Water</span><span class="chip">🧹 Sanitation</span>
+        <span style="width:1px;background:var(--line);margin:0 6px;"></span>
+        <span class="chip hot">All</span><span class="chip">New</span><span class="chip">In Process</span><span class="chip">Done</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:13px;margin-top:18px;">
+        <div class="glass" style="padding:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div style="width:44px;height:44px;border-radius:13px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;" class="display">#1</div>
+          <div style="flex:1;min-width:260px;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="badge b-ver"><span class="dot" style="background:#c4b5fd"></span>New / Sent</span>
+              <span class="chip">road</span><span class="chip hot">priority 34.5</span>
+            </div>
+            <b style="font-size:14.5px;display:block;margin-top:8px;">#1 · Deep pothole on Fuller Road is causing accidents</b>
+            <span style="font-size:11.5px;color:#66738f;">Fuller Road, Shahbagh · ▲ 4 votes · by Rahim Ahmed</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span class="btnp" style="padding:9px 16px;font-size:12px;">⏳ Start Process</span>
+            <span class="btng" style="padding:9px 16px;font-size:12px;color:#5eead4;border-color:rgba(45,212,191,.4);">✓ Done</span>
+            <span class="btng" style="padding:9px 16px;font-size:12px;color:#fda4af;border-color:rgba(251,113,133,.4);">✕ Reject</span>
+          </div>
+        </div>
+        <div class="glass" style="padding:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-color:rgba(251,191,36,.3);">
+          <div style="width:44px;height:44px;border-radius:13px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;" class="display">#2</div>
+          <div style="flex:1;min-width:260px;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="badge b-wip"><span class="dot" style="background:#fcd34d"></span>In Process · ETA 48h</span>
+              <span class="chip">electricity</span><span class="chip hot">priority 58.0</span>
+            </div>
+            <b style="font-size:14.5px;display:block;margin-top:8px;">#2 · Electric pole leaning dangerously over footpath</b>
+            <span style="font-size:11.5px;color:#66738f;">TSC area, DU campus · ▲ 6 votes · by Karima Begum</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span class="btng" style="padding:9px 16px;font-size:12px;color:#5eead4;border-color:rgba(45,212,191,.4);">✓ Mark Done</span>
+          </div>
+        </div>
+        <div class="glass" style="padding:18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;opacity:.75;">
+          <div style="width:44px;height:44px;border-radius:13px;background:rgba(45,212,191,.25);display:flex;align-items:center;justify-content:center;font-weight:800;color:#5eead4;" class="display">#3</div>
+          <div style="flex:1;min-width:260px;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="badge b-res"><span class="dot" style="background:#5eead4"></span>Done ✓</span>
+              <span class="chip">water</span>
+            </div>
+            <b style="font-size:14.5px;display:block;margin-top:8px;">#3 · Water logging drains overflowing at Nilkhet</b>
+            <span style="font-size:11.5px;color:#66738f;">Resolved 2 days ago · citizen notified automatically</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MOBILE ================= -->
+<section class="screen" id="s-mobile">
+  <h1 style="font-size:30px;font-weight:800;text-align:center;">📱 Flutter mobile app <span class="gtext">preview</span></h1>
+  <p style="text-align:center;color:#94a3b8;margin-top:8px;">Same API, same agents — native Android &amp; iOS experience</p>
+  <div style="display:flex;gap:34px;justify-content:center;flex-wrap:wrap;margin-top:40px;">
+
+    <!-- phone frame -->
+    <div style="width:270px;border-radius:38px;border:1px solid rgba(255,255,255,.14);background:#0a0e1d;box-shadow:0 40px 80px -30px rgba(0,0,0,.8), 0 0 60px -20px rgba(91,140,255,.35);overflow:hidden;">
+      <div style="height:26px;display:flex;justify-content:center;align-items:flex-start;"><div style="width:86px;height:18px;background:#000;border-radius:0 0 14px 14px;"></div></div>
+      <div style="padding:14px 14px 8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><b style="font-family:'Sora';">Explore issues</b><br/><span style="font-size:10px;color:#66738f;">Upvote instead of re-reporting</span></div>
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(91,140,255,.25);display:flex;align-items:center;justify-content:center;">R</div>
+        </div>
+        <div style="margin-top:10px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:11px;color:#66738f;">🔍 Search pothole, garbage, water…</div>
+        <div style="display:flex;gap:6px;margin-top:9px;"><span class="chip hot" style="font-size:10px;padding:4px 10px;">ALL</span><span class="chip" style="font-size:10px;padding:4px 10px;">ROAD</span><span class="chip" style="font-size:10px;padding:4px 10px;">POWER</span><span class="chip" style="font-size:10px;padding:4px 10px;">WATER</span></div>
+        <div class="glass" style="padding:12px;margin-top:11px;border-radius:15px;">
+          <div style="display:flex;gap:6px;align-items:center;"><span class="chip" style="font-size:9px;padding:3px 8px;">🛣️ ROAD</span><span class="badge b-ver" style="font-size:9px;padding:2px 8px;">Sent</span><span style="margin-left:auto;color:#5b8cff;font-weight:800;font-size:11px;">▲ 4</span></div>
+          <b style="font-size:12px;display:block;margin-top:8px;line-height:1.4;">#1 Deep pothole on Fuller Road…</b>
+          <span style="font-size:10px;color:#66738f;">Shahbagh · Dhaka South City Corp</span>
+        </div>
+        <div class="glass" style="padding:12px;margin-top:9px;border-radius:15px;border-color:rgba(251,191,36,.3);">
+          <div style="display:flex;gap:6px;align-items:center;"><span class="chip" style="font-size:9px;padding:3px 8px;">⚡ POWER</span><span class="badge b-wip" style="font-size:9px;padding:2px 8px;">In Process</span><span style="margin-left:auto;color:#5b8cff;font-weight:800;font-size:11px;">▲ 6</span></div>
+          <b style="font-size:12px;display:block;margin-top:8px;line-height:1.4;">#2 Electric pole leaning over…</b>
+          <span style="font-size:10px;color:#fcd34d;">⏳ ETA 48h · voting locked</span>
+        </div>
+      </div>
+      <div style="margin:10px 14px;background:linear-gradient(92deg,#a76cff,#ff6cb5);border-radius:14px;padding:11px;text-align:center;font-weight:800;font-size:12.5px;color:#fff;">📢 Report Issue</div>
+      <div style="display:flex;justify-content:space-around;background:#0b1020;border-top:1px solid var(--line);padding:9px 0 14px;font-size:16px;">
+        <span>🧭</span><span>🚨</span><span>➕</span><span>👤</span>
+      </div>
+    </div>
+
+    <!-- phone 2: submit -->
+    <div style="width:270px;border-radius:38px;border:1px solid rgba(255,255,255,.14);background:#0a0e1d;box-shadow:0 40px 80px -30px rgba(0,0,0,.8), 0 0 60px -20px rgba(255,108,181,.3);overflow:hidden;">
+      <div style="height:26px;display:flex;justify-content:center;"><div style="width:86px;height:18px;background:#000;border-radius:0 0 14px 14px;"></div></div>
+      <div style="padding:14px;">
+        <b style="font-family:'Sora';font-size:15px;">Report an issue</b><br/>
+        <span style="font-size:10px;color:#66738f;">Voice or text + photo + exact location</span>
+        <div class="glass" style="padding:11px;margin-top:11px;border-radius:13px;font-size:11px;color:#8899bb;">Title * (e.g. Deep pothole near school)</div>
+        <div class="glass" style="padding:11px;margin-top:8px;border-radius:13px;font-size:11px;color:#8899bb;height:58px;">Describe the problem *</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:11px;">
+          <div style="width:42px;height:42px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 7px rgba(255,108,181,.12);">🎤</div>
+          <span style="font-size:10.5px;"><b>Listening… speak now</b><br/><span style="color:#5b8cff;">বাংলা / English</span></span>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:12px;align-items:center;">
+          <div style="width:74px;height:74px;border-radius:15px;border:1.5px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;">📷</div>
+          <div class="glass" style="flex:1;padding:10px;border-radius:13px;font-size:10px;color:#8899bb;line-height:1.5;">📍 GPS locked:<br/>23.73362, 90.39417<br/><span style="color:#5b8cff;font-weight:700;">Use GPS ↻</span></div>
+        </div>
+        <div style="margin-top:13px;background:var(--grad);border-radius:13px;padding:11px;text-align:center;font-weight:800;font-size:12px;color:#fff;">🚀 Submit via Agent Pipeline</div>
+        <div style="margin-top:11px;background:rgba(45,212,191,.09);border:1px solid rgba(45,212,191,.3);border-radius:12px;padding:10px;font-size:10px;color:#5eead4;text-align:center;">
+          ✅ Verified &amp; sent! Routed to Dhaka South City Corporation
+        </div>
+      </div>
+    </div>
+
+    <!-- phone 3: emergency -->
+    <div style="width:270px;border-radius:38px;border:1px solid rgba(255,255,255,.14);background:#0a0e1d;box-shadow:0 40px 80px -30px rgba(0,0,0,.8), 0 0 60px -20px rgba(45,212,191,.3);overflow:hidden;">
+      <div style="height:26px;display:flex;justify-content:center;"><div style="width:86px;height:18px;background:#000;border-radius:0 0 14px 14px;"></div></div>
+      <div style="padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><b style="font-family:'Sora';font-size:15px;">Emergency nearby</b><br/><span style="font-size:10px;color:#66738f;">No login needed · tap to call</span></div>
+          <div style="width:34px;height:34px;border-radius:11px;background:rgba(91,140,255,.2);display:flex;align-items:center;justify-content:center;">📍</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;"><span class="chip hot" style="font-size:9.5px;padding:4px 9px;">🏙️ ALL</span><span class="chip" style="font-size:9.5px;padding:4px 9px;">🚒 FIRE</span><span class="chip" style="font-size:9.5px;padding:4px 9px;">🚓 POLICE</span><span class="chip" style="font-size:9.5px;padding:4px 9px;">🚻 TOILET</span></div>
+        <div class="glass" style="padding:12px;margin-top:12px;border-radius:15px;display:flex;gap:10px;align-items:center;">
+          <span style="font-size:22px;">🚒</span>
+          <div style="flex:1;"><b style="font-size:12px;">Ramna Fire Station</b><br/><span style="font-size:9.5px;color:#66738f;">102 · 650 m away</span></div>
+          <div style="background:var(--grad);border-radius:9px;padding:7px;font-size:12px;">📞</div>
+        </div>
+        <div class="glass" style="padding:12px;margin-top:8px;border-radius:15px;display:flex;gap:10px;align-items:center;">
+          <span style="font-size:22px;">🚓</span>
+          <div style="flex:1;"><b style="font-size:12px;">Ramna Model Thana</b><br/><span style="font-size:9.5px;color:#66738f;">999 · 900 m away</span></div>
+          <div style="background:var(--grad);border-radius:9px;padding:7px;font-size:12px;">📞</div>
+        </div>
+        <div class="glass" style="padding:12px;margin-top:8px;border-radius:15px;display:flex;gap:10px;align-items:center;">
+          <span style="font-size:22px;">🚻</span>
+          <div style="flex:1;"><b style="font-size:12px;">Public Toilet Shahbagh</b><br/><span style="font-size:9.5px;color:#66738f;">195 m away</span></div>
+          <div style="background:var(--grad);border-radius:9px;padding:7px;font-size:12px;">📞</div>
+        </div>
+        <div class="glass" style="padding:12px;margin-top:8px;border-radius:15px;display:flex;gap:10px;align-items:center;">
+          <span style="font-size:22px;">🔥</span>
+          <div style="flex:1;"><b style="font-size:12px;">Titas Gas Office</b><br/><span style="font-size:9.5px;color:#66738f;">165 · 2.6 km</span></div>
+          <div style="background:var(--grad);border-radius:9px;padding:7px;font-size:12px;">📞</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<p class="note">Static prototype — open the real apps with the commands in README.md · Nagorik Sheba © 2026</p>
+</main>
+
+<script>
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+      t.classList.add('on');
+      document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+      document.getElementById(t.dataset.s).classList.add('on');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+</script>
+</body>
+</html>

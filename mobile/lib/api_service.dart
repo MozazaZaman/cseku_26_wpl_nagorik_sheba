@@ -196,13 +196,27 @@ class ApiService {
     return (b['divisions'] as List).cast<Map<String, dynamic>>();
   }
 
-  Future<List<dynamic>> authorities({String? district, String? type}) async {
+  Future<List<dynamic>> authorities({String? district, String? type, String? division, String? upazila}) async {
     final params = <String, String>{};
     if (district != null) params['district'] = district;
+    if (division != null) params['division'] = division;
     if (type != null) params['type'] = type;
+    if (upazila != null) params['upazila'] = upazila;
     final uri = Uri.parse('$kApiBase/authorities').replace(queryParameters: params);
     final b = _check(await http.get(uri));
     return (b['authorities'] as List);
+  }
+
+  Future<List<String>> authorityTypes({required String district}) async {
+    final uri = Uri.parse('$kApiBase/authorities/types').replace(queryParameters: {'district': district});
+    final b = _check(await http.get(uri));
+    return (b['types'] as List).cast<String>();
+  }
+
+  Future<List<String>> authorityUpazilas({required String district}) async {
+    final uri = Uri.parse('$kApiBase/authorities/upazilas').replace(queryParameters: {'district': district});
+    final b = _check(await http.get(uri));
+    return (b['upazilas'] as List).cast<String>();
   }
 
   Future<Map<String, dynamic>?> _geocodeOnce(String query) async {

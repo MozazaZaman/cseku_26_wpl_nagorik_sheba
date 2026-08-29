@@ -4,12 +4,15 @@ import { haversineMeters } from '../utils/geo.js';
 
 const router = Router();
 
-// Public - no login required: find emergency services near me
+// Public - no login required: find emergency services across the whole country, sorted nearest → farthest
 router.get('/nearby', (req, res) => {
   const lat = parseFloat(req.query.lat);
   const lng = parseFloat(req.query.lng);
-  const radius = Math.min(parseFloat(req.query.radius) || 15000, 50000);
   const type = req.query.type;
+  // radius is optional: if omitted, search the whole country (no distance filter)
+  const radiusParam = req.query.radius;
+  const radius = radiusParam != null ? Math.min(parseFloat(radiusParam), 1000000) : null;
+  const limit = Math.min(parseInt(req.query.limit) || 100, 500);
 
   if (Number.isNaN(lat) || Number.isNaN(lng)) {
     return res.status(400).json({ error: 'lat and lng query parameters are required' });
@@ -20,9 +23,9 @@ router.get('/nearby', (req, res) => {
 
   rows = rows
     .map((r) => ({ ...r, distance_m: Math.round(haversineMeters(lat, lng, r.latitude, r.longitude)) }))
-    .filter((r) => r.distance_m <= radius)
+    .filter((r) => radius == null || r.distance_m <= radius)
     .sort((a, b) => a.distance_m - b.distance_m)
-    .slice(0, 25);
+    .slice(0, limit);
 
   res.json({ services: rows });
 });

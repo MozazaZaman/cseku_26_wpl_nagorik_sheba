@@ -16,6 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/geo', express.static(path.join(__dirname, '..', '..', 'uploads')));
 
 initDb();
 initFaceEngine();
@@ -96,15 +97,61 @@ app.get('/api/geocode', async (req, res) => {
 });
 
 app.get('/api/authorities', (req, res) => {
-  const { division, district, type } = req.query;
+  const { division, district, type, upazila } = req.query;
   let sql = `SELECT a.*, (SELECT COUNT(*) FROM complaints c WHERE c.authority_id = a.authority_id) AS complaint_count
              FROM authorities a WHERE 1=1`;
   const args = [];
   if (division) { sql += ' AND a.division = ?'; args.push(division); }
   if (district) { sql += ' AND a.district = ?'; args.push(district); }
   if (type) { sql += ' AND a.type = ?'; args.push(type); }
+  if (upazila) { sql += ' AND a.upazila = ?'; args.push(upazila); }
   sql += ' ORDER BY a.name';
   res.json({ authorities: db.prepare(sql).all(...args) });
+});
+
+app.get('/api/authorities/types', (req, res) => {
+  const { district } = req.query;
+  if (!district) return res.json({ types: [] });
+  const types = db.prepare(
+    'SELECT DISTINCT type FROM authorities WHERE district = ?'
+  ).all(district).map(r => r.type);
+  res.json({ types });
+});
+
+app.get('/api/authorities/upazilas', (req, res) => {
+  const { district } = req.query;
+  if (!district) return res.json({ upazilas: [] });
+  const rows = db.prepare(
+    "SELECT DISTINCT upazila FROM authorities WHERE district = ? AND type='UNION_PARISHAD' AND upazila IS NOT NULL ORDER BY upazila"
+  ).all(district);
+  res.json({ upazilas: rows.map(r=>r.upazila) });
+});
+
+// Direct JSON access for Report page (uses bangladesh_local_government_units.json)
+app.get('/api/lg/units', (req, res) => {
+  try {
+    const p = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_local_government_units.json');
+    const j = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    res.json(j);
+  } catch(e){ res.status(500).json({error:'LG file not found'}); }
+});
+
+// Emergency services: osmium extracts are seeded into DB; this reverse proxy gives accurate nearby addresses via public Nominatim (English for district matching)
+const reverseCache = new Map();
+app.get('/api/reverse', async (req, res) => {
+  const lat = parseFloat(req.query.lat), lng = parseFloat(req.query.lng);
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return res.status(400).json({error:'lat/lng required'});
+  const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+  const hit = reverseCache.get(key);
+  if (hit && Date.now() - hit.at < 24*60*60*1000) return res.json(hit.data);
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=en`, {headers:{'User-Agent':'NagorikSheba/1.0 (emergency osmium+Nominatim)'}});
+    if (!r.ok) return res.json({found:false});
+    const j = await r.json();
+    const data = {found:true, display_name: j.display_name, address: j.address, source:'OpenStreetMap'};
+    reverseCache.set(key,{at:Date.now(), data});
+    res.json(data);
+  } catch(e){ res.json({found:false}); }
 });
 
 app.get('/api/my/notifications', requireAuth, (req, res) => {

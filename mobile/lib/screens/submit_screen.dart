@@ -39,6 +39,8 @@ class _SubmitScreenState extends State<SubmitScreen> {
   String locMode = 'gps'; // gps | address
   List<Map<String, dynamic>> divisions = [];
   List<dynamic> authorities = [];
+  List<String> availableTypes = [];
+  List<String> availableUpazilas = [];
   String? division;
   String? district;
   String authType = 'CITY_CORPORATION';
@@ -57,11 +59,23 @@ class _SubmitScreenState extends State<SubmitScreen> {
   String? geoNote;
 
   @override
+  static const _fallbackDivs = [
+    {'name': 'Dhaka', 'districts': ['Dhaka','Faridpur','Gazipur','Gopalganj','Kishoreganj','Madaripur','Manikganj','Munshiganj','Narayanganj','Narsingdi','Rajbari','Shariatpur','Tangail']},
+    {'name': 'Chattogram', 'districts': ['Bandarban','Brahmanbaria','Chandpur','Chattogram','Cumilla',"Cox's Bazar",'Feni','Khagrachhari','Lakshmipur','Noakhali','Rangamati']},
+    {'name': 'Khulna', 'districts': ['Bagerhat','Chuadanga','Jashore','Jhenaidah','Khulna','Kushtia','Magura','Meherpur','Narail','Satkhira']},
+    {'name': 'Rajshahi', 'districts': ['Bogura','Chapainawabganj','Joypurhat','Naogaon','Natore','Pabna','Rajshahi','Sirajganj']},
+    {'name': 'Sylhet', 'districts': ['Habiganj','Moulvibazar','Sunamganj','Sylhet']},
+    {'name': 'Barishal', 'districts': ['Barguna','Barishal','Bhola','Jhalokati','Patuakhali','Pirojpur']},
+    {'name': 'Rangpur', 'districts': ['Dinajpur','Gaibandha','Kurigram','Lalmonirhat','Nilphamari','Panchagarh','Rangpur','Thakurgaon']},
+    {'name': 'Mymensingh', 'districts': ['Jamalpur','Mymensingh','Netrokona','Sherpur']},
+  ];
+
   void initState() {
     super.initState();
     gpsNote = context.read<Lang>().t('sub.gpsDefault');
+    divisions = _fallbackDivs.map((e) => Map<String, dynamic>.from(e)).toList();
     api.divisions().then((d) {
-      if (mounted) setState(() => divisions = d);
+      if (mounted && d.isNotEmpty) setState(() => divisions = d);
     }).catchError((_) {});
     _autoLocate();
   }
@@ -83,12 +97,52 @@ class _SubmitScreenState extends State<SubmitScreen> {
     }
   }
 
-  Future<void> _loadAuthorities() async {
+  Future<void> _loadTypes() async {
+    if (district == null) { if (mounted) setState(() { availableTypes = []; availableUpazilas = []; authorities = []; }); return; }
     try {
-      final list = await api.authorities(district: district, type: authType);
+      final types = await api.authorityTypes(district: district!);
+      if (!mounted) return;
+      setState(() {
+        availableTypes = types;
+        if (types.isNotEmpty && !types.contains(authType)) authType = types.first;
+        authorityId = null;
+        if (authType != 'UNION_PARISHAD') _upazila.text = '';
+      });
+      if (types.isNotEmpty) {
+        if (authType == 'UNION_PARISHAD') await _loadUpazilas();
+        else await _loadAuthorities();
+      } else setState(() => authorities = []);
+    } catch (_) { if (mounted) setState(() { availableTypes = []; availableUpazilas = []; authorities = []; }); }
+  }
+
+  Future<void> _loadUpazilas() async {
+    if (district == null) { if (mounted) setState(() => availableUpazilas = []); return; }
+    try {
+      final list = await api.authorityUpazilas(district: district!);
+      if (!mounted) return;
+      setState(() {
+        availableUpazilas = list;
+        if (list.isNotEmpty && !list.contains(_upazila.text)) _upazila.text = list.first;
+        authorityId = null;
+      });
+      if (list.isNotEmpty) await _loadAuthorities();
+      else setState(() => authorities = []);
+    } catch (_) { if (mounted) setState(() => availableUpazilas = []); }
+  }
+
+  Future<void> _loadAuthorities() async {
+    if (district == null || authType.isEmpty) { if (mounted) setState(() => authorities = []); return; }
+    if (availableTypes.isNotEmpty && !availableTypes.contains(authType)) { if (mounted) setState(() => authorities = []); return; }
+    if (authType == 'UNION_PARISHAD' && _upazila.text.isEmpty) { if (mounted) setState(() => authorities = []); return; }
+    try {
+      final list = await api.authorities(
+        district: district,
+        type: authType,
+        upazila: authType == 'UNION_PARISHAD' ? _upazila.text : null,
+      );
       if (!mounted) return;
       setState(() => authorities = list);
-    } catch (_) {}
+    } catch (_) { if (mounted) setState(() => authorities = []); }
   }
 
   Future<void> _toggleVoice() async {
@@ -159,7 +213,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
   Future<void> _geocode() async {
     final lang = context.read<Lang>();
     if (division == null || district == null || authorityId == null || _road.text.isEmpty ||
-        (isUnion && _village.text.isEmpty)) {
+        (isUnion && (_village.text.isEmpty || _upazila.text.isEmpty))) {
       setState(() => error = lang.t('sub.completeFields'));
       return;
     }
@@ -198,7 +252,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
 
   bool _addressValid() =>
       division != null && district != null && authorityId != null && _road.text.isNotEmpty &&
-      (!isUnion || _village.text.isNotEmpty);
+      (!isUnion || (_village.text.isNotEmpty && _upazila.text.isNotEmpty));
 
   Future<void> _submit() async {
     final lang = context.read<Lang>();
@@ -289,19 +343,6 @@ class _SubmitScreenState extends State<SubmitScreen> {
       setState(() {
         busy = false;
         error = context.read<Lang>().t('sub.err.network');
-      });
-    }
-  }
-      setState(() => busy = false);
-    } on ApiException catch (e) {
-      setState(() {
-        busy = false;
-        error = e.message;
-      });
-    } catch (e) {
-      setState(() {
-        busy = false;
-        error = 'Network error — is the server running? ($kApiBase)';
       });
     }
   }
@@ -476,7 +517,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                   value: division,
                   decoration: _dec(lang.t('sub.division')),
                   items: divisions.map((d) => DropdownMenuItem(value: d['name'] as String, child: Text(d['name'] as String))).toList(),
-                  onChanged: (v) => setState(() { division = v; district = null; authorityId = null; authorities = []; }),
+                  onChanged: (v) => setState(() { division = v; district = null; authorityId = null; authorities = []; availableTypes = []; availableUpazilas = []; _upazila.text = ''; }),
                 ),
                 SizedBox(height: 10),
                 DropdownButtonFormField<String>(
@@ -484,32 +525,43 @@ class _SubmitScreenState extends State<SubmitScreen> {
                   decoration: _dec(lang.t('sub.district')),
                   items: (divisions.firstWhere((d) => d['name'] == division, orElse: () => null)?['districts'] as List?)
                       ?.cast<String>().map((d) => DropdownMenuItem(value: d, child: Text(d))).toList() ?? [],
-                  onChanged: division == null ? null : (v) => setState(() { district = v; authorityId = null; _loadAuthorities(); }),
+                  onChanged: division == null ? null : (v) { setState(() { district = v; authorityId = null; }); _loadTypes(); },
                 ),
                 SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: authType,
+                  value: availableTypes.contains(authType) ? authType : null,
                   decoration: _dec(lang.t('sub.type')),
-                  items: [
-                    DropdownMenuItem(value: 'CITY_CORPORATION', child: Text(lang.t('sub.cityCorp'))),
-                    DropdownMenuItem(value: 'POUROSHOVA', child: Text(lang.t('sub.pouro'))),
-                    DropdownMenuItem(value: 'UNION_PARISHAD', child: Text(lang.t('sub.union'))),
-                  ],
-                  onChanged: (v) => setState(() { authType = v!; authorityId = null; _loadAuthorities(); }),
+                  items: district == null ? [] : availableTypes.isEmpty
+                    ? [DropdownMenuItem(value: '', child: Text('No types for this district'))]
+                    : availableTypes.map((tp) => DropdownMenuItem(
+                        value: tp,
+                        child: Text(tp == 'CITY_CORPORATION' ? lang.t('sub.cityCorp') : tp == 'POUROSHOVA' ? lang.t('sub.pouro') : lang.t('sub.union')),
+                      )).toList(),
+                  onChanged: district == null || availableTypes.isEmpty ? null : (v) {
+                    setState(() { authType = v!; authorityId = null; if (v != 'UNION_PARISHAD') _upazila.text = ''; });
+                    if (v == 'UNION_PARISHAD') _loadUpazilas(); else _loadAuthorities();
+                  },
                 ),
                 SizedBox(height: 10),
+                if (isUnion) ...[
+                  DropdownButtonFormField<String>(
+                    value: _upazila.text.isNotEmpty && availableUpazilas.contains(_upazila.text) ? _upazila.text : null,
+                    decoration: _dec(lang.t('sub.upazila')),
+                    items: availableUpazilas.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                    onChanged: district == null ? null : (v) { setState(() { _upazila.text = v!; authorityId = null; }); _loadAuthorities(); },
+                  ),
+                  SizedBox(height: 10),
+                ],
                 DropdownButtonFormField<int>(
                   value: authorityId,
                   decoration: _dec(isUnion ? lang.t('sub.union') : authType == 'POUROSHOVA' ? lang.t('sub.pouro') : lang.t('sub.cityCorp')),
                   items: authorities.map((a) => DropdownMenuItem(
                       value: a['authority_id'] as int, child: Text(a['name'] as String, overflow: TextOverflow.ellipsis))).toList(),
-                  onChanged: district == null ? null : (v) => setState(() => authorityId = v),
+                  onChanged: district == null || (isUnion && _upazila.text.isEmpty) ? null : (v) => setState(() => authorityId = v),
                 ),
                 SizedBox(height: 10),
                 if (isUnion) ...[
                   TextField(controller: _village, decoration: _dec(lang.t('sub.village'))),
-                  SizedBox(height: 10),
-                  TextField(controller: _upazila, decoration: _dec(lang.t('sub.upazila'))),
                   SizedBox(height: 10),
                 ] else ...[
                   TextField(controller: _area, decoration: _dec(lang.t('sub.area'))),

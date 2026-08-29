@@ -6,32 +6,37 @@ export const CATEGORIES = ['road', 'electricity', 'water', 'gas', 'sanitation', 
 const CATEGORY_KEYWORDS = {
   gas: {
     phrases: ['gas leak', 'leaking gas', 'gas smell', 'gas line', 'gas cylinder', 'gas connection', 'gas pipeline',
-      'গ্যাস লিক', 'গ্যাসের লিক', 'গ্যাসের গন্ধ', 'রান্নার গ্যাস', 'গ্যাস সংযোগ', 'গ্যাসের পাইপ', 'গ্যাস পাইপলাইন'],
-    words: ['gas', 'গ্যাস', 'titas', 'টাইটাস', 'cylinder', 'সিলিন্ডার', 'lpg', 'এলপিজি', 'চুলা']
+      'গ্যাস লিক', 'গ্যাসের লিক', 'গ্যাসের গন্ধ', 'রান্নার গ্যাস', 'গ্যাস সংযোগ', 'গ্যাসের পাইপ', 'গ্যাস পাইপলাইন',
+      'gas er gondho', 'gas line fata', 'chula gas', 'rannar gas'],
+    words: ['gas', 'ges', 'গ্যাস', 'titas', 'টাইটাস', 'cylinder', 'silinder', 'সিলিন্ডার', 'lpg', 'এলপিজি', 'chula', 'চুলা']
   },
   electricity: {
     phrases: ['street light', 'streetlight', 'electric pole', 'electric wire', 'power cut', 'power outage',
-      'load shedding', 'short circuit', 'transformer blast', 'বিদ্যুৎ বিভ্রাট', 'কারেন্টের তার', 'বাতি জ্বলে না', 'আলো নেই', 'লাইট জ্বলে না'],
-    words: ['electricity', 'electric', 'বিদ্যুৎ', 'কারেন্ট', 'transformer', 'ট্রান্সফরমার', 'wire', 'তার', 'pole', 'খুঁটি',
-      'lamp', 'ল্যাম্প', 'বাতি', 'streetlight', 'desa', 'ডেসা', 'cable', 'শক', 'লাইট']
+      'load shedding', 'short circuit', 'transformer blast', 'বিদ্যুৎ বিভ্রাট', 'কারেন্টের তার', 'বাতি জ্বলে না', 'আলো নেই', 'লাইট জ্বলে না',
+      'bati jole na', 'current er tar', 'khuti pore', 'pole pore', 'light nosto', 'alo nei'],
+    words: ['electricity', 'electric', 'biddyut', 'biddut', 'বিদ্যুৎ', 'current', 'karent', 'কারেন্ট', 'transformer', 'ট্রান্সফরমার', 'wire', 'tar', 'তার', 'pole', 'khuti', 'খুঁটি',
+      'lamp', 'bati', 'ল্যাম্প', 'বাতি', 'streetlight', 'desa', 'dpdc', 'ডেসা', 'cable', 'shock', 'shok', 'light', 'layt', 'লাইট']
   },
   water: {
     phrases: ['water logging', 'waterlogging', 'water leak', 'pipe leak', 'water supply', 'drainage blocked',
-      'tube well', 'পানি জমে', 'পানি জমা', 'পাইপ লিক', 'পানির লিক', 'নলকূপ', 'নর্দমা ভরাট', 'পানি সরবরাহ'],
-    words: ['water', 'পানি', 'wasa', 'ওয়াসা', 'drainage', 'নর্দমা', 'জলাবদ্ধতা', 'drain', 'ড্রেন', 'pipe', 'পাইপ',
-      'কল', 'tap', 'pipeline', 'পাইপলাইন', 'বন্যা']
+      'tube well', 'পানি জমে', 'পানি জমা', 'পাইপ লিক', 'পানির লিক', 'নলকূপ', 'নর্দমা ভরাট', 'পানি সরবরাহ',
+      'pani jome', 'jolaboddhota', 'wasa pani', 'drain bondho', 'pani nei', 'kol nosto', 'pipe fata'],
+    words: ['water', 'pani', 'jol', 'পানি', 'wasa', 'ওয়াসা', 'drainage', 'drain', 'nala', 'নর্দমা', 'জলাবদ্ধতা', 'ড্রেন', 'pipe', 'paip', 'পাইপ',
+      'kol', 'tap', 'koler', 'tubewell', 'nal kup', 'pipeline', 'পাইপলাইন', 'bonna', 'বন্যা', 'jolaboddho', 'overflow']
   },
   sanitation: {
     phrases: ['garbage collection', 'garbage not collected', 'public toilet', 'mosquito breeding', 'toilet blocked',
-      'ময়লা সংগ্রহ', 'ময়লার ডাস্টবিন', 'টয়লেট পরিষ্কার', 'মশার উপদ্রব'],
-    words: ['garbage', 'ময়লা', 'waste', 'আবর্জনা', 'trash', 'dustbin', 'ডাস্টবিন', 'toilet', 'টয়লেট', 'sewer',
-      'পয়ঃনিষ্কাশন', 'পয়বা', 'mosquito', 'মশা', 'নোংরা', 'মলিন', 'সাফাই', 'ঝাঁকড়া']
+      'ময়লা সংগ্রহ', 'ময়লার ডাস্টবিন', 'টয়লেট পরিষ্কার', 'মশার উপদ্রব',
+      'moyla jome', 'dustbin vora', 'toilet nongra', 'mosa upodrob', 'norda bhorti'],
+    words: ['garbage', 'moyla', 'moila', 'ময়লা', 'waste', 'aborjona', 'আবর্জনা', 'trash', 'dustbin', 'ডাস্টবিন', 'toilet', 'টয়লেট', 'latrine', 'sewer',
+      'পয়ঃনিষ্কাশন', 'mosquito', 'mosa', 'মশা', 'nongra', 'নোংরা', 'moylar', 'bosti', 'drain', 'safai', 'cleaning']
   },
   road: {
     phrases: ['road accident', 'road blocked', 'footpath occupied', 'speed breaker', 'রাস্তায় গর্ত', 'রাস্তা ভাঙা',
-      'ফুটপাত দখল', 'রাস্তা মেরামত'],
-    words: ['road', 'রাস্তা', 'রাস্তাঘাট', 'pothole', 'গর্ত', 'footpath', 'ফুটপাত', 'bridge', 'ব্রিজ', 'manhole',
-      'traffic', 'ট্রাফিক', 'culvert', 'কালভার্ট', 'ডামর', 'divider', 'highway', 'হাইওয়ে', 'কার্ব']
+      'ফুটপাত দখল', 'রাস্তা মেরামত',
+      'rasta vangga', 'rasta bhanga', 'rasta kharap', 'rasta noshto', 'rasta gorto', 'rasta gortho', 'road bhenge', 'sadak vangga', 'poth e gorto'],
+    words: ['road', 'rasta', 'rastay', 'rastar', 'sarak', 'sadak', 'sorok', 'রাস্তা', 'রাস্তাঘাট', 'pothole', 'gorto', 'gortho', 'gorto', 'gortho', 'গর্ত', 'footpath', 'ফুটপাত', 'bridge', 'birij', 'ব্রিজ', 'brij', 'manhole', 'dhakna',
+      'traffic', 'jaam', 'jam', 'trafik', 'ট্রাফিক', 'culvert', 'kalvert', 'কালভার্ট', 'pitch', 'broken', 'vangga', 'bhanga', 'bhagna', 'kharap', 'nosto', 'divider', 'highway', 'bump', 'speed']
   }
 };
 

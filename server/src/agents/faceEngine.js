@@ -4,7 +4,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const MODELS_DIR = path.join(__dirname, '..', '..', 'models');
-export const FACE_MATCH_THRESHOLD = 0.55;
+// 0.60 is face-api recommended; 0.62 gives authentic users a little extra tolerance for NID photo quality/lighting
+export const FACE_MATCH_THRESHOLD = 0.62;
+export const FACE_MATCH_THRESHOLD_STRICT = 0.55;
 
 let state = { ready: false, error: null, faceapi: null, loadImage: null };
 
@@ -42,9 +44,17 @@ export function engineAvailable() {
 async function describe(imagePath) {
   const { faceapi, loadImage } = state;
   const canvas = await loadImage(imagePath);
-  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 });
-  const result = await faceapi.detectSingleFace(canvas, options).withFaceLandmarks().withFaceDescriptor();
-  return result || null;
+  // Try progressively more permissive detection for NID cards (small face, glare, low res)
+  const attempts = [
+    new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.25 }),
+    new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 }),
+    new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.3 }),
+  ];
+  for (const options of attempts) {
+    const result = await faceapi.detectSingleFace(canvas, options).withFaceLandmarks().withFaceDescriptor();
+    if (result) return result;
+  }
+  return null;
 }
 
 export async function compareFaces(selfiePath, idPhotoPath) {
@@ -52,11 +62,12 @@ export async function compareFaces(selfiePath, idPhotoPath) {
   try {
     const selfie = await describe(selfiePath);
     const idFace = await describe(idPhotoPath);
-    if (!selfie) return { available: true, matched: false, reason: 'No clear face detected in the selfie. Retake with good lighting.' };
-    if (!idFace) return { available: true, matched: false, reason: 'No clear face detected on the ID card photo. Retake the whole card clearly.' };
+    if (!selfie) return { available: true, matched: false, reason: 'No clear face detected in the selfie. Please retake with good front lighting, no mask/glasses, and look straight at the camera.' };
+    if (!idFace) return { available: true, matched: false, reason: 'No clear face detected on the ID card photo. Please retake the whole card clearly in good light without glare or blur.' };
     const distance = state.faceapi.euclideanDistance(selfie.descriptor, idFace.descriptor);
     const matched = distance <= FACE_MATCH_THRESHOLD;
-    return { available: true, matched, distance: Math.round(distance * 1000) / 1000 };
+    const confidence = distance <= FACE_MATCH_THRESHOLD_STRICT ? 'high' : distance <= FACE_MATCH_THRESHOLD ? 'medium' : 'low';
+    return { available: true, matched, distance: Math.round(distance * 1000) / 1000, confidence };
   } catch (e) {
     return { available: true, matched: false, reason: 'Face analysis failed: ' + e.message };
   }

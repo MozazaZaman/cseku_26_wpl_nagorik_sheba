@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
 export function makeIcon(emoji, color) {
@@ -48,6 +48,17 @@ function SignalRecenter({ center, signal }) {
   return null;
 }
 
+// Fits map to a route once it appears
+function FitRoute({ coords }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!coords || coords.length < 2) return;
+    const bounds = L.latLngBounds(coords.map(([lat, lng]) => [lat, lng]));
+    map.fitBounds(bounds.pad(0.25), { animate: true, duration: 0.6 });
+  }, [coords, map]);
+  return null;
+}
+
 const LAYERS = {
   map: {
     name: 'Map',
@@ -69,6 +80,7 @@ const LAYERS = {
 export default function MapPanel({
   center = { lat: 23.7385, lng: 90.3965 },
   markers = [],
+  routeCoords = null,
   onPick,
   height = '380px',
   zoom = 14,
@@ -91,6 +103,12 @@ export default function MapPanel({
         {markers.map((m, i) => (
           <Marker key={i} position={[m.lat, m.lng]} icon={makeIcon(m.emoji || '📍', m.color || '#5b8cff')} />
         ))}
+        {routeCoords && routeCoords.length > 1 && (
+          <>
+            <Polyline positions={routeCoords} pathOptions={{ color: '#5b8cff', weight: 5, opacity: 0.85 }} />
+            <FitRoute coords={routeCoords} />
+          </>
+        )}
       </MapContainer>
       <div className="absolute right-2 top-2 z-[500] flex gap-1 rounded-lg bg-night/85 p-1 backdrop-blur">
         {Object.entries(LAYERS).map(([key, val]) => (

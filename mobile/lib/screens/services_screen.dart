@@ -41,6 +41,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
     _load();
   }
 
+  bool _hasPhone(ServiceItem s) => s.phone.trim().isNotEmpty;
+
+  Future<void> _openDirections(ServiceItem s) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&origin=$lat,$lng&destination=${s.lat},${s.lng}',
+    );
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
   Future<void> _load() async {
     setState(() => loading = true);
     try {
@@ -59,7 +70,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final lang = context.read<Lang>();
     ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(lang.t('em.gpsGetting')), duration: const Duration(seconds: 1)));
-    // geolocator is used here to fetch live position
     try {
       final pos = await getCurrentPosition();
       if (!mounted) return;
@@ -124,26 +134,57 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         final dist = s.distanceM >= 1000
                             ? '${(s.distanceM / 1000).toStringAsFixed(1)} km'
                             : '${s.distanceM} m';
+                        final hasPhone = _hasPhone(s);
                         return Card(
                           margin: const EdgeInsets.only(bottom: 10),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                            leading: Text(ServiceItem.typeIcons[s.type] ?? '🏢',
-                                style: TextStyle(fontSize: 26)),
-                            title: Text(s.name,
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
-                            subtitle: Text('${s.phone} · $dist${lang.t('em.away')}',
-                                style: TextStyle(color: Colors.white38, fontSize: 12.5)),
-                            trailing: Container(
-                              padding: EdgeInsets.all(9),
-                              decoration: BoxDecoration(
-                                gradient: NSGradient.box,
-                                borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            child: Row(children: [
+                              Text(ServiceItem.typeIcons[s.type] ?? '🏢',
+                                  style: TextStyle(fontSize: 26)),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(s.name,
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
+                                  Text(s.address ?? '',
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: Colors.white38, fontSize: 11.5)),
+                                  SizedBox(height: 6),
+                                  Row(children: [
+                                    FilledButton.icon(
+                                      onPressed: () => _openDirections(s),
+                                      style: FilledButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        minimumSize: Size(0, 32),
+                                        textStyle: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                                      ),
+                                      icon: Icon(Icons.directions_rounded, size: 14),
+                                      label: Text('Directions'),
+                                    ),
+                                    if (hasPhone) ...[
+                                      SizedBox(width: 8),
+                                      OutlinedButton.icon(
+                                        onPressed: () => showCallDialog(context, s),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          minimumSize: Size(0, 32),
+                                          side: BorderSide(color: NSColors.mint.withOpacity(0.5)),
+                                          foregroundColor: NSColors.mint,
+                                          textStyle: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                                        ),
+                                        icon: Icon(Icons.call_rounded, size: 14),
+                                        label: Text('Call'),
+                                      ),
+                                    ],
+                                  ]),
+                                ]),
                               ),
-                              child: Icon(Icons.call_rounded, size: 18, color: Colors.white),
-                            ),
-                            onTap: () => showCallDialog(context, s),
+                              SizedBox(width: 8),
+                              Text(dist,
+                                  style: TextStyle(color: NSColors.accent, fontWeight: FontWeight.w800, fontSize: 12)),
+                            ]),
                           ),
                         );
                       },
@@ -155,6 +196,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   void showCallDialog(BuildContext context, ServiceItem s) {
     final lang = context.read<Lang>();
+    final hasPhone = _hasPhone(s);
     showModalBottomSheet(
       context: context,
       backgroundColor: NSColors.card,
@@ -173,22 +215,30 @@ class _ServicesScreenState extends State<ServicesScreen> {
           SizedBox(height: 10),
           Text(s.address ?? '', style: TextStyle(color: Colors.white38, fontSize: 13)),
           SizedBox(height: 14),
-          InfoBanner('${lang.t('em.hotline')}${s.phone}', color: NSColors.mint),
-          SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: () async {
-              final num = s.phone.split('/').first.trim();
-              final uri = Uri(scheme: 'tel', path: num);
-              try {
-                final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                if (!ok && context.mounted) Navigator.pop(context);
-              } catch (_) {
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            icon: Icon(Icons.call_rounded, size: 18),
-            label: Text('${lang.t('em.call')} ${s.phone.split('/').first.trim()}'),
+            onPressed: () => _openDirections(s),
+            icon: Icon(Icons.directions_rounded, size: 18),
+            label: Text('Get Directions'),
           ),
+          if (hasPhone) ...[
+            SizedBox(height: 10),
+            InfoBanner('${lang.t('em.hotline')}${s.phone}', color: NSColors.mint),
+            SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () async {
+                final num = s.phone.split('/').first.trim();
+                final uri = Uri(scheme: 'tel', path: num);
+                try {
+                  final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  if (!ok && context.mounted) Navigator.pop(context);
+                } catch (_) {
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              icon: Icon(Icons.call_rounded, size: 18),
+              label: Text('${lang.t('em.call')} ${s.phone.split('/').first.trim()}'),
+            ),
+          ],
         ]),
       ),
     );

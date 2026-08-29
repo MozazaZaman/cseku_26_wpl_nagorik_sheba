@@ -205,21 +205,81 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
   }
 
   // AGENT 5 — Destination router (citizen-selected authority wins, else GPS nearest)
+  // For GPS option (no authority_id), we reverse-geocode the pin to get the true place name
+  // and route to the corresponding CC/Pouro/Union, so staff sees the pinned location not just org name.
   let authority = null;
   let routingMode = 'gps-nearest';
+  let gpsReverseName = null;
+  let gpsReverseDetails = {};
   const selectedId = parseInt(req.body.authority_id);
   if (selectedId) {
     authority = db.prepare('SELECT * FROM authorities WHERE authority_id = ?').get(selectedId) || null;
     if (authority) routingMode = 'citizen-address-selection';
   }
   if (!authority) {
-    authority = agentRoute(lat, lng);
+    // GPS mode: try reverse geocode via public Nominatim (English) for accurate place name and smarter routing
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=en`, { headers: { 'User-Agent': 'NagorikSheba/1.0 (GPS routing)' } });
+      if (r.ok) {
+        const j = await r.json();
+        if (j.display_name) {
+          gpsReverseName = j.display_name;
+          gpsReverseDetails = j.address || {};
+        }
+      }
+    } catch {}
+    // Try to find a more accurate authority from reverse address (district + upazila + village/town)
+    if (gpsReverseDetails) {
+      const revDistrictRaw = gpsReverseDetails.state_district || gpsReverseDetails.district || gpsReverseDetails.county || '';
+      const revUpazilaRaw = gpsReverseDetails.county || gpsReverseDetails.district || '';
+      const revVillage = (gpsReverseDetails.village || gpsReverseDetails.hamlet || gpsReverseDetails.suburb || gpsReverseDetails.town || gpsReverseDetails.city || '').toLowerCase();
+      // normalize district like "Cumilla District" -> "Cumilla"
+      const normRevDistrict = revDistrictRaw.replace(/\s*District\s*$/i, '').trim();
+      if (normRevDistrict) {
+        const tryFind = (type, extraWhere = '', extraArgs = []) => {
+          let sql = `SELECT * FROM authorities WHERE type=? AND district LIKE ? ${extraWhere} LIMIT 5`;
+          const args = [type, `%${normRevDistrict}%`, ...extraArgs];
+          return db.prepare(sql).all(...args);
+        };
+        // For unions: try district+upazila+village match
+        if (revVillage) {
+          const cand = db.prepare(`SELECT * FROM authorities WHERE type='UNION_PARISHAD' AND district LIKE ? AND (name LIKE ? OR upazila LIKE ?) LIMIT 1`).get(`%${normRevDistrict}%`, `%${revVillage}%`, `%${revUpazilaRaw}%`);
+          if (cand) authority = cand;
+        }
+        if (!authority) {
+          // Try pouro matching town/city
+          const town = (gpsReverseDetails.town || gpsReverseDetails.city || revVillage).toLowerCase();
+          if (town) {
+            const cand2 = db.prepare(`SELECT * FROM authorities WHERE type='POUROSHOVA' AND district LIKE ? AND name LIKE ? LIMIT 1`).get(`%${normRevDistrict}%`, `%${town}%`);
+            if (cand2) authority = cand2;
+          }
+        }
+      }
+    }
+    if (!authority) {
+      authority = agentRoute(lat, lng);
+    }
   }
 
-  const fullAddress = composeFullAddress(
-    { road, sector, ward, area_text, village, upazila, district, division },
-    authority?.name
-  );
+  // For GPS mode, staff must see the pinned map's place name, not just "Khulna City Corporation, Khulna"
+  let fullAddress;
+  let finalDivision = division, finalDistrict = district, finalUpazila = upazila, finalVillage = village, finalAddressText = address_text;
+  if (routingMode === 'gps-nearest' && gpsReverseName) {
+    const landmarkPart = (address_text || '').trim();
+    fullAddress = landmarkPart ? `${landmarkPart}, ${gpsReverseName}` : gpsReverseName;
+    // Populate administrative fields from reverse so filtering/search works for GPS complaints
+    finalDivision = division || (gpsReverseDetails.state ? gpsReverseDetails.state.replace(/\s*Division\s*$/i,'').trim() : null);
+    const revDist = (gpsReverseDetails.state_district || gpsReverseDetails.district || gpsReverseDetails.county || '').replace(/\s*District\s*$/i,'').trim();
+    finalDistrict = district || (revDist || null);
+    finalUpazila = upazila || gpsReverseDetails.county || null;
+    finalVillage = village || gpsReverseDetails.village || gpsReverseDetails.hamlet || gpsReverseDetails.suburb || null;
+    finalAddressText = address_text || gpsReverseName || null;
+  } else {
+    fullAddress = composeFullAddress(
+      { road, sector, ward, area_text, village, upazila, district, division },
+      authority?.name
+    );
+  }
 
   const info = db.prepare(
     `INSERT INTO complaints
@@ -228,9 +288,9 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
         sector, village, upazila, full_address)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'verified', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(me.id, authority?.authority_id ?? null, title.trim(), description.trim(),
-    imagePath, lat, lng, address_text || null, category,
-    division || null, district || null, area_text || null, ward || null, road || null,
-    sector || null, village || null, upazila || null, fullAddress);
+    imagePath, lat, lng, finalAddressText || null, category,
+    finalDivision || null, finalDistrict || null, area_text || null, ward || null, road || null,
+    sector || null, finalVillage || null, finalUpazila || null, fullAddress);
 
   const newId = info.lastInsertRowid;
   refreshPriority(newId);

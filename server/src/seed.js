@@ -1,7 +1,12 @@
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDb, db } from './db.js';
 
 initDb();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const force = process.argv.includes('--force');
 const existing = db.prepare('SELECT COUNT(*) n FROM complaints').get().n;
@@ -26,76 +31,188 @@ wipe();
 
 const hash = (p) => bcrypt.hashSync(p, 10);
 
-// ---------- Authorities (nationwide, all 8 divisions) ----------
+// ---------- Authorities: from bangladesh_local_government_units.json (Report page only) ----------
 const insAuth = db.prepare(
   `INSERT INTO authorities
-     (name, type, min_lat, max_lat, min_lng, max_lng, center_lat, center_lng, division, district, phone, email)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     (name, type, min_lat, max_lat, min_lng, max_lng, center_lat, center_lng, division, district, upazila, phone, email)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 const pad = (v, d) => +(v + d).toFixed(4);
-function addAuthority(name, type, division, district, lat, lng, phone, email) {
-  const d = type === 'CITY_CORPORATION' ? 0.09 : 0.07;
+function addAuthority(name, type, division, district, upazila, lat, lng, phone, email) {
+  const d = type === 'CITY_CORPORATION' ? 0.09 : type === 'POUROSHOVA' ? 0.06 : 0.05;
   return insAuth.run(
     name, type, pad(lat, -d), pad(lat, d), pad(lng, -d), pad(lng, d), lat, lng,
-    division, district, phone, email
+    division, district, upazila || null, phone, email
   ).lastInsertRowid;
 }
 
-const A = {};
-A.dhakaSouth = addAuthority('Dhaka South City Corporation', 'CITY_CORPORATION', 'Dhaka', 'Dhaka', 23.7276, 90.4093, '+880-2-9674444', 'dsp@dhakasouth.gov.bd');
-A.dhakaNorth = addAuthority('Dhaka North City Corporation', 'CITY_CORPORATION', 'Dhaka', 'Dhaka', 23.8103, 90.4150, '+880-2-55074141', 'dncc@dncc.gov.bd');
-A.gazipur = addAuthority('Gazipur City Corporation', 'CITY_CORPORATION', 'Dhaka', 'Gazipur', 24.0019, 90.4203, '+880-2-49266015', 'gcc@gazipur.gov.bd');
-A.narayanganj = addAuthority('Narayanganj City Corporation', 'CITY_CORPORATION', 'Dhaka', 'Narayanganj', 23.6238, 90.4997, '+880-2-7641552', 'ncc@narayanganj.gov.bd');
-A.savar = addAuthority('Savar Pouroshova', 'POUROSHOVA', 'Dhaka', 'Dhaka', 23.8580, 90.2660, '+880-2-7789123', 'info@savarpourashava.gov.bd');
-A.ruhitpur = addAuthority('Ruhitpur Union Parishad', 'UNION_PARISHAD', 'Dhaka', 'Dhaka', 23.6740, 90.2870, '+880-1730-456789', 'ruhitpur.up@gmail.com');
-A.chattogram = addAuthority('Chattogram City Corporation', 'CITY_CORPORATION', 'Chattogram', 'Chattogram', 22.3569, 91.7832, '+880-31-615600', 'ccc@ctg.gov.bd');
-A.cumilla = addAuthority('Cumilla City Corporation', 'CITY_CORPORATION', 'Chattogram', 'Cumilla', 23.4607, 91.1809, '+880-81-61160', 'cumillacity@gmail.com');
-A.coxsbazar = addAuthority("Cox's Bazar Pouroshova", 'POUROSHOVA', 'Chattogram', "Cox's Bazar", 21.4272, 92.0058, '+880-341-63100', 'cp.coxsbazar@gmail.com');
-A.khulna = addAuthority('Khulna City Corporation', 'CITY_CORPORATION', 'Khulna', 'Khulna', 22.8456, 89.5403, '+880-241-720044', 'kcc@khulnacity.org');
-A.jashore = addAuthority('Jashore Pouroshova', 'POUROSHOVA', 'Khulna', 'Jashore', 23.1664, 89.2081, '+880-421-68684', 'jashorepourashava@gmail.com');
-A.kushtia = addAuthority('Kushtia Pouroshova', 'POUROSHOVA', 'Khulna', 'Kushtia', 23.9013, 89.1206, '+880-71-62200', 'kushtiapo@gmail.com');
-A.dighalia = addAuthority('Dighalia Union Parishad', 'UNION_PARISHAD', 'Khulna', 'Khulna', 22.9203, 89.5603, '+880-1777-123456', 'dighalia.up@gmail.com');
-A.rajshahi = addAuthority('Rajshahi City Corporation', 'CITY_CORPORATION', 'Rajshahi', 'Rajshahi', 24.3745, 88.6042, '+880-721-771394', 'rcc@rajshahi.gov.bd');
-A.bogura = addAuthority('Bogura Pouroshova', 'POUROSHOVA', 'Rajshahi', 'Bogura', 24.8465, 89.3773, '+880-51-78412', 'bogurapourashava@gmail.com');
-A.sylhet = addAuthority('Sylhet City Corporation', 'CITY_CORPORATION', 'Sylhet', 'Sylhet', 24.8949, 91.8687, '+880-821-720055', 'scc@sylhetcity.gov.bd');
-A.moulvibazar = addAuthority('Moulvibazar Pouroshova', 'POUROSHOVA', 'Sylhet', 'Moulvibazar', 24.4829, 91.7774, '+880-861-63000', 'moulvibazar.po@gmail.com');
-A.gowainghat = addAuthority('Gowainghat Union Parishad', 'UNION_PARISHAD', 'Sylhet', 'Sylhet', 25.0293, 92.0180, '+880-1711-987654', 'gowainghat.up@gmail.com');
-A.barishal = addAuthority('Barishal City Corporation', 'CITY_CORPORATION', 'Barishal', 'Barishal', 22.7010, 90.3535, '+880-431-21760', 'bcc@barishal.gov.bd');
-A.bhola = addAuthority('Bhola Pouroshova', 'POUROSHOVA', 'Barishal', 'Bhola', 22.6859, 90.6482, '+880-491-56300', 'bholapo@gmail.com');
-A.rangpur = addAuthority('Rangpur City Corporation', 'CITY_CORPORATION', 'Rangpur', 'Rangpur', 25.7439, 89.2752, '+880-521-62224', 'rpcc@rangpur.gov.bd');
-A.dinajpur = addAuthority('Dinajpur Pouroshova', 'POUROSHOVA', 'Rangpur', 'Dinajpur', 25.6217, 88.6354, '+880-531-64888', 'dinajpurpo@gmail.com');
-A.mymensingh = addAuthority('Mymensingh City Corporation', 'CITY_CORPORATION', 'Mymensingh', 'Mymensingh', 24.7471, 90.4203, '+880-91-65055', 'mcc@mymensingh.gov.bd');
-A.jamalpur = addAuthority('Jamalpur Pouroshova', 'POUROSHOVA', 'Mymensingh', 'Jamalpur', 24.9264, 89.9371, '+880-981-63333', 'jamalpurpo@gmail.com');
+// district center coordinates (used to place authorities when JSON has no lat/lng)
+const DISTRICT_COORDS = {
+  'Dhaka': [23.71,90.41], 'Faridpur': [23.60,89.83], 'Gazipur': [24.00,90.42], 'Gopalganj': [23.01,89.82],
+  'Kishoreganj': [24.43,90.78], 'Madaripur': [23.16,90.20], 'Manikganj': [23.86,90.00], 'Munshiganj': [23.54,90.53],
+  'Narayanganj': [23.62,90.50], 'Narsingdi': [23.93,90.72], 'Rajbari': [23.76,89.64], 'Shariatpur': [23.24,90.36], 'Tangail': [24.25,89.91],
+  'Bandarban': [22.19,92.21], 'Brahmanbaria': [23.96,91.11], 'Chandpur': [23.23,90.65], 'Chattogram': [22.35,91.78],
+  'Cumilla': [23.46,91.18], "Cox's Bazar": [21.42,92.00], 'Feni': [23.01,91.40], 'Khagrachhari': [23.12,91.98],
+  'Lakshmipur': [22.94,90.82], 'Noakhali': [22.82,91.10], 'Rangamati': [22.64,92.19],
+  'Bagerhat': [22.65,89.52], 'Chuadanga': [23.64,88.85], 'Jashore': [23.16,89.20], 'Jhenaidah': [23.54,89.17],
+  'Khulna': [22.84,89.54], 'Kushtia': [23.90,89.12], 'Magura': [23.48,89.41], 'Meherpur': [23.76,88.63],
+  'Narail': [23.17,89.50], 'Satkhira': [22.71,89.07],
+  'Bogura': [24.85,89.37], 'Chapainawabganj': [24.60,88.27], 'Joypurhat': [25.10,89.02], 'Naogaon': [24.80,88.95],
+  'Natore': [24.41,88.93], 'Pabna': [24.00,89.21], 'Rajshahi': [24.37,88.60], 'Sirajganj': [24.45,89.70],
+  'Habiganj': [24.37,91.41], 'Moulvibazar': [24.48,91.77], 'Sunamganj': [25.06,91.39], 'Sylhet': [24.89,91.86],
+  'Barguna': [22.16,90.12], 'Barishal': [22.70,90.35], 'Bhola': [22.68,90.64], 'Jhalokati': [22.64,90.20],
+  'Patuakhali': [22.36,90.33], 'Pirojpur': [22.58,89.98],
+  'Dinajpur': [25.62,88.63], 'Gaibandha': [25.32,89.54], 'Kurigram': [25.80,89.64], 'Lalmonirhat': [25.91,89.45],
+  'Nilphamari': [25.93,88.85], 'Panchagarh': [26.34,88.56], 'Rangpur': [25.74,89.27], 'Thakurgaon': [26.03,88.46],
+  'Jamalpur': [24.93,89.93], 'Mymensingh': [24.74,90.42], 'Netrokona': [24.88,90.73], 'Sherpur': [25.02,90.01],
+};
 
-// ---------- General staff (one per authority, no departments) ----------
+// normalize division/district names from JSON to match bd-geo.json
+const DIV_NORM = { 'Chattagram':'Chattogram', 'Barisal':'Barishal', 'Chattogram':'Chattogram', 'Dhaka':'Dhaka', 'Khulna':'Khulna', 'Rajshahi':'Rajshahi', 'Sylhet':'Sylhet', 'Rangpur':'Rangpur', 'Mymensingh':'Mymensingh' };
+const DIST_ALIAS = {
+  'comilla':'Cumilla',
+  'coxsbazar':"Cox's Bazar",
+  'chapainawabganj':'Chapainawabganj',
+  'jhalokathi':'Jhalokati',
+  'cox\'s bazar':"Cox's Bazar",
+  'chapai nawabganj':'Chapainawabganj',
+};
+
+function normDivision(d) {
+  const t = (d||'').trim();
+  return DIV_NORM[t] || t;
+}
+function normDistrict(d) {
+  const t = (d||'').trim();
+  // direct match in coords?
+  if (DISTRICT_COORDS[t]) return t;
+  const key = t.toLowerCase().replace(/[^a-z]/g,'');
+  if (DIST_ALIAS[key]) return DIST_ALIAS[key];
+  // try case-insensitive match to coords keys
+  for (const k of Object.keys(DISTRICT_COORDS)) {
+    if (k.toLowerCase().replace(/[^a-z]/g,'') === key) return k;
+  }
+  return t;
+}
+
+function coordFor(district, idx) {
+  const base = DISTRICT_COORDS[district] || [23.71, 90.41];
+  const offLat = ((idx % 30) - 15) * 0.0025;
+  const offLng = ((Math.floor(idx/30) % 30) - 15) * 0.0025;
+  return [base[0] + offLat, base[1] + offLng];
+}
+
+// Load JSON (Report page only source)
+const lgPath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_local_government_units.json');
+console.log('Reading LG JSON...');
+const raw = fs.readFileSync(lgPath, 'utf-8');
+const lg = JSON.parse(raw);
+console.log(`LG JSON: ${lg.city_corporations.length} CC, ${lg.pourashava.length} Pouro, ${lg.unions.length} Unions`);
+
+const A = {};
+let globalIdx = 0;
+
+function insertLG(entry, type, nameField, divField, distField, upazilaField) {
+  const rawDiv = entry[divField] || entry.division || entry.division_name;
+  const rawDist = entry[distField] || entry.district || entry.district_name;
+  const division = normDivision(rawDiv);
+  const district = normDistrict(rawDist);
+  let name = entry[nameField] || entry.name;
+  if (type === 'POUROSHOVA' && !/pourashava/i.test(name)) name = `${name} Pourashava`;
+  if (type === 'UNION_PARISHAD' && !/union/i.test(name)) name = `${name} Union Parishad`;
+  // keep CC name as-is
+  const upazila = upazilaField ? (entry[upazilaField] || entry.upazila_name || null) : null;
+  const [lat, lng] = coordFor(district, globalIdx++);
+  const id = addAuthority(name, type, division, district, upazila, lat, lng, null, null);
+  // keep lookup for complaint seeding
+  const key = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z_]/g,'');
+  if (!A[key]) A[key] = id;
+  return id;
+}
+
+console.log('Seeding authorities from JSON...');
+const lgInsert = db.transaction(() => {
+  for (const e of lg.city_corporations) insertLG(e, 'CITY_CORPORATION', 'name', 'division', 'district', null);
+  for (const e of lg.pourashava) insertLG(e, 'POUROSHOVA', 'name', 'division', 'district', null);
+  for (const e of lg.unions) insertLG(e, 'UNION_PARISHAD', 'name', 'division_name', 'district_name', 'upazila_name');
+});
+lgInsert();
+console.log('Authorities seeded');
+
+// convenient aliases for demo complaints (lookup by name)
+function findAuth(name) {
+  const row = db.prepare('SELECT authority_id FROM authorities WHERE name=? LIMIT 1').get(name);
+  return row ? row.authority_id : null;
+}
+A.dhakaSouth = findAuth('Dhaka South City Corporation');
+A.dhakaNorth = findAuth('Dhaka North City Corporation');
+A.gazipur = findAuth('Gazipur City Corporation');
+A.narayanganj = findAuth('Narayanganj City Corporation');
+A.chattogram = findAuth('Chattogram City Corporation');
+A.cumilla = findAuth('Cumilla City Corporation');
+A.khulna = findAuth('Khulna City Corporation');
+A.rajshahi = findAuth('Rajshahi City Corporation');
+A.sylhet = findAuth('Sylhet City Corporation');
+A.barishal = findAuth('Barishal City Corporation');
+A.rangpur = findAuth('Rangpur City Corporation');
+A.mymensingh = findAuth('Mymensingh City Corporation');
+// for backwards compat, pick any representative poura/union if needed
+A.savar = findAuth('Savar Pourashava') || db.prepare("SELECT authority_id FROM authorities WHERE district='Dhaka' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.ruhitpur = db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Ruhitpur%' LIMIT 1").get()?.authority_id || db.prepare("SELECT authority_id FROM authorities WHERE district='Dhaka' AND type='UNION_PARISHAD' LIMIT 1").get()?.authority_id;
+A.dighalia = db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Dighalia%' LIMIT 1").get()?.authority_id || A.khulna;
+A.gowainghat = db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Gowainghat%' LIMIT 1").get()?.authority_id || A.sylhet;
+A.jashore = db.prepare("SELECT authority_id FROM authorities WHERE district='Jashore' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.kushtia = db.prepare("SELECT authority_id FROM authorities WHERE district='Kushtia' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.coxsbazar = db.prepare("SELECT authority_id FROM authorities WHERE district=? AND type='POUROSHOVA' LIMIT 1").get("Cox's Bazar")?.authority_id;
+A.bogura = db.prepare("SELECT authority_id FROM authorities WHERE district='Bogura' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.moulvibazar = db.prepare("SELECT authority_id FROM authorities WHERE district='Moulvibazar' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.bhola = db.prepare("SELECT authority_id FROM authorities WHERE district='Bhola' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.dinajpur = db.prepare("SELECT authority_id FROM authorities WHERE district='Dinajpur' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.jamalpur = db.prepare("SELECT authority_id FROM authorities WHERE district='Jamalpur' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+
+// ---------- Staff: one general officer per EVERY authority ----------
 const insStaff = db.prepare(
   `INSERT INTO staff (full_name, email, password_hash, department, authority_id) VALUES (?, ?, ?, 'general', ?)`
 );
-insStaff.run('Kamrul Hasan', 'kamrul.city@nagorik.bd', hash('staff123'), A.dhakaSouth);
-insStaff.run('Shirin Akter', 'shirin.city@nagorik.bd', hash('staff123'), A.dhakaNorth);
-insStaff.run('Jamal Uddin', 'jamal.savar@nagorik.bd', hash('staff123'), A.savar);
-insStaff.run('Ripon Mia', 'ripon.union@nagorik.bd', hash('staff123'), A.ruhitpur);
-insStaff.run('Habibur Rahman', 'staff.khulna@nagorik.bd', hash('staff123'), A.khulna);
-insStaff.run('Tanjina Sultana', 'staff.chattogram@nagorik.bd', hash('staff123'), A.chattogram);
-insStaff.run('Mizanur Rahman', 'staff.sylhet@nagorik.bd', hash('staff123'), A.sylhet);
-insStaff.run('Asaduzzaman Noor', 'staff.rajshahi@nagorik.bd', hash('staff123'), A.rajshahi);
-insStaff.run('Farhana Yasmin', 'staff.barishal@nagorik.bd', hash('staff123'), A.barishal);
-insStaff.run('Rakibul Islam', 'staff.rangpur@nagorik.bd', hash('staff123'), A.rangpur);
-insStaff.run('Nusrat Jahan', 'staff.mymensingh@nagorik.bd', hash('staff123'), A.mymensingh);
-insStaff.run('Shafiqul Alam', 'staff.gazipur@nagorik.bd', hash('staff123'), A.gazipur);
-insStaff.run('Mahmuda Khatun', 'staff.narayanganj@nagorik.bd', hash('staff123'), A.narayanganj);
-insStaff.run('Arif Chowdhury', 'staff.cumilla@nagorik.bd', hash('staff123'), A.cumilla);
-insStaff.run('Sohel Mahmud', 'staff.jashore@nagorik.bd', hash('staff123'), A.jashore);
-insStaff.run('Rehana Parvin', 'staff.coxsbazar@nagorik.bd', hash('staff123'), A.coxsbazar);
-insStaff.run('Delwar Hossain', 'staff.kushtia@nagorik.bd', hash('staff123'), A.kushtia);
-insStaff.run('Sabbir Ahmed', 'staff.dighalia@nagorik.bd', hash('staff123'), A.dighalia);
-insStaff.run('Tahmina Begum', 'staff.bogura@nagorik.bd', hash('staff123'), A.bogura);
-insStaff.run('Imran Khan', 'staff.moulvibazar@nagorik.bd', hash('staff123'), A.moulvibazar);
-insStaff.run('Jahid Hasan', 'staff.gowainghat@nagorik.bd', hash('staff123'), A.gowainghat);
-insStaff.run('Salma Akter', 'staff.bhola@nagorik.bd', hash('staff123'), A.bhola);
-insStaff.run('Nayeem Mia', 'staff.dinajpur@nagorik.bd', hash('staff123'), A.dinajpur);
-insStaff.run('Ruhul Amin', 'staff.jamalpur@nagorik.bd', hash('staff123'), A.jamalpur);
+const staffNames = ['Kamrul Hasan','Shirin Akter','Habibur Rahman','Tanjina Sultana','Mizanur Rahman','Asaduzzaman Noor','Farhana Yasmin','Rakibul Islam','Nusrat Jahan','Shafiqul Alam','Mahmuda Khatun','Arif Chowdhury','Sohel Mahmud','Rehana Parvin','Delwar Hossain','Sabbir Ahmed','Tahmina Begum','Imran Khan','Jahid Hasan','Salma Akter','Nayeem Mia','Ruhul Amin','Jamal Uddin','Ripon Mia','Anika Sultana','Rashid Khan','Farzana Ahmed','Mokbul Hossain','Sonia Akter','Biplob Kumar','Lamia Rahman','Tofayel Ahmed','Nazia Islam','Saiful Alam','Shahnaz Parvin','Khaled Mahmud','Rubina Yasmin','Elias Hossain','Sharmin Akter','Moniruzzaman','Tanvir Ahmed','Fahmida Begum','Ariful Islam','Sultana Rajia','Mahbub Alam','Nasrin Akter','Helal Uddin','Jannatul Ferdous','Abdur Rahim','Moushumi Akter','Shahriar Kabir','Rezaul Karim','Nadira Sultana','Firoz Ahmed','Tasnim Jahan'];
+const staffHash = hash('staff123');
+console.log('Seeding staff (4880) with single hash...');
+const legacyCCStaff = [
+  ['Kamrul Hasan','kamrul.city@nagorik.bd', A.dhakaSouth],
+  ['Shirin Akter','shirin.city@nagorik.bd', A.dhakaNorth],
+  ['Shafiqul Alam','staff.gazipur@nagorik.bd', A.gazipur],
+  ['Mahmuda Khatun','staff.narayanganj@nagorik.bd', A.narayanganj],
+  ['Tanjina Sultana','staff.chattogram@nagorik.bd', A.chattogram],
+  ['Arif Chowdhury','staff.cumilla@nagorik.bd', A.cumilla],
+  ['Habibur Rahman','staff.khulna@nagorik.bd', A.khulna],
+  ['Asaduzzaman Noor','staff.rajshahi@nagorik.bd', A.rajshahi],
+  ['Mizanur Rahman','staff.sylhet@nagorik.bd', A.sylhet],
+  ['Farhana Yasmin','staff.barishal@nagorik.bd', A.barishal],
+  ['Rakibul Islam','staff.rangpur@nagorik.bd', A.rangpur],
+  ['Nusrat Jahan','staff.mymensingh@nagorik.bd', A.mymensingh],
+];
+const createdAuthorityIds = new Set();
+const staffInsertMany = db.transaction(() => {
+  for (const [fullName, email, authId] of legacyCCStaff) {
+    if (!authId) continue;
+    insStaff.run(fullName, email, staffHash, authId);
+    createdAuthorityIds.add(authId);
+  }
+  const allAuthorities = db.prepare('SELECT authority_id, name, type, district FROM authorities').all();
+  let idx = 0;
+  for (const auth of allAuthorities) {
+    if (createdAuthorityIds.has(auth.authority_id)) continue;
+    const fullName = staffNames[idx % staffNames.length];
+    idx++;
+    const safeDistrict = auth.district.toLowerCase().replace(/[^a-z]/g,'');
+    const email = `${auth.type.toLowerCase()}.${safeDistrict}.${auth.authority_id}@nagorik.bd`;
+    insStaff.run(`${fullName} - ${auth.name}`, email, staffHash, auth.authority_id);
+    createdAuthorityIds.add(auth.authority_id);
+  }
+});
+staffInsertMany();
+console.log(`Staff seeded: ${createdAuthorityIds.size}`);
 
 // ---------- Citizens ----------
 const insUser = db.prepare(
@@ -105,34 +222,59 @@ const rahim = insUser.run('Rahim Ahmed', 'rahim@example.com', '+8801711111111', 
 const karim = insUser.run('Karima Begum', 'karima@example.com', '+8801822222222', hash('password123')).lastInsertRowid;
 const joya = insUser.run('Joya Chowdhury', 'joya@example.com', '+8801933333333', hash('password123')).lastInsertRowid;
 
-// ---------- Emergency services (across divisions) ----------
+// ---------- Emergency services: from uploads (osmium extracts) - Task 4 but kept minimal here, full import happens via seed ----------
 const insSvc = db.prepare(
   `INSERT INTO emergency_services (name, type, phone, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)`
 );
-const services = [
-  ['Ramna Fire Station', 'fire_service', '102 / +880-2-223355566', 'Ramna, Dhaka', 23.7350, 90.3970],
-  ['Tejgaon Fire Station', 'fire_service', '102 / +880-2-9111000', 'Tejgaon Industrial Area, Dhaka', 23.7590, 90.4000],
-  ['Ramna Model Thana', 'police_station', '999', 'Ramna, Dhaka', 23.7310, 90.3995],
-  ['Shahbagh Police Station', 'police_station', '999', 'Shahbagh, Dhaka', 23.7390, 90.3930],
-  ['DWASA Head Office', 'wasa', '+880-2-223388777', '98 Kazi Alauddin Rd, Dhaka', 23.7509, 90.3936],
-  ['LGED Dhaka Division', 'lged', '+880-2-55667788', 'LGED Bhaban, Agargaon, Dhaka', 23.7620, 90.3880],
-  ['DESA Distribution Office', 'desa', '16999', 'DESA Bhaban, Ma Sherani Rd, Dhaka', 23.7580, 90.3910],
-  ['Titas Gas Head Office', 'titas_gas', '165', 'Kawran Bazar, Dhaka', 23.7500, 90.3990],
-  ['Public Toilet - Shahbagh', 'public_toilet', '+8801811000001', 'Shahbagh Square, Dhaka', 23.7385, 90.3925],
-  ['Public Toilet - Suhrawardy Udyan', 'public_toilet', '+8801811000002', 'Suhrawardy Udyan, Dhaka', 23.7365, 90.3960],
-  ['Khulna Fire Station', 'fire_service', '102', 'Khulna', 22.8103, 89.5626],
-  ['Sonadanga Police Station', 'police_station', '999', 'Sonadanga, Khulna', 22.8285, 89.5376],
-  ['Khulna WASA Office', 'wasa', '+880-241-777777', 'Mujgunni, Khulna', 22.8200, 89.5480],
-  ['Public Toilet - Shiromoni Point', 'public_toilet', '+8801811000003', 'Shiromoni, Khulna', 22.8122, 89.5521],
-  ['Chattogram Fire Service HQ', 'fire_service', '102', 'Agrabad, Chattogram', 22.3287, 91.8123],
-  ['Kotwali Police Station', 'police_station', '999', 'Kotwali, Chattogram', 22.3378, 91.8421],
-  ['Sylhet Fire Station', 'fire_service', '102', 'Chowhatta, Sylhet', 24.8974, 91.8703],
-  ['Rajshahi Fire Station', 'fire_service', '102', 'Saheb Bazar, Rajshahi', 24.3716, 88.6094],
-  ['Barishal Fire Station', 'fire_service', '102', 'Sadar Road, Barishal', 22.7029, 90.3703],
-  ['Rangpur Fire Station', 'fire_service', '102', 'Jahaj Company More, Rangpur', 25.7466, 89.2517],
-  ['Mymensingh Fire Station', 'fire_service', '102', 'Chorpara, Mymensingh', 24.7539, 90.4025]
-];
-for (const s of services) insSvc.run(...s);
+let services = [];
+try {
+  const firePath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_fire_stations.json');
+  const policePath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_police_stations.json');
+  const toiletPath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_public_toilets.json');
+  const wasaPath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_wasa_desa_lged.json');
+  // osmium extracts are in uploads as JSON with keys like fire_stations / police_stations / toilets / wasa_offices etc
+  function insertSvc(name, type, lat, lng, phone, addr) {
+    lat=parseFloat(lat); lng=parseFloat(lng);
+    if(Number.isNaN(lat)||Number.isNaN(lng)||!name) return;
+    try{ insSvc.run(String(name), type, String(phone||'N/A'), String(addr||name), lat, lng); services.push(name);}catch{}
+  }
+  if (fs.existsSync(firePath)) {
+    const j=JSON.parse(fs.readFileSync(firePath,'utf-8'));
+    const arr=j.fire_stations||j.features||j.data||[];
+    for(const f of arr){ const p=f.properties||f; insertSvc(p.name||f.name, 'fire_service', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'102', p.address||`${p.district||''} ${p.division||''}`.trim()); }
+  }
+  if (fs.existsSync(policePath)) {
+    const j=JSON.parse(fs.readFileSync(policePath,'utf-8'));
+    const arr=j.police_stations||j.features||[];
+    for(const f of arr){ const p=f.properties||f; insertSvc(p.name||f.name, 'police_station', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'999', p.address||`${p.district||''} ${p.division||''}`.trim()); }
+  }
+  if (fs.existsSync(toiletPath)) {
+    const j=JSON.parse(fs.readFileSync(toiletPath,'utf-8'));
+    const arr=j.toilets||j.features||[];
+    for(const f of arr){ const p=f.properties||f; insertSvc(p.name||f.name, 'public_toilet', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'N/A', p.address||`${p.district||''} ${p.division||''}`.trim()); }
+  }
+  if (fs.existsSync(wasaPath)) {
+    const j=JSON.parse(fs.readFileSync(wasaPath,'utf-8'));
+    for(const f of (j.wasa_offices||[])) { const p=f.properties||f; insertSvc(p.name, 'wasa', p.latitude, p.longitude, p.phone_number||'N/A', p.address); }
+    for(const f of (j.desa_successor_offices||[])) { const p=f.properties||f; insertSvc(p.name, 'desa', p.latitude, p.longitude, p.phone_number||'16999', p.address); }
+    for(const f of (j.lged_offices||[])) { const p=f.properties||f; insertSvc(p.name, 'lged', p.latitude, p.longitude, p.phone_number||'N/A', p.address); }
+    // also handle any titas entries if present
+    for(const f of (j.titas_gas||j.titas||[])) { const p=f.properties||f; insertSvc(p.name, 'titas_gas', p.latitude, p.longitude, p.phone_number||'165', p.address); }
+  }
+} catch(e){ console.log('emergency import skipped', e.message); }
+if (services.length === 0) {
+  const fallback = [
+    ['Ramna Fire Station', 'fire_service', '102 / +880-2-223355566', 'Ramna, Dhaka', 23.7350, 90.3970],
+    ['Tejgaon Fire Station', 'fire_service', '102 / +880-2-9111000', 'Tejgaon Industrial Area, Dhaka', 23.7590, 90.4000],
+    ['Ramna Model Thana', 'police_station', '999', 'Ramna, Dhaka', 23.7310, 90.3995],
+    ['Shahbagh Police Station', 'police_station', '999', 'Shahbagh, Dhaka', 23.7390, 90.3930],
+    ['DWASA Head Office', 'wasa', '+880-2-223388777', '98 Kazi Alauddin Rd, Dhaka', 23.7509, 90.3936],
+    ['LGED Dhaka Division', 'lged', '+880-2-55667788', 'LGED Bhaban, Agargaon, Dhaka', 23.7620, 90.3880],
+    ['DESA Distribution Office', 'desa', '16999', 'DESA Bhaban, Ma Sherani Rd, Dhaka', 23.7580, 90.3910],
+    ['Titas Gas Head Office', 'titas_gas', '165', 'Kawran Bazar, Dhaka', 23.7500, 90.3990],
+  ];
+  for (const s of fallback) { insSvc.run(...s); services.push(s[0]); }
+}
 
 // ---------- Demo complaints ----------
 const insComplaint = db.prepare(
@@ -180,7 +322,7 @@ const c4 = insComplaint.run(
   23.8580, 90.2660, 'Savar Bazar Road, Savar',
   'sanitation', 'verified', 18.0, 1, null, '-1 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Savar Bazar', 'Bazar Road',
-  'Road Bazar Road, Savar Bazar, Savar Pouroshova, Dhaka, Dhaka, Bangladesh'
+  'Road Bazar Road, Savar Bazar, Savar Pourashava, Dhaka, Dhaka, Bangladesh'
 ).lastInsertRowid;
 
 insComplaint.run(
@@ -261,10 +403,10 @@ db.prepare(
    VALUES (?, ?, 'Update on an issue you voted for', 'Gas leakage near Shiromoni point is under review by Khulna City Corporation.')`
 ).run(karim, c7);
 
-console.log('Nationwide seed complete:');
-console.log('  Authorities : 24 (all 8 divisions: Dhaka, Chattogram, Khulna, Rajshahi, Sylhet, Barishal, Rangpur, Mymensingh)');
-console.log('  Staff       : 1 general officer per authority (password: staff123)');
-console.log('                e.g. kamrul.city@nagorik.bd (Dhaka South), staff.khulna@nagorik.bd (Khulna)');
+const authCount = db.prepare('SELECT COUNT(*) n FROM authorities').get().n;
+console.log('Nationwide seed complete (from bangladesh_local_government_units.json):');
+console.log(`  Authorities : ${authCount} (CC ${db.prepare("SELECT COUNT(*) n FROM authorities WHERE type='CITY_CORPORATION'").get().n} + Pouro ${db.prepare("SELECT COUNT(*) n FROM authorities WHERE type='POUROSHOVA'").get().n} + Union ${db.prepare("SELECT COUNT(*) n FROM authorities WHERE type='UNION_PARISHAD'").get().n})`);
+console.log(`  Staff       : ${db.prepare('SELECT COUNT(*) n FROM staff').get().n} general officers (password: staff123)`);
 console.log('  Citizens    : rahim@example.com / karima@example.com / joya@example.com  (password: password123)');
-console.log(`  Services    : ${services.length} emergency services across divisions`);
+console.log(`  Services    : ${services.length} emergency services (osmium extracts)`);
 console.log(`  Complaints  : ${db.prepare('SELECT COUNT(*) n FROM complaints').get().n}`);

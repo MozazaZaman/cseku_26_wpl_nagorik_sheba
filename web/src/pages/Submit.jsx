@@ -40,8 +40,21 @@ export default function Submit() {
     if (!user) nav('/login', { state: { from: '/submit' } });
   }, [user]);
 
+  const FALLBACK_DIVISIONS = [
+    { name: 'Dhaka', districts: ['Dhaka','Faridpur','Gazipur','Gopalganj','Kishoreganj','Madaripur','Manikganj','Munshiganj','Narayanganj','Narsingdi','Rajbari','Shariatpur','Tangail'] },
+    { name: 'Chattogram', districts: ['Bandarban','Brahmanbaria','Chandpur','Chattogram','Cumilla',"Cox's Bazar",'Feni','Khagrachhari','Lakshmipur','Noakhali','Rangamati'] },
+    { name: 'Khulna', districts: ['Bagerhat','Chuadanga','Jashore','Jhenaidah','Khulna','Kushtia','Magura','Meherpur','Narail','Satkhira'] },
+    { name: 'Rajshahi', districts: ['Bogura','Chapainawabganj','Joypurhat','Naogaon','Natore','Pabna','Rajshahi','Sirajganj'] },
+    { name: 'Sylhet', districts: ['Habiganj','Moulvibazar','Sunamganj','Sylhet'] },
+    { name: 'Barishal', districts: ['Barguna','Barishal','Bhola','Jhalokati','Patuakhali','Pirojpur'] },
+    { name: 'Rangpur', districts: ['Dinajpur','Gaibandha','Kurigram','Lalmonirhat','Nilphamari','Panchagarh','Rangpur','Thakurgaon'] },
+    { name: 'Mymensingh', districts: ['Jamalpur','Mymensingh','Netrokona','Sherpur'] },
+  ];
   useEffect(() => {
-    api.get('/geo').then(({ data }) => setGeo(data)).catch(() => {});
+    api.get('/geo').then(({ data }) => {
+      if (data?.divisions?.length) setGeo(data);
+      else setGeo({ divisions: FALLBACK_DIVISIONS });
+    }).catch(() => setGeo({ divisions: FALLBACK_DIVISIONS }));
   }, []);
 
   useEffect(() => {
@@ -60,13 +73,60 @@ export default function Submit() {
     );
   }, []);
 
+  const [availableTypes, setAvailableTypes] = useState([]);
+  const [availableUpazilas, setAvailableUpazilas] = useState([]);
+  // When district changes: fetch which local-govt types actually exist for that district (from bangladesh_local_government_units.json via DB)
   useEffect(() => {
-    if (locMode !== 'address') return;
-    const params = {};
-    if (addr.district) params.district = addr.district;
-    if (addr.type) params.type = addr.type;
-    api.get('/authorities', { params }).then(({ data }) => setAuthorities(data.authorities)).catch(() => {});
-  }, [locMode, addr.district, addr.type]);
+    if (locMode !== 'address' || !addr.district) { setAvailableTypes([]); setAvailableUpazilas([]); setAuthorities([]); return; }
+    const loadTypes = async () => {
+      try {
+        const { data } = await api.get('/authorities/types', { params: { district: addr.district } });
+        const types = data.types || [];
+        setAvailableTypes(types);
+        if (types.length > 0 && !types.includes(addr.type)) {
+          setAddr((a) => ({ ...a, type: types[0], authority_id: '', upazila: '' }));
+        } else if (types.length === 0) {
+          setAddr((a) => ({ ...a, authority_id: '', upazila: '' }));
+        }
+      } catch { setAvailableTypes([]); }
+    };
+    loadTypes();
+  }, [locMode, addr.district]);
+
+  // For Union: load upazilas belonging to selected district
+  useEffect(() => {
+    if (locMode !== 'address' || !addr.district || addr.type !== 'UNION_PARISHAD') { setAvailableUpazilas([]); return; }
+    if (!availableTypes.includes('UNION_PARISHAD')) { setAvailableUpazilas([]); return; }
+    const loadUpazilas = async () => {
+      try {
+        const { data } = await api.get('/authorities/upazilas', { params: { district: addr.district } });
+        const list = data.upazilas || [];
+        setAvailableUpazilas(list);
+        if (list.length > 0 && !list.includes(addr.upazila)) {
+          setAddr((a) => ({ ...a, upazila: list[0], authority_id: '' }));
+        } else if (list.length === 0) {
+          setAddr((a) => ({ ...a, upazila: '', authority_id: '' }));
+        }
+      } catch { setAvailableUpazilas([]); }
+    };
+    loadUpazilas();
+  }, [locMode, addr.district, addr.type, availableTypes]);
+
+  // Load authorities: CC/Pouro by district+type, Union by district+type+upazila (from JSON)
+  useEffect(() => {
+    if (locMode !== 'address' || !addr.district || !addr.type) { setAuthorities([]); return; }
+    if (availableTypes.length > 0 && !availableTypes.includes(addr.type)) { setAuthorities([]); return; }
+    if (addr.type === 'UNION_PARISHAD' && !addr.upazila) { setAuthorities([]); return; }
+    const load = async () => {
+      try {
+        const params = { district: addr.district, type: addr.type };
+        if (addr.type === 'UNION_PARISHAD' && addr.upazila) params.upazila = addr.upazila;
+        const { data } = await api.get('/authorities', { params });
+        setAuthorities(data.authorities || []);
+      } catch { setAuthorities([]); }
+    };
+    load();
+  }, [locMode, addr.district, addr.type, addr.upazila, availableTypes]);
 
   if (!user) return null;
 
@@ -91,8 +151,10 @@ export default function Submit() {
   const setAddrField = (k, v) => {
     setAddr((a) => {
       const next = { ...a, [k]: v };
-      if (k === 'division') next.district = '';
-      if (k === 'district' || k === 'type') next.authority_id = '';
+      if (k === 'division') { next.district = ''; next.upazila = ''; }
+      if (k === 'district') { next.upazila = ''; next.authority_id = ''; }
+      if (k === 'type') { next.upazila = ''; next.authority_id = ''; }
+      if (k === 'upazila') next.authority_id = '';
       return next;
     });
   };
@@ -136,7 +198,7 @@ export default function Submit() {
 
   const geocodeAddress = async () => {
     setErr('');
-    if (!addr.division || !addr.district || !addr.authority_id || !addr.road || (isUnion && !addr.village)) {
+    if (!addr.division || !addr.district || !addr.authority_id || !addr.road || (isUnion && (!addr.village || !addr.upazila))) {
       setErr(t('sub.completeFields'));
       return;
     }
@@ -164,7 +226,7 @@ export default function Submit() {
     if (description.trim().length < 10) return t('sub.needDesc');
     if (locMode === 'address') {
       if (!addr.division || !addr.district || !addr.authority_id || !addr.road) return t('sub.needLoc');
-      if (isUnion && !addr.village) return t('sub.needVillage');
+      if (isUnion && (!addr.village || !addr.upazila)) return t('sub.needVillage');
     }
     return null;
   };
@@ -390,30 +452,41 @@ export default function Submit() {
                 </select>
 
                 <label className="label mt-3">{t('sub.type')}</label>
-                <select className="input" value={addr.type} onChange={(e) => setAddrField('type', e.target.value)}>
-                  <option value="CITY_CORPORATION">{t('sub.typeCity')}</option>
-                  <option value="POUROSHOVA">{t('sub.typePouro')}</option>
-                  <option value="UNION_PARISHAD">{t('sub.typeUnion')}</option>
+                <select className="input" value={addr.type} onChange={(e) => setAddrField('type', e.target.value)} disabled={!addr.district || availableTypes.length === 0}>
+                  {!addr.district ? (
+                    <option value="">{t('sub.selectFirst')}</option>
+                  ) : availableTypes.length === 0 ? (
+                    <option value="">{t('sub.noTypes') || 'No local govt types for this district'}</option>
+                  ) : (
+                    availableTypes.map((tp) => (
+                      <option key={tp} value={tp}>
+                        {tp === 'CITY_CORPORATION' ? t('sub.typeCity') : tp === 'POUROSHOVA' ? t('sub.typePouro') : t('sub.typeUnion')}
+                      </option>
+                    ))
+                  )}
                 </select>
+                {!addr.district ? null : availableTypes.length === 0 ? (
+                  <p className="mt-1.5 text-xs text-amber-300">{t('sub.noTypesHint') || 'No authorities registered for this district.'}</p>
+                ) : null}
 
                 <label className="label mt-3">
                   {isUnion ? t('sub.union') : addr.type === 'POUROSHOVA' ? t('sub.pouro') : t('sub.cityCorp')}
                 </label>
                 <select className="input" value={addr.authority_id}
-                  onChange={(e) => setAddrField('authority_id', e.target.value)} disabled={!addr.district}>
-                  <option value="">{addr.district ? t('sub.selectList') : t('sub.selectFirst')}</option>
+                  onChange={(e) => setAddrField('authority_id', e.target.value)} disabled={!addr.district || (isUnion && !addr.upazila) || authorities.length === 0}>
+                  <option value="">{!addr.district ? t('sub.selectFirst') : isUnion && !addr.upazila ? (t('sub.selectUpazilaFirst') || 'Select upazila first') : authorities.length === 0 ? (t('sub.noAuth') || 'No authority for this district+type') : `${t('sub.selectList')} (${authorities.length})`}</option>
                   {authorities.map((a) => <option key={a.authority_id} value={a.authority_id}>{a.name}</option>)}
                 </select>
-                {addr.district && authorities.length === 0 && (
-                  <p className="mt-1.5 text-xs text-amber-300">{t('sub.noAuthority')}</p>
-                )}
 
                 {isUnion ? (
                   <>
+                    <label className="label mt-3">{t('sub.upazila') || 'Upazila / Sub-district'}</label>
+                    <select className="input" value={addr.upazila} onChange={(e) => setAddrField('upazila', e.target.value)} disabled={!addr.district || availableUpazilas.length === 0}>
+                      <option value="">{availableUpazilas.length === 0 ? (t('sub.selectUpazilaEmpty') || 'No upazila for this district') : (t('sub.selectUpazila') || 'Select Upazila')}</option>
+                      {availableUpazilas.map((u) => <option key={u} value={u}>{u}</option>)}
+                    </select>
                     <label className="label mt-3">{t('sub.village')}</label>
                     <input className="input" value={addr.village} onChange={(e) => setAddrField('village', e.target.value)} placeholder={t('sub.village.ph')} />
-                    <label className="label mt-3">{t('sub.upazila')}</label>
-                    <input className="input" value={addr.upazila} onChange={(e) => setAddrField('upazila', e.target.value)} placeholder={t('sub.upazila.ph')} />
                   </>
                 ) : (
                   <>
@@ -465,3 +538,4 @@ export default function Submit() {
     </main>
   );
 }
+

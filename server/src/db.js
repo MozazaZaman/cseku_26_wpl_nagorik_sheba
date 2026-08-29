@@ -145,6 +145,7 @@ function migrate() {
   addColumn('authorities', 'district', 'TEXT');
   addColumn('authorities', 'center_lat', 'REAL');
   addColumn('authorities', 'center_lng', 'REAL');
+  addColumn('authorities', 'upazila', 'TEXT');
 }
 
 export function logAgent({ complaintId = null, agentName, decision, inputSummary = '', outputSummary = '' }) {

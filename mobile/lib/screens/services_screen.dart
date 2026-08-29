@@ -115,8 +115,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(children: [
             ...types.map((t) => Padding(padding: EdgeInsets.only(right: 8), child: ChoiceChip(
-              label: Text(t.$2), selected: type == t.key,
-              onSelected: (_) => setState(() { type = t.key; _load(); }),
+              label: Text(t.$2), selected: type == t.$1,
+              onSelected: (_) => setState(() { type = t.$1; _load(); }),
             ))),
           ]),
         ),

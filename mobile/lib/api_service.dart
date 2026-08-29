@@ -46,13 +46,13 @@ class ApiService {
     try {
       return jsonDecode(utf8.decode(r.bodyBytes));
     } catch (_) {
-      return {};
+      return <String, dynamic>{};
     }
   }
 
   dynamic _check(http.Response r) {
     final b = _decode(r);
-    if (r.statusCode >= 400) throw ApiException(r.statusCode, b is Map ? b : {});
+    if (r.statusCode >= 400) throw ApiException(r.statusCode, b is Map ? (b as Map<String, dynamic>) : <String, dynamic>{});
     return b;
   }
 
@@ -80,11 +80,11 @@ class ApiService {
     final r = await http.Response.fromStream(streamed);
     final b = _decode(r);
     if (r.statusCode == 422) {
-      throw ApiException(422, b is Map ? b : {'error': 'Face verification failed'});
+      throw ApiException(422, b is Map ? (b as Map<String, dynamic>) : <String, dynamic>{'error': 'Face verification failed'});
     }
-    if (r.statusCode >= 400) throw ApiException(r.statusCode, b is Map ? b : {});
+    if (r.statusCode >= 400) throw ApiException(r.statusCode, b is Map ? (b as Map<String, dynamic>) : <String, dynamic>{});
     await saveToken(b['token']);
-    return User.fromJson(b['user']);
+    return User.fromJson(b['user'] as Map<String, dynamic>);
   }
 
   Future<User> register(String name, String email, String phone, String password) async {
@@ -98,7 +98,7 @@ class ApiService {
         }));
     final b = _check(r);
     await saveToken(b['token']);
-    return User.fromJson(b['user']);
+    return User.fromJson(b['user'] as Map<String, dynamic>);
   }
 
   Future<User> login(String email, String password) async {
@@ -107,7 +107,7 @@ class ApiService {
         body: jsonEncode({'email': email, 'password': password}));
     final b = _check(r);
     await saveToken(b['token']);
-    return User.fromJson(b['user']);
+    return User.fromJson(b['user'] as Map<String, dynamic>);
   }
 
   Future<List<Complaint>> complaints({String? q, String? category, String? status}) async {
@@ -117,20 +117,20 @@ class ApiService {
     if (status != null && status != 'all') params['status'] = status;
     final uri = Uri.parse('$kApiBase/complaints').replace(queryParameters: params);
     final b = _check(await http.get(uri, headers: _headers));
-    return (b['complaints'] as List).map((e) => Complaint.fromJson(e)).toList();
+    return (b['complaints'] as List).map((e) => Complaint.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<Complaint>> myComplaints() async {
     final b = _check(await http.get(Uri.parse('$kApiBase/complaints/mine'), headers: _headers));
-    return (b['complaints'] as List).map((e) => Complaint.fromJson(e)).toList();
+    return (b['complaints'] as List).map((e) => Complaint.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<Map<String, dynamic>> complaintDetail(int id) async {
     final b = _check(await http.get(Uri.parse('$kApiBase/complaints/$id'), headers: _headers));
     return {
-      'complaint': Complaint.fromJson(b['complaint']),
-      'history': (b['history'] as List).map(HistoryItem.fromJson).toList(),
-      'agents': (b['agents'] as List).map(AgentLogItem.fromJson).toList(),
+      'complaint': Complaint.fromJson(b['complaint'] as Map<String, dynamic>),
+      'history': (b['history'] as List).map((e) => HistoryItem.fromJson(e as Map<String, dynamic>)).toList(),
+      'agents': (b['agents'] as List).map((e) => AgentLogItem.fromJson(e as Map<String, dynamic>)).toList(),
     };
   }
 
@@ -183,12 +183,12 @@ class ApiService {
     if (r.statusCode == 202) {
       return {'action': 'rejected', 'reason': b['reason']};
     }
-    if (r.statusCode >= 400) throw ApiException(r.statusCode, b is Map ? b : {});
+    if (r.statusCode >= 400) throw ApiException(r.statusCode, b is Map ? (b as Map<String, dynamic>) : <String, dynamic>{});
 
     if (b['merged'] == true) {
-      return {'action': 'merged', 'original': Complaint.fromJson(b['original'])};
+      return {'action': 'merged', 'original': Complaint.fromJson(b['original'] as Map<String, dynamic>)};
     }
-    return {'action': 'created', 'complaint': Complaint.fromJson(b['complaint']), 'routed_to': b['routed_to']};
+    return {'action': 'created', 'complaint': Complaint.fromJson(b['complaint'] as Map<String, dynamic>), 'routed_to': b['routed_to']};
   }
 
   Future<List<Map<String, dynamic>>> divisions() async {
@@ -258,19 +258,19 @@ class ApiService {
     final uri = Uri.parse('$kApiBase/services/nearby')
         .replace(queryParameters: {'lat': '$lat', 'lng': '$lng', 'type': type});
     final b = _check(await http.get(uri));
-    return (b['services'] as List).map(ServiceItem.fromJson).toList();
+    return (b['services'] as List).map((e) => ServiceItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<NotificationItem>> notifications() async {
     final b = _check(await http.get(Uri.parse('$kApiBase/my/notifications'), headers: _headers));
-    return (b['notifications'] as List).map(NotificationItem.fromJson).toList();
+    return (b['notifications'] as List).map((e) => NotificationItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<Complaint>> staffQueue({String category = 'all', String status = 'all'}) async {
     final uri = Uri.parse('$kApiBase/complaints/staff/queue')
         .replace(queryParameters: {'category': category, 'status': status});
     final b = _check(await http.get(uri, headers: _headers));
-    return (b['complaints'] as List).map(Complaint.fromJson).toList();
+    return (b['complaints'] as List).map((e) => Complaint.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<Complaint> updateStatus(int id, String status, {int? etaHours, String? note}) async {
@@ -283,10 +283,10 @@ class ApiService {
         'note': note ?? '',
       }),
     ));
-    return Complaint.fromJson(b['complaint']);
+    return Complaint.fromJson(b['complaint'] as Map<String, dynamic>);
   }
 
   Future<Map<String, dynamic>> stats() async {
-    return _check(await http.get(Uri.parse('$kApiBase/stats')));
+    return _check(await http.get(Uri.parse('$kApiBase/stats'))) as Map<String, dynamic>;
   }
 }

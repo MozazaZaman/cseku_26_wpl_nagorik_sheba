@@ -23,8 +23,11 @@ const faceUpload = multer({
   storage: faceStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (/^image\//.test(file.mimetype)) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
+    const mimeOk = /^image\//.test(file.mimetype || '');
+    const extOk = /\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(file.originalname || '');
+    // some clients (esp. mobile gallery/camera) send application/octet-stream with correct extension
+    if (mimeOk || extOk) cb(null, true);
+    else cb(new Error(`Only image files are allowed (received ${file.mimetype || 'unknown type'} for ${file.originalname})`));
   }
 });
 

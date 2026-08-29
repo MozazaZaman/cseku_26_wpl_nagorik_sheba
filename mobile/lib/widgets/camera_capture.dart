@@ -43,9 +43,9 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
         return;
       }
       final wanted = widget.front ? CameraLensDirection.front : CameraLensDirection.back;
-      _index = _cams.indexWhere((c) => c.lensDirection == wanted);
+      _index = _cameras.indexWhere((c) => c.lensDirection == wanted);
       if (_index < 0) _index = 0;
-      await _start(_cams[_index]);
+      await _start(_cameras[_index]);
     } catch (e) {
       setState(() => _error = e.toString());
     }
@@ -76,7 +76,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
   Future<void> _flip() async {
     if (_cameras.length < 2) return;
     _index = (_index + 1) % _cameras.length;
-    await _start(_cams[_index]);
+    await _start(_cameras[_index]);
   }
 
   Future<void> _shoot() async {

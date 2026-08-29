@@ -64,6 +64,7 @@ class Complaint {
     required this.createdAt,
     this.etaHours,
     this.addressText,
+    this.fullAddress,
     this.imageUrl,
     this.submitterName,
     this.authorityName,

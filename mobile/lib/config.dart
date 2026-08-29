@@ -1,6 +1,6 @@
 const kApiBase = String.fromEnvironment(
   'API_BASE',
-  defaultValue: 'http://10.0.2.2:5000/api',
+  defaultValue: 'http://localhost:5000/api',
 );
 
 // Optional: paste a Google Geocoding API key for better address accuracy.

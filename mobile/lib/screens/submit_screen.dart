@@ -523,8 +523,11 @@ class _SubmitScreenState extends State<SubmitScreen> {
                 DropdownButtonFormField<String>(
                   value: district,
                   decoration: _dec(lang.t('sub.district')),
-                  items: (divisions.firstWhere((d) => d['name'] == division, orElse: () => null)?['districts'] as List?)
-                      ?.cast<String>().map((d) => DropdownMenuItem(value: d, child: Text(d))).toList() ?? [],
+                  items: (() {
+                    final match = divisions.where((d) => d['name'] == division);
+                    if (match.isEmpty) return <DropdownMenuItem<String>>[];
+                    return (match.first['districts'] as List).cast<String>().map((d) => DropdownMenuItem(value: d, child: Text(d))).toList();
+                  })(),
                   onChanged: division == null ? null : (v) { setState(() { district = v; authorityId = null; }); _loadTypes(); },
                 ),
                 SizedBox(height: 10),
@@ -595,7 +598,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                       options: MapOptions(initialCenter: LatLng(lat, lng), initialZoom: 15,
                           interactionOptions: InteractionOptions(flags: InteractiveFlag.none)),
                       children: [
-                        TileLayer(url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+                        TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
                         MarkerLayer(markers: [
                           Marker(point: LatLng(lat, lng), width: 40, height: 40,
                               child: Text('📌', style: TextStyle(fontSize: 26))),

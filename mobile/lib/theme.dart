@@ -25,7 +25,6 @@ ThemeData buildTheme() {
       error: NSColors.rose,
       surface: NSColors.card,
     ),
-    fontFamily: 'Roboto',
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -70,7 +69,7 @@ ThemeData buildTheme() {
       side: BorderSide(color: Colors.white12),
       shape: StadiumBorder(),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: Colors.white.withOpacity(0.04),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),

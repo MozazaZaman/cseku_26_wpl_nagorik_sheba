@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../api_service.dart';
+import '../api_service.dart';
 import '../auth_provider.dart';
+import '../config.dart';
 import '../i18n.dart';
 import '../theme.dart';
 import '../widgets/camera_capture.dart';
@@ -36,8 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (_) => const HomeShell(initialTab: 0)),
       );
+    } on ApiException catch (e) {
+      setState(() => error = e.message);
     } catch (e) {
-      setState(() => error = e.toString().replaceFirst('ApiException: ', ''));
+      setState(() => error = 'Network error — is the server running? ($kApiBase) ${e.toString().split('\n').first}');
     } finally {
       if (mounted) setState(() => busy = false);
     }

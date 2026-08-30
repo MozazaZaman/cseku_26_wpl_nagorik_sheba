@@ -1,20 +1,5 @@
 # নাগরিক সেবা — Nagorik Sheba
 
-## Table of Contents
-
-- [Project Status](#project-status)
-- [Sprint 1 Deliverables Summary](#sprint-1-deliverables-summary)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [The 5-Agent AI Pipeline](#the-5-agent-ai-pipeline)
-- [Getting Started](#getting-started)
-- [Demo Accounts](#demo-accounts)
-- [Project Roadmap](#project-roadmap)
-- [Documentation](#documentation)
-- [Acknowledgements](#acknowledgements)
-
----
-
 ## Project Status
 
 🟢 **Sprint 1 (Weeks 3) complete** — core authentication, the full AI pipeline, the React web app, tested, and merged to `branch 0.3`.

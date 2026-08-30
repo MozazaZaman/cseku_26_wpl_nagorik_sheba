@@ -164,12 +164,6 @@ voting with lock alerts, notifications, and a full staff console with ETA dialog
 
 ---
 
-## ER Diagram
-
-Open **`docs/er-diagram.html`** in a browser (Ctrl+P → save as PDF for your report), or read
-`docs/er-diagram.md` for entity tables, cardinalities and business rules.
-Mermaid source is embedded — also renders at https://mermaid.live
-
 ## Tech stack summary
 
 - **Backend**: Node.js, Express, better-sqlite3, JWT, bcryptjs, multer

@@ -6,6 +6,8 @@ Nagorik Sheba (নাগরিক সেবা — "Citizen Service") is a multi
 
 > Course project — Web Programming and Mobile Application Development, Dept. of CSE.
 > Status: **Week 1 — Initiation & SRS**
+> Status: **Week 2 — Created UI wireframes, architecture (ER diagrams, flowcharts, Use Case Diagram), Configured GitHub Projects board for task allocation**
+> Status: **Week 3 — Development Sprint 1 (Branch 0.3 — Production Ready)**
 
 ---
 
@@ -26,49 +28,94 @@ Existing government complaint systems in the region (e.g. Pakistan Citizen's Por
 
 See [`docs/Nagorik_Sheba_SRS_v0.1.docx`](docs/Nagorik_Sheba_SRS_v0.1.docx) for the full Software Requirements Specification.
 
+## What is implemented (v1.1)
+
+| Feature | Status |
+|---|---|
+| Face-verified citizen registration | ✅ Working |
+| Phone + email login | ✅ Working |
+| 5-agent complaint pipeline | ✅ Working |
+| Voice input (Bangla + English) | ✅ Working |
+| GPS routing to nearest authority | ✅ Working |
+| Nationwide coverage (8 divisions, 64 districts, 4,880 authorities) | ✅ Working |
+| Map layers (Map / Satellite / Dark) | ✅ Working |
+| Staff priority dashboard + ETA tracking | ✅ Working |
+| Voting and duplicate detection (250m radius) | ✅ Working |
+| Notifications (auto-delete after 90 days) | ✅ Working |
+| Emergency services directory (355 services) | ✅ Working |
+| React 18 web frontend | ✅ Working |
+| Flutter mobile app | ✅ Scaffolded |
+| Open issues tracked | 31 open |
+
 ## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Backend | Node.js, Express, SQLite (`better-sqlite3`) |
-| Auth | JWT, bcryptjs |
-| File uploads | multer |
-| Image processing | `exifr` (EXIF), `sharp` (perceptual hashing) |
-| Geo | OpenStreetMap (map tiles) + Barikoi API (ward/zone jurisdiction resolution) — documented upgrade path to PostgreSQL + PostGIS |
-| Website | Plain HTML5 / CSS3 / JS, no framework, mobile-first responsive |
-| Mobile (planned) | Expo / React Native |
-| SMS | Twilio (prototype) → BD-licensed aggregator (production) |
-| AI agents | Claude API, with local rule-based fallback per agent |
+| Backend | Node.js, Express, SQLite (WAL mode) |
+| Auth | JWT, bcryptjs, Face verification (face-api.js + TensorFlow WASM) |
+| File uploads | Multer |
+| Image processing | exifr (EXIF), sharp (perceptual hashing) |
+| Geo | OpenStreetMap + Nominatim geocoding + Leaflet.js |
+| Web Frontend | React 18, Vite, Tailwind CSS, Framer Motion |
+| Mobile | Flutter (Android + iOS), Material 3 |
+| Voice Input | Web Speech API (Bangla + English) |
+| AI Agents | Rule-based pipeline with Claude API fallback |
+| Maps | OpenStreetMap tiles (Map / Satellite / Dark layers) |
 
 ## Project structure
 
 ```
 nagorik-sheba/
-├── backend/          # Express API, agent pipeline, SQLite DB
-├── website/          # Citizen + staff web app (no build step)
-├── mobile/           # Expo app (to be rebuilt — see docs/SRS.md §2.4)
-├── docs/
-│   ├── Nagorik_Sheba_SRS_v0.1.docx   # Software Requirements Specification
-│   ├── tasks.md                      # Sprint backlog / task list
-│   ├── architecture.md               # (Week 2)
-│   └── api-contract.md               # (Week 2)
+├── server/              # Node.js + Express + SQLite REST API
+│   ├── src/
+│   │   ├── index.js     # Main server entry point
+│   │   ├── db.js        # SQLite database setup
+│   │   ├── seed.js      # Database seeding script
+│   │   ├── routes/      # auth, complaints, services
+│   │   └── agents/      # 5-agent pipeline + face verification
+│   ├── models/          # TensorFlow face detection models
+│   └── data/            # SQLite database file
+├── web/                 # React 18 web frontend
+│   ├── src/             # React components
+│   └── config/
+├── mobile/              # Flutter mobile app
+│   ├── lib/             # Dart source code
+│   ├── android/
+│   └── ios/
+├── docs/                # ER diagrams, Mermaid flowcharts, SRS
+├── uploads/             # Complaint photos + face images
 └── README.md
 ```
 ## Getting started
 
 ```bash
 # Backend
-cd backend
+cd server
 npm install
-npm run dev          # starts API on localhost:3000
+npm run seed     # seeds 4,880 authorities + 355 emergency services
+npm run dev      # starts API on localhost:3000
 
-# Website
-cd website
-# no build step — open index.html or serve with any static server
-npx serve .
+# Web frontend
+cd web
+npm install
+npm run dev      # starts React app on localhost:5173
+
+# Mobile
+cd mobile
+flutter pub get
+flutter run
 ```
+## Demo accounts
 
-Demo staff accounts (seeded departments): phone `0188000000`–`0188000006`, password `staffpass123`.
+**Citizen accounts**
+- `rahim@example.com` / `password123`
+- `karima@example.com` / `password123`
+
+**Staff accounts**
+- Dhaka South City Corp: `kamrul.city@nagorik.bd` / `staff123`
+- Khulna City Corp: `staff.khulna@nagorik.bd` / `staff123`
+- Savar Pouroshova: `jamal.savar@nagorik.bd` / `staff123`
+- Ruhitpur Union Parishad: `ripon.union@nagorik.bd` / `staff123`
 
 ## Team (Week 1)
 
@@ -134,10 +181,11 @@ tools, and organizations whose support and resources made this project possible.
 
 ## Roadmap
 
-- [x] **Week 1 — Initiation & SRS**: scope/objectives/roles, SRS draft, GitHub repo + contribution guidelines, README + initial task list
-- [X] **Week 2 — Design & Planning**: UI wireframes, architecture documentation (ER diagrams, flowcharts), GitHub Projects board
-- [ ] **Week 3–4 — Development Sprint 1**: core modules (auth, navigation, basic UI), Copilot-assisted scaffolding, unit tests, PR-based peer review
-- [ ] **Week 5–6 — Development Sprint 2**: CRUD operations, forms, API integration, sprint velocity tracking, retrospectives
+
+- [x] **Week 1 — Initiation & SRS** — scope, objectives, roles, SRS draft, GitHub setup
+- [x] **Week 2 — Design & Planning** — UI wireframes, ER diagram, flowcharts, GitHub Projects board
+- [x] **Week 3–4 — Development Sprint 1** — authentication, 5-agent pipeline, React web frontend, Flutter mobile, face verification, database seeding
+- [ ] **Week 5–6 — Development Sprint 2** — CRUD operations, forms, full API integration, sprint retrospectives
 
 ## License
 

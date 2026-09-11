@@ -25,16 +25,8 @@ updates, and the responsible staff hierarchy manages progress from first review 
   full lifecycle on every complaint page — submission, AI verification, each human review stage (with
   officer name, role, and comment), assignment, execution, and resolution — including the stage and reason
   for any rejection.
-- **Resolution proof & citizen confirmation** — field staff attach a before/after resolution photo when the
-  original complaint had photo evidence; citizens then confirm or dispute the resolution. A dispute reopens
-  the complaint for WIT re-inspection; an unconfirmed resolution auto-reopens after 3 days.
-- **Email notifications at every step** — citizens and staff are emailed as a complaint moves through each
-  stage (demo SMTP via Ethereal with preview links; swap in a real relay via `SMTP_URL`).
-- **Role-based staff dashboards** — each of the 5 roles gets its own console; Senior and Mayor roles can
-  toggle between "My Queue" and a full-lifecycle "All Problems" oversight view, with department-wise and
-  workflow-stage filtering.
-
-## What's new in v1.1
+  
+## What's in v1.1
 
 - **Face-verified registration** — selfie (front camera) + ID photo are matched server-side by a real biometric
   engine (face-api.js + TensorFlow WASM). No match → account rejected, try again. Login unchanged.

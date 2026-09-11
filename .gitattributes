@@ -1,3 +1,7 @@
 *.dart linguist-detectable=true
 *.jsx linguist-detectable=true
 *.js linguist-detectable=true
+*.jsx linguist-language=JavaScript
+*.dart linguist-language=Dart
+my_frontend/** linguist-vendored=false
+public/build/** linguist-generated=true

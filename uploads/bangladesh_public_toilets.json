@@ -1,0 +1,901 @@
+{
+  "meta": {
+    "description": "Sample list of public toilets across Bangladesh, grouped by division and district, sourced from Google Places data.",
+    "source": "Google Places (via places_search)",
+    "note": "This is a representative sample (not exhaustive) since Google Maps' public-toilet coverage varies significantly by area; some divisions/districts have far fewer mapped entries than others.",
+    "total_count": 99
+  },
+  "toilets": [
+    {
+      "name": "Public Toilet",
+      "latitude": 23.0111479,
+      "longitude": 91.4008417,
+      "division": "Chattogram",
+      "district": "Feni",
+      "rating": 3.4,
+      "address": "College Rd, Feni"
+    },
+    {
+      "name": "Public Toilet (W/C)",
+      "latitude": 23.008116,
+      "longitude": 91.3984196,
+      "division": "Chattogram",
+      "district": "Feni",
+      "rating": 5.0,
+      "address": "Takia Rd, Feni"
+    },
+    {
+      "name": "Public Toilet, Anondo Bazaar",
+      "latitude": 23.976646,
+      "longitude": 91.1148852,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 5.0,
+      "address": "Anondo Bazaar, Brahmanbaria"
+    },
+    {
+      "name": "Brahmanbaria Railway Station Public Toilet",
+      "latitude": 23.9668836,
+      "longitude": 91.1091162,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 3.6,
+      "address": "Station Rd, Brahmanbaria"
+    },
+    {
+      "name": "Public Toilet",
+      "latitude": 23.9844793,
+      "longitude": 91.112302,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 5.0,
+      "address": "Brahmanbaria"
+    },
+    {
+      "name": "Public Toilet",
+      "latitude": 23.9740798,
+      "longitude": 91.1012083,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 5.0,
+      "address": "Brahmanbaria"
+    },
+    {
+      "name": "Public Toilet, Ananda Bazar (Boat Ghat)",
+      "latitude": 23.9756696,
+      "longitude": 91.1152598,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 2.0,
+      "address": "Ananda Bazar, Boat Ghat, Brahmanbaria"
+    },
+    {
+      "name": "Public Toilet, Comilla-Brahmanbaria Highway",
+      "latitude": 23.9589478,
+      "longitude": 91.1031561,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": null,
+      "address": "Comilla-Brahmanbaria Hwy, Brahmanbaria"
+    },
+    {
+      "name": "Public Toilet",
+      "latitude": 23.9888542,
+      "longitude": 91.1032296,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 3.0,
+      "address": "Brahmanbaria"
+    },
+    {
+      "name": "Public Toilet, Rangamati Bus Stand",
+      "latitude": 22.6612887,
+      "longitude": 92.1558853,
+      "division": "Chattogram",
+      "district": "Rangamati",
+      "rating": 5.0,
+      "address": "N106, Rangamati"
+    },
+    {
+      "name": "Public Toilet, Banarupa Road",
+      "latitude": 22.6555679,
+      "longitude": 92.1788101,
+      "division": "Chattogram",
+      "district": "Rangamati",
+      "rating": null,
+      "address": "Banarupa Road, Rangamati"
+    },
+    {
+      "name": "Polwel Park Public Toilet",
+      "latitude": 22.6406035,
+      "longitude": 92.1993484,
+      "division": "Chattogram",
+      "district": "Rangamati",
+      "rating": null,
+      "address": "Polwel Park, Rangamati"
+    },
+    {
+      "name": "Public Toilet, Hilsha Road",
+      "latitude": 23.2311807,
+      "longitude": 90.6401829,
+      "division": "Chattogram",
+      "district": "Chandpur",
+      "rating": 3.0,
+      "address": "Hilsha Rd, Chandpur"
+    },
+    {
+      "name": "Public Washroom, Market Area",
+      "latitude": 22.9383477,
+      "longitude": 90.8282151,
+      "division": "Chattogram",
+      "district": "Lakshmipur",
+      "rating": null,
+      "address": "Masjid Rd, Lakshmipur"
+    },
+    {
+      "name": "Agrabad Jamboree Park Public Toilet - Unit 1",
+      "latitude": 22.3235893,
+      "longitude": 91.8078257,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.2,
+      "address": "Agrabad, Chattogram"
+    },
+    {
+      "name": "CDA Market Public Toilet",
+      "latitude": 22.3458599,
+      "longitude": 91.8335129,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 3.2,
+      "address": "Pahartali, Chattogram"
+    },
+    {
+      "name": "Bibirhat Public Toilet",
+      "latitude": 22.3741857,
+      "longitude": 91.8327829,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 3.9,
+      "address": "Hathazari Rd, Chattogram"
+    },
+    {
+      "name": "Bahaddarhat Bazar Public Toilet",
+      "latitude": 22.3696718,
+      "longitude": 91.8418347,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 2.8,
+      "address": "Bahaddarhat, Chattogram"
+    },
+    {
+      "name": "Shah Amanat Bridge Public Toilet (Male & Female)",
+      "latitude": 22.3305455,
+      "longitude": 91.8516372,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 3.5,
+      "address": "Hazrat Shah Amanat (R) Bridge, Chattogram"
+    },
+    {
+      "name": "Public Toilet, Marine Drive",
+      "latitude": 21.4047551,
+      "longitude": 91.9907872,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 5.0,
+      "address": "Cox's Bazar Marine Dr"
+    },
+    {
+      "name": "Laboni Point Public Toilet",
+      "latitude": 21.4278908,
+      "longitude": 91.9712204,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 4.5,
+      "address": "Laboni Point, Cox's Bazar"
+    },
+    {
+      "name": "Public Toilet, Laboni Beach",
+      "latitude": 21.4267354,
+      "longitude": 91.9732921,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 3.8,
+      "address": "Laboni Beach Road, Cox's Bazar"
+    },
+    {
+      "name": "Sugandha Multipurpose Public Toilet",
+      "latitude": 21.4398932,
+      "longitude": 91.9764983,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": null,
+      "address": "Sugandha Beach Point, Cox's Bazar"
+    },
+    {
+      "name": "Cox's Bazar Bus Terminal Public Toilet",
+      "latitude": 21.4273371,
+      "longitude": 92.0040976,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 4.7,
+      "address": "Kendrio Bus Terminal, Cox's Bazar"
+    },
+    {
+      "name": "Kolatoli Public Toilet",
+      "latitude": 21.4154283,
+      "longitude": 91.9843503,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 3.3,
+      "address": "Kolatoli, Cox's Bazar"
+    },
+    {
+      "name": "Khagrachhari Public Toilet",
+      "latitude": 23.1067477,
+      "longitude": 91.9819953,
+      "division": "Chattogram",
+      "district": "Khagrachhari",
+      "rating": 3.0,
+      "address": "Khagrachhari"
+    },
+    {
+      "name": "Public Toilet, Bus Station",
+      "latitude": 23.1114259,
+      "longitude": 91.9738034,
+      "division": "Chattogram",
+      "district": "Khagrachhari",
+      "rating": 3.5,
+      "address": "Bus Station, Khagrachhari"
+    },
+    {
+      "name": "Public Toilet, Bandarban",
+      "latitude": 22.1965253,
+      "longitude": 92.2174473,
+      "division": "Chattogram",
+      "district": "Bandarban",
+      "rating": null,
+      "address": "Bandarban"
+    },
+    {
+      "name": "Public Toilet, Bazar Station",
+      "latitude": 24.4520185,
+      "longitude": 89.702565,
+      "division": "Rajshahi",
+      "district": "Sirajganj",
+      "rating": 3.7,
+      "address": "Sirajganj"
+    },
+    {
+      "name": "Public Toilet, Old Post Office Road",
+      "latitude": 24.4564802,
+      "longitude": 89.7052927,
+      "division": "Rajshahi",
+      "district": "Sirajganj",
+      "rating": 4.0,
+      "address": "Puran Post Office Rd, Sirajganj"
+    },
+    {
+      "name": "Public Toilet, Central Jame Masjid",
+      "latitude": 24.4572634,
+      "longitude": 89.706507,
+      "division": "Rajshahi",
+      "district": "Sirajganj",
+      "rating": 4.7,
+      "address": "Shahid Sarwardi Rd, Sirajganj"
+    },
+    {
+      "name": "Public Toilet, Hasan Ghat",
+      "latitude": 24.0122365,
+      "longitude": 89.2467836,
+      "division": "Rajshahi",
+      "district": "Pabna",
+      "rating": null,
+      "address": "Pabna"
+    },
+    {
+      "name": "Female Bathroom (Public)",
+      "latitude": 24.0169746,
+      "longitude": 89.2424319,
+      "division": "Rajshahi",
+      "district": "Pabna",
+      "rating": null,
+      "address": "Pabna"
+    },
+    {
+      "name": "Sumaiya Public Toilet",
+      "latitude": 24.8479758,
+      "longitude": 89.3741809,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "rating": 3.4,
+      "address": "Nawabbari Rd, Bogura"
+    },
+    {
+      "name": "Public Toilet, College Road",
+      "latitude": 24.8486195,
+      "longitude": 89.371846,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "rating": 1.0,
+      "address": "College Rd, Bogura"
+    },
+    {
+      "name": "Public Toilet",
+      "latitude": 24.8465328,
+      "longitude": 89.3759203,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "rating": null,
+      "address": "Bogura"
+    },
+    {
+      "name": "Chelopara Public Toilet",
+      "latitude": 24.8506403,
+      "longitude": 89.3760974,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "rating": null,
+      "address": "Bogura"
+    },
+    {
+      "name": "Public Washroom (Pay & Use), Rajshahi Station",
+      "latitude": 24.37525,
+      "longitude": 88.609251,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": null,
+      "address": "Rajshahi Railway Station"
+    },
+    {
+      "name": "Station Public Toilet",
+      "latitude": 24.3748939,
+      "longitude": 88.6075144,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 3.6,
+      "address": "Shiroil, Rajshahi"
+    },
+    {
+      "name": "Public Toilet, Emergency Road",
+      "latitude": 24.3712813,
+      "longitude": 88.58504,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 4.1,
+      "address": "Emergency Rd, Rajshahi"
+    },
+    {
+      "name": "Newmarket Public Toilets",
+      "latitude": 24.3720107,
+      "longitude": 88.601807,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 3.0,
+      "address": "Hawker's Market, Newmarket, Rajshahi"
+    },
+    {
+      "name": "Public Toilet, near Bhubanmohan Park",
+      "latitude": 24.3662708,
+      "longitude": 88.5993176,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 4.0,
+      "address": "Rajshahi"
+    },
+    {
+      "name": "Talaimari Public Toilet",
+      "latitude": 24.3621832,
+      "longitude": 88.6269651,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 3.0,
+      "address": "Talaimari, Rajshahi"
+    },
+    {
+      "name": "Station Market Public Toilet",
+      "latitude": 24.3745662,
+      "longitude": 88.6061998,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": null,
+      "address": "Rajshahi"
+    },
+    {
+      "name": "Natore Station Public Toilet",
+      "latitude": 24.4100366,
+      "longitude": 88.9664175,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "rating": 3.0,
+      "address": "Natore-Dhaka Hwy, Natore"
+    },
+    {
+      "name": "Natore Station Bazar Public Toilet (Free)",
+      "latitude": 24.4111323,
+      "longitude": 88.9668365,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "rating": 3.8,
+      "address": "Chak Baidyanath, Natore"
+    },
+    {
+      "name": "Public Toilet, Tebaria Bus Stand",
+      "latitude": 24.4017905,
+      "longitude": 88.96893,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "rating": 5.0,
+      "address": "Natore City Bypass"
+    },
+    {
+      "name": "Railway Public Toilet",
+      "latitude": 24.4113893,
+      "longitude": 88.9664577,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "rating": 4.0,
+      "address": "Railway Station, Natore"
+    },
+    {
+      "name": "Public Toilet, Sadar Road",
+      "latitude": 25.1017666,
+      "longitude": 89.026921,
+      "division": "Rajshahi",
+      "district": "Joypurhat",
+      "rating": 5.0,
+      "address": "Sadar Rd, Joypurhat"
+    },
+    {
+      "name": "Mosque Toilet & Ozukhana",
+      "latitude": 25.0987467,
+      "longitude": 89.0258127,
+      "division": "Rajshahi",
+      "district": "Joypurhat",
+      "rating": 5.0,
+      "address": "Joypurhat"
+    },
+    {
+      "name": "Public Toilet, Sugar Mill Road",
+      "latitude": 25.0998448,
+      "longitude": 89.0256718,
+      "division": "Rajshahi",
+      "district": "Joypurhat",
+      "rating": null,
+      "address": "Joypurhat Sugar Mill Road"
+    },
+    {
+      "name": "Public Toilet, Gomastapur",
+      "latitude": 24.7900207,
+      "longitude": 88.3104554,
+      "division": "Rajshahi",
+      "district": "Chapainawabganj",
+      "rating": null,
+      "address": "Pirason Rd, Gomastapur, Chapainawabganj"
+    },
+    {
+      "name": "Public Toilet, Sonadanga Bus Terminal",
+      "latitude": 22.8165857,
+      "longitude": 89.5426428,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.0,
+      "address": "Sonadanga Bus Terminal, Khulna"
+    },
+    {
+      "name": "Public Toilet, Khulna Rail Station",
+      "latitude": 22.8220216,
+      "longitude": 89.5590519,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 3.7,
+      "address": "Station Rd, Khulna"
+    },
+    {
+      "name": "Public Toilet, near Daulatpur",
+      "latitude": 22.8680991,
+      "longitude": 89.5263436,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.3,
+      "address": "Daulatpur, Khulna"
+    },
+    {
+      "name": "Public Toilet (24hr)",
+      "latitude": 22.8517063,
+      "longitude": 89.5294839,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": null,
+      "address": "Khulna 9000"
+    },
+    {
+      "name": "Banabilas Public Toilet",
+      "latitude": 22.9239838,
+      "longitude": 89.497065,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.0,
+      "address": "Khulna"
+    },
+    {
+      "name": "Rupsha Shondha Bazar Public Toilet",
+      "latitude": 22.801586,
+      "longitude": 89.5802324,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 5.0,
+      "address": "Rupsha Ghat Rd, Khulna"
+    },
+    {
+      "name": "Jatishongho Park Public Toilet",
+      "latitude": 22.8113016,
+      "longitude": 89.5614159,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 5.0,
+      "address": "Khan Jahan Ali Rd, Khulna"
+    },
+    {
+      "name": "Public Toilet, Zero Point Bus Stop",
+      "latitude": 22.7980929,
+      "longitude": 89.5290688,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 5.0,
+      "address": "N709, Khulna"
+    },
+    {
+      "name": "East Rupsha Bus Terminal Public Toilet",
+      "latitude": 22.8009791,
+      "longitude": 89.5844148,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 5.0,
+      "address": "Khulna"
+    },
+    {
+      "name": "Rupsha Ghat Public Toilet",
+      "latitude": 22.8017763,
+      "longitude": 89.5809033,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 3.0,
+      "address": "Rupsha Ferry Ghat, Khulna"
+    },
+    {
+      "name": "Community Public Toilet, KCC",
+      "latitude": 22.8147433,
+      "longitude": 89.5660584,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": null,
+      "address": "Jessore Rd, Khulna"
+    },
+    {
+      "name": "Jashore Railway Station Public Toilet",
+      "latitude": 23.1545898,
+      "longitude": 89.2081609,
+      "division": "Khulna",
+      "district": "Jashore",
+      "rating": 3.7,
+      "address": "Rail Rd, Jashore"
+    },
+    {
+      "name": "Public Toilet, Jashore Bus Terminal",
+      "latitude": 23.1437753,
+      "longitude": 89.2156554,
+      "division": "Khulna",
+      "district": "Jashore",
+      "rating": 4.2,
+      "address": "Jashore Bus Terminal"
+    },
+    {
+      "name": "Public Toilet, Kushtia Court Railway",
+      "latitude": 23.9072631,
+      "longitude": 89.1276039,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": 5.0,
+      "address": "Ram Chandra Ray Chowdhury Rd, Kushtia"
+    },
+    {
+      "name": "Public Toilet",
+      "latitude": 23.9022037,
+      "longitude": 89.1240535,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": 4.5,
+      "address": "Kushtia"
+    },
+    {
+      "name": "Public Toilet, NS Road",
+      "latitude": 23.9084661,
+      "longitude": 89.1280742,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": null,
+      "address": "NS Rd, Kushtia"
+    },
+    {
+      "name": "Public Toilet, Mongolbaria Bazar",
+      "latitude": 23.9129993,
+      "longitude": 89.1130281,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": null,
+      "address": "Mongolbaria Bazar, Kushtia"
+    },
+    {
+      "name": "Renwick Park Toilet (Men)",
+      "latitude": 23.9149114,
+      "longitude": 89.1241471,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": null,
+      "address": "Renwick Park, Kushtia"
+    },
+    {
+      "name": "Renwick Park Toilet (Women)",
+      "latitude": 23.9149813,
+      "longitude": 89.1242061,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": null,
+      "address": "Renwick Park, Kushtia"
+    },
+    {
+      "name": "Roadside Public Toilet, Ramna",
+      "latitude": 23.7347699,
+      "longitude": 90.4006067,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 3.8,
+      "address": "Ramna, Dhaka"
+    },
+    {
+      "name": "DNCC Public Toilet",
+      "latitude": 23.7726958,
+      "longitude": 90.365513,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.1,
+      "address": "Khilji Rd, Dhaka"
+    },
+    {
+      "name": "Gulshan-2 Public Toilet",
+      "latitude": 23.7941325,
+      "longitude": 90.4148667,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.2,
+      "address": "DNCC Market, Gulshan-2, Dhaka"
+    },
+    {
+      "name": "Public Toilet, Hospital Footover Bridge",
+      "latitude": 23.8166204,
+      "longitude": 90.4109312,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 5.0,
+      "address": "Tongi Diversion Rd, Dhaka"
+    },
+    {
+      "name": "Public Toilet, AK Khandakar Road",
+      "latitude": 23.7801881,
+      "longitude": 90.4077394,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.4,
+      "address": "Bir Uttam AK Khandakar Rd, Dhaka"
+    },
+    {
+      "name": "Public Toilet, Main Road",
+      "latitude": 23.809203,
+      "longitude": 90.420447,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 3.8,
+      "address": "Dhaka"
+    },
+    {
+      "name": "Tejgaon Truck Stand Public Toilet",
+      "latitude": 23.7562064,
+      "longitude": 90.3959651,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.1,
+      "address": "Truck Stand Rd, Tejgaon, Dhaka"
+    },
+    {
+      "name": "Public Toilet, Sonargaon Road",
+      "latitude": 23.7583861,
+      "longitude": 90.3862437,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.2,
+      "address": "Dhaka"
+    },
+    {
+      "name": "Panthakunja Toilet",
+      "latitude": 23.747279,
+      "longitude": 90.3929476,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.1,
+      "address": "Bir Uttam CR Dutta Rd, Dhaka"
+    },
+    {
+      "name": "Public Toilet, Chowrasta-Joydebpur Road",
+      "latitude": 23.9923061,
+      "longitude": 90.3825718,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "rating": 3.3,
+      "address": "Chowrasta-Joydebpur Rd, Gazipur"
+    },
+    {
+      "name": "Gazipur DC Office Public Toilet",
+      "latitude": 24.00021,
+      "longitude": 90.4252595,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "rating": 4.1,
+      "address": "Gazipur"
+    },
+    {
+      "name": "Public Toilet, Bus Terminal",
+      "latitude": 24.7471248,
+      "longitude": 90.4219212,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": null,
+      "address": "Bus Terminal, Mymensingh"
+    },
+    {
+      "name": "Public Toilet, Uttar Bongo Bus Stand",
+      "latitude": 24.7476124,
+      "longitude": 90.4203575,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": 3.3,
+      "address": "Bridge Mor, Mymensingh"
+    },
+    {
+      "name": "Public Toilet, Patgudam Circle",
+      "latitude": 24.7481032,
+      "longitude": 90.4216196,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": null,
+      "address": "Shombhuganj Hwy, Mymensingh"
+    },
+    {
+      "name": "Public Toilet, Shombhugonj Bridge",
+      "latitude": 24.7478024,
+      "longitude": 90.4221782,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": null,
+      "address": "Mymensingh-Bhairab Rd"
+    },
+    {
+      "name": "Chowhatta Public Toilet",
+      "latitude": 24.9002618,
+      "longitude": 91.8690068,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 4.0,
+      "address": "Medical College Rd, Sylhet"
+    },
+    {
+      "name": "Public Toilet, Shahjalal Dorgah Area",
+      "latitude": 24.9018302,
+      "longitude": 91.8664331,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 5.0,
+      "address": "Dorgah Moholla Rd, Sylhet"
+    },
+    {
+      "name": "Shishu Park Public Toilet",
+      "latitude": 24.8925405,
+      "longitude": 91.8753352,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 4.0,
+      "address": "Kastoghar Rd, Sylhet"
+    },
+    {
+      "name": "Public Toilet, Muktijoddha Squire",
+      "latitude": 24.8813441,
+      "longitude": 91.8748991,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 3.7,
+      "address": "Sylhet"
+    },
+    {
+      "name": "Public Toilet, Medical College Road",
+      "latitude": 24.9005431,
+      "longitude": 91.8518414,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": null,
+      "address": "Medical College Rd, Sylhet"
+    },
+    {
+      "name": "Toilet & Bathroom, Dorgah Moholla Road",
+      "latitude": 24.9028406,
+      "longitude": 91.865414,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": null,
+      "address": "Dorgah Moholla Rd, Sylhet"
+    },
+    {
+      "name": "Rupatoli Bus Stand Public Toilet",
+      "latitude": 22.678478,
+      "longitude": 90.3457263,
+      "division": "Barishal",
+      "district": "Barishal",
+      "rating": 3.7,
+      "address": "Barisal-Pirojpur Hwy, Barishal"
+    },
+    {
+      "name": "Town Hall Public Toilet",
+      "latitude": 22.7045807,
+      "longitude": 90.3710691,
+      "division": "Barishal",
+      "district": "Barishal",
+      "rating": 5.0,
+      "address": "Barishal"
+    },
+    {
+      "name": "Public Toilet, BRTC Jatri Chhauni",
+      "latitude": 22.715431,
+      "longitude": 90.347896,
+      "division": "Barishal",
+      "district": "Barishal",
+      "rating": 3.0,
+      "address": "N8, Barishal"
+    },
+    {
+      "name": "Public Toilet, Thanar Ghat",
+      "latitude": 22.7132876,
+      "longitude": 90.3496278,
+      "division": "Barishal",
+      "district": "Barishal",
+      "rating": null,
+      "address": "Barishal"
+    },
+    {
+      "name": "Public Toilet, Medical College Hospital",
+      "latitude": 25.6126923,
+      "longitude": 88.6541669,
+      "division": "Rangpur",
+      "district": "Dinajpur",
+      "rating": 3.1,
+      "address": "Medical College Hospital, Dinajpur"
+    },
+    {
+      "name": "Shishu Park Public Toilet",
+      "latitude": 25.6145542,
+      "longitude": 88.6317178,
+      "division": "Rangpur",
+      "district": "Dinajpur",
+      "rating": null,
+      "address": "Dinajpur"
+    },
+    {
+      "name": "Community Toilet, Boro Math",
+      "latitude": 25.6200841,
+      "longitude": 88.6332697,
+      "division": "Rangpur",
+      "district": "Dinajpur",
+      "rating": 4.3,
+      "address": "Circuit House Rd, Dinajpur"
+    }
+  ]
+}

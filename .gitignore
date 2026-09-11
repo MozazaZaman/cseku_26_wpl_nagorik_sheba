@@ -1,0 +1,9 @@
+node_modules/
+dist/
+server/data/
+server/uploads/
+mobile/.dart_tool/
+mobile/build/
+*.db
+*.db-wal
+*.db-shm

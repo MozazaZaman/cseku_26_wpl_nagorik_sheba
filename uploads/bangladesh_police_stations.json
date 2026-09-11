@@ -1,0 +1,586 @@
+{
+  "meta": {
+    "description": "List of Bangladesh Police stations (mainly district/city Sadar or Kotwali/Model thanas) covering all 64 districts across all 8 divisions, with contact numbers and geolocation, sourced from Google Places data.",
+    "source": "Google Places (via places_search)",
+    "note": "One representative station (usually the Sadar/Kotwali/Model thana, or district Police Super's office where a thana entry lacked a listed phone number) is included per district. Phone numbers are as listed on Google Places; some entries had no publicly listed number (shown as null). This is not an exhaustive list of every thana in the country.",
+    "total_count": 64
+  },
+  "police_stations": [
+    {
+      "name": "Kotwali Police Station, Dhaka Metropolitan Police",
+      "latitude": 23.7076011,
+      "longitude": 90.4095011,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": "+880 2-7116255",
+      "address": "2no Simson Rd, Dhaka 1100"
+    },
+    {
+      "name": "Faridpur Sadar Kotowali Thana",
+      "latitude": 23.6003539,
+      "longitude": 89.8345024,
+      "division": "Dhaka",
+      "district": "Faridpur",
+      "phone_number": "+880 1713-373556",
+      "address": "6 Thana Rd, Faridpur 7800"
+    },
+    {
+      "name": "Gazipur Sadar Police Station",
+      "latitude": 24.0023228,
+      "longitude": 90.4195743,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "phone_number": "+880 2-9252255",
+      "address": "Thana Rd, Gazipur"
+    },
+    {
+      "name": "Gopalganj Sadar Thana",
+      "latitude": 23.0127637,
+      "longitude": 89.8332873,
+      "division": "Dhaka",
+      "district": "Gopalganj",
+      "phone_number": "+880 1320-099370",
+      "address": "Gopalganj"
+    },
+    {
+      "name": "Kishoreganj Sadar Model Police Station",
+      "latitude": 24.4382762,
+      "longitude": 90.7800948,
+      "division": "Dhaka",
+      "district": "Kishoreganj",
+      "phone_number": "+880 1713-373480",
+      "address": "Mymensingh Road, Kishoreganj"
+    },
+    {
+      "name": "Madaripur Sadar Model Thana",
+      "latitude": 23.1670057,
+      "longitude": 90.2004945,
+      "division": "Dhaka",
+      "district": "Madaripur",
+      "phone_number": "+880 1320-098375",
+      "address": "Madaripur-Dhaka Hwy, Madaripur"
+    },
+    {
+      "name": "Manikganj Sadar Police Station",
+      "latitude": 23.861647,
+      "longitude": 90.0012473,
+      "division": "Dhaka",
+      "district": "Manikganj",
+      "phone_number": "+880 1713-373379",
+      "address": "R504, Manikganj"
+    },
+    {
+      "name": "Munshiganj Sadar Police Station",
+      "latitude": 23.5533854,
+      "longitude": 90.5341512,
+      "division": "Dhaka",
+      "district": "Munshiganj",
+      "phone_number": "+880 1713-373396",
+      "address": "Munshiganj"
+    },
+    {
+      "name": "Narayanganj Model Thana",
+      "latitude": 23.6152484,
+      "longitude": 90.5039385,
+      "division": "Dhaka",
+      "district": "Narayanganj",
+      "phone_number": "+880 1320-090382",
+      "address": "19 Sahid Suhrwardi Sarak, Narayanganj 1400"
+    },
+    {
+      "name": "Narsingdi Model Police Station",
+      "latitude": 23.9234983,
+      "longitude": 90.7100286,
+      "division": "Dhaka",
+      "district": "Narsingdi",
+      "phone_number": "+880 1320-091380",
+      "address": "Bhuiyanpara-Nobabbari Silpara Rd, Narsingdi"
+    },
+    {
+      "name": "Rajbari Police Station",
+      "latitude": 23.7563805,
+      "longitude": 89.6435951,
+      "division": "Dhaka",
+      "district": "Rajbari",
+      "phone_number": "+880 1320-101374",
+      "address": "Rajbari Porosova Rd, Rajbari"
+    },
+    {
+      "name": "Palong Model Thana, Shariatpur",
+      "latitude": 23.2185523,
+      "longitude": 90.3486114,
+      "division": "Dhaka",
+      "district": "Shariatpur",
+      "phone_number": "+880 1320-100379",
+      "address": "Madaripur-Shariatpur Hwy, Shariatpur"
+    },
+    {
+      "name": "Tangail Sadar Thana",
+      "latitude": 24.2503092,
+      "longitude": 89.9144727,
+      "division": "Dhaka",
+      "district": "Tangail",
+      "phone_number": "+880 1713-373454",
+      "address": "Tangail"
+    },
+    {
+      "name": "Kotwali Police Station, Chattogram",
+      "latitude": 22.3336744,
+      "longitude": 91.8370019,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "phone_number": "+880 1713-373256",
+      "address": "Abdur Rahman Rd, Chittagong 4300"
+    },
+    {
+      "name": "Cox's Bazar Sadar Model Police Station",
+      "latitude": 21.4447665,
+      "longitude": 91.9738805,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "phone_number": "+880 1713-373663",
+      "address": "Police Station Rd, Cox's Bazar 4700"
+    },
+    {
+      "name": "Kotwali Police Station, Rangamati",
+      "latitude": 22.6370882,
+      "longitude": 92.1858549,
+      "division": "Chattogram",
+      "district": "Rangamati",
+      "phone_number": "+880 351-62060",
+      "address": "Rangamati"
+    },
+    {
+      "name": "Bandarban Police Station",
+      "latitude": 22.1944808,
+      "longitude": 92.2164775,
+      "division": "Chattogram",
+      "district": "Bandarban",
+      "phone_number": "+880 1713-373267",
+      "address": "Main Rd, Bandarban"
+    },
+    {
+      "name": "Khagrachari Police Station",
+      "latitude": 23.1121545,
+      "longitude": 91.9899688,
+      "division": "Chattogram",
+      "district": "Khagrachhari",
+      "phone_number": "+880 1853-131209",
+      "address": "Khagrachari"
+    },
+    {
+      "name": "Feni Model Police Station",
+      "latitude": 23.0119246,
+      "longitude": 91.3982991,
+      "division": "Chattogram",
+      "district": "Feni",
+      "phone_number": "+880 1713-373778",
+      "address": "Grand Trunk Rd, Feni 3900"
+    },
+    {
+      "name": "Lakshmipur Sadar Model Thana",
+      "latitude": 22.939579,
+      "longitude": 90.8278648,
+      "division": "Chattogram",
+      "district": "Lakshmipur",
+      "phone_number": "+880 1751-395068",
+      "address": "Thana Rd, Lakshmipur"
+    },
+    {
+      "name": "Kotwali Model Police Station, Cumilla",
+      "latitude": 23.4648126,
+      "longitude": 91.1872674,
+      "division": "Chattogram",
+      "district": "Comilla",
+      "phone_number": "+880 1320-113996",
+      "address": "Cumilla"
+    },
+    {
+      "name": "Sudharam Model Police Station, Noakhali",
+      "latitude": 22.8711248,
+      "longitude": 91.0972586,
+      "division": "Chattogram",
+      "district": "Noakhali",
+      "phone_number": null,
+      "address": "Noakhali"
+    },
+    {
+      "name": "Chandpur Model Thana",
+      "latitude": 23.224366,
+      "longitude": 90.6531602,
+      "division": "Chattogram",
+      "district": "Chandpur",
+      "phone_number": "+880 1320-115981",
+      "address": "Thana Rd, Chandpur 3600"
+    },
+    {
+      "name": "Brahmanbaria Model Police Station",
+      "latitude": 23.9736683,
+      "longitude": 91.111835,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "phone_number": "+880 1713-373730",
+      "address": "Masjid Rd, Brahmanbaria 3400"
+    },
+    {
+      "name": "Boalia Model Police Station, Rajshahi",
+      "latitude": 24.3649625,
+      "longitude": 88.6042552,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "phone_number": "+880 721-774134",
+      "address": "Alupotti, Kumarpara, Rajshahi 6100"
+    },
+    {
+      "name": "Bogura Sadar Thana",
+      "latitude": 24.8504511,
+      "longitude": 89.3727966,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "phone_number": "+880 1320-126606",
+      "address": "Bogura"
+    },
+    {
+      "name": "Joypurhat Police Station",
+      "latitude": 25.1031287,
+      "longitude": 89.0232782,
+      "division": "Rajshahi",
+      "district": "Joypurhat",
+      "phone_number": "+880 1320-127574",
+      "address": "Thana Rd, Joypurhat 5900"
+    },
+    {
+      "name": "Naogaon Sadar Model Thana",
+      "latitude": 24.8249352,
+      "longitude": 88.9298373,
+      "division": "Rajshahi",
+      "district": "Naogaon",
+      "phone_number": "+880 1320-123590",
+      "address": "Naogaon"
+    },
+    {
+      "name": "Natore Sadar Police Station",
+      "latitude": 24.4116382,
+      "longitude": 88.9934166,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "phone_number": "+880 7716-6922",
+      "address": "Natore-Dhaka Hwy, Natore"
+    },
+    {
+      "name": "Chapainawabganj Sadar Model Police Station",
+      "latitude": 24.5995031,
+      "longitude": 88.2687806,
+      "division": "Rajshahi",
+      "district": "Chapainawabganj",
+      "phone_number": "+880 1713-373819",
+      "address": "Baten Kha Rd, Chapainawabganj"
+    },
+    {
+      "name": "Pabna Sadar Police Station",
+      "latitude": 24.0088444,
+      "longitude": 89.24003599999999,
+      "division": "Rajshahi",
+      "district": "Pabna",
+      "phone_number": "+880 731-65080",
+      "address": "Hospital Road, Pabna 6600"
+    },
+    {
+      "name": "Sirajganj Sadar Police Station",
+      "latitude": 24.4580924,
+      "longitude": 89.7008099,
+      "division": "Rajshahi",
+      "district": "Sirajganj",
+      "phone_number": "+880 1723-179141",
+      "address": "I.H Sirajee Rd, Sirajganj 6700"
+    },
+    {
+      "name": "Sonadanga Model Police Station, Khulna",
+      "latitude": 22.8160528,
+      "longitude": 89.5436271,
+      "division": "Khulna",
+      "district": "Khulna",
+      "phone_number": "+880 1713-373286",
+      "address": "Majid Sarani, Khulna 9200"
+    },
+    {
+      "name": "Bagerhat Sadar Model Thana",
+      "latitude": 22.6615244,
+      "longitude": 89.7947018,
+      "division": "Khulna",
+      "district": "Bagerhat",
+      "phone_number": "+880 1320-141179",
+      "address": "Old Mnigong Doratan Rd, Bagerhat"
+    },
+    {
+      "name": "Chuadanga Sadar Police Station",
+      "latitude": 23.645101,
+      "longitude": 88.8442288,
+      "division": "Khulna",
+      "district": "Chuadanga",
+      "phone_number": null,
+      "address": "R748, Chuadanga"
+    },
+    {
+      "name": "Kotwali Model Thana, Jashore",
+      "latitude": 23.1655545,
+      "longitude": 89.2138419,
+      "division": "Khulna",
+      "district": "Jashore",
+      "phone_number": "+880 1320-143180",
+      "address": "Chowrasta, Jessore 7400"
+    },
+    {
+      "name": "Jhenaidah Sadar Police Station",
+      "latitude": 23.5464353,
+      "longitude": 89.1740238,
+      "division": "Khulna",
+      "district": "Jhenaidah",
+      "phone_number": "+880 451-62222",
+      "address": "Old DC Court, Dhaka Highway, Jhenaidah"
+    },
+    {
+      "name": "Kushtia Police Station",
+      "latitude": 23.908235,
+      "longitude": 89.1278499,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "phone_number": "+880 1320-147180",
+      "address": "Kushtia"
+    },
+    {
+      "name": "Magura Police Station",
+      "latitude": 23.4909528,
+      "longitude": 89.422574,
+      "division": "Khulna",
+      "district": "Magura",
+      "phone_number": "+880 1713-374179",
+      "address": "Syed Ator Ali Rd, Magura 7600"
+    },
+    {
+      "name": "Meherpur Police Station",
+      "latitude": 23.7790242,
+      "longitude": 88.6257787,
+      "division": "Khulna",
+      "district": "Meherpur",
+      "phone_number": "+880 1320-149164",
+      "address": "Meherpur 7100"
+    },
+    {
+      "name": "SP Office, Narail (District Police HQ)",
+      "latitude": 23.1760344,
+      "longitude": 89.4999351,
+      "division": "Khulna",
+      "district": "Narail",
+      "phone_number": "+880 1320-146100",
+      "address": "Narail"
+    },
+    {
+      "name": "Satkhira Police Station",
+      "latitude": 22.7115196,
+      "longitude": 89.0732972,
+      "division": "Khulna",
+      "district": "Satkhira",
+      "phone_number": "+880 1713-374141",
+      "address": "Satkhira"
+    },
+    {
+      "name": "Kotwali Model Police Station, Barishal",
+      "latitude": 22.7063129,
+      "longitude": 90.3718209,
+      "division": "Barishal",
+      "district": "Barisal",
+      "phone_number": "+880 1712-740633",
+      "address": "Barishal"
+    },
+    {
+      "name": "Barguna Police Station",
+      "latitude": 22.1597753,
+      "longitude": 90.1234725,
+      "division": "Barishal",
+      "district": "Barguna",
+      "phone_number": "+880 1793-150066",
+      "address": "Barguna"
+    },
+    {
+      "name": "Police Office, Bhola",
+      "latitude": 22.6869494,
+      "longitude": 90.6455507,
+      "division": "Barishal",
+      "district": "Bhola",
+      "phone_number": "+880 1794-430001",
+      "address": "Sailibakpur Union, Bhola"
+    },
+    {
+      "name": "Jhalokati Police Station",
+      "latitude": 22.6389099,
+      "longitude": 90.197578,
+      "division": "Barishal",
+      "district": "Jhalakathi",
+      "phone_number": null,
+      "address": "Jhalakathi 8400"
+    },
+    {
+      "name": "Patuakhali Sadar Police Station",
+      "latitude": 22.3635639,
+      "longitude": 90.3403525,
+      "division": "Barishal",
+      "district": "Patuakhali",
+      "phone_number": "+880 1751-136237",
+      "address": "Sadar Rd, Patuakhali"
+    },
+    {
+      "name": "Pirojpur Police Station",
+      "latitude": 22.579268,
+      "longitude": 89.9720968,
+      "division": "Barishal",
+      "district": "Pirojpur",
+      "phone_number": "+880 1885-946539",
+      "address": "Police Station Rd, Pirojpur Pourashava"
+    },
+    {
+      "name": "Kotwali Model Police Station, Sylhet",
+      "latitude": 24.8885766,
+      "longitude": 91.8659369,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "phone_number": "+880 1713-374517",
+      "address": "Sylhet 3100"
+    },
+    {
+      "name": "Moulvibazar Model Police Station",
+      "latitude": 24.4794251,
+      "longitude": 91.765843,
+      "division": "Sylhet",
+      "district": "Moulvibazar",
+      "phone_number": "+880 1713-374439",
+      "address": "N207, Moulvibazar"
+    },
+    {
+      "name": "Habiganj Headquarter Police Station",
+      "latitude": 24.3733699,
+      "longitude": 91.4161507,
+      "division": "Sylhet",
+      "district": "Habiganj",
+      "phone_number": "+880 1713-374398",
+      "address": "Thana Rd, Habiganj"
+    },
+    {
+      "name": "Sunamganj Police Station",
+      "latitude": 25.0711203,
+      "longitude": 91.400446,
+      "division": "Sylhet",
+      "district": "Sunamganj",
+      "phone_number": "+880 1713-374418",
+      "address": "Sunamganj 3000"
+    },
+    {
+      "name": "Kotwali Police Station, Rangpur",
+      "latitude": 25.7474729,
+      "longitude": 89.2503799,
+      "division": "Rangpur",
+      "district": "Rangpur",
+      "phone_number": "+880 521-63090",
+      "address": "Kotwali Thana Rd, Rangpur 5400"
+    },
+    {
+      "name": "Dinajpur Police Station",
+      "latitude": 25.6361137,
+      "longitude": 88.63878,
+      "division": "Rangpur",
+      "district": "Dinajpur",
+      "phone_number": "+880 531-63132",
+      "address": "Kalitola-Charubabaur Mor Rd, Dinajpur 5200"
+    },
+    {
+      "name": "Kurigram Police Station",
+      "latitude": 25.8062989,
+      "longitude": 89.6367945,
+      "division": "Rangpur",
+      "district": "Kurigram",
+      "phone_number": "+880 581-61344",
+      "address": "Police Line Rd, Kurigram"
+    },
+    {
+      "name": "Gaibandha Sadar Police Station",
+      "latitude": 25.3277498,
+      "longitude": 89.5407575,
+      "division": "Rangpur",
+      "district": "Gaibandha",
+      "phone_number": "+880 1320-132381",
+      "address": "Gaibandha 5700"
+    },
+    {
+      "name": "Nilphamari Police Station",
+      "latitude": 25.9313062,
+      "longitude": 88.8570051,
+      "division": "Rangpur",
+      "district": "Nilphamari",
+      "phone_number": "+880 1713-373909",
+      "address": "Thana Rd, Nilphamari 5300"
+    },
+    {
+      "name": "Panchagarh Sadar Police Station",
+      "latitude": 26.3324911,
+      "longitude": 88.5542701,
+      "division": "Rangpur",
+      "district": "Panchagarh",
+      "phone_number": "+880 1713-373999",
+      "address": "B620, Panchagarh"
+    },
+    {
+      "name": "Thakurgaon Sadar Police Station",
+      "latitude": 26.0348496,
+      "longitude": 88.4611506,
+      "division": "Rangpur",
+      "district": "Thakurgaon",
+      "phone_number": "+880 1769-691251",
+      "address": "North Circular Road, Thakurgaon 5100"
+    },
+    {
+      "name": "Lalmonirhat Sadar Police Station",
+      "latitude": 25.9158622,
+      "longitude": 89.4489948,
+      "division": "Rangpur",
+      "district": "Lalmonirhat",
+      "phone_number": "+880 1765-890504",
+      "address": "Lalmonirhat"
+    },
+    {
+      "name": "Kotwali Model Thana, Mymensingh",
+      "latitude": 23.7206439,
+      "longitude": 90.407455,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "phone_number": "+880 91-65781",
+      "address": "Mymensingh"
+    },
+    {
+      "name": "Jamalpur Police Station",
+      "latitude": 24.9390002,
+      "longitude": 89.9366144,
+      "division": "Mymensingh",
+      "district": "Jamalpur",
+      "phone_number": "+880 1713-373538",
+      "address": "Medical Rd, Jamalpur 2000"
+    },
+    {
+      "name": "Office of the Police Super, Netrokona (District Police HQ)",
+      "latitude": 24.8723891,
+      "longitude": 90.7282855,
+      "division": "Mymensingh",
+      "district": "Netrokona",
+      "phone_number": "+880 1713-373497",
+      "address": "Netrokona"
+    },
+    {
+      "name": "Sherpur Sadar Thana",
+      "latitude": 25.011936,
+      "longitude": 90.0179266,
+      "division": "Mymensingh",
+      "district": "Sherpur",
+      "phone_number": "+880 1713-373523",
+      "address": "Sherpur"
+    }
+  ]
+}

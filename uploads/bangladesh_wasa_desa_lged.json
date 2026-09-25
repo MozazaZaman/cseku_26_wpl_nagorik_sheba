@@ -1,0 +1,695 @@
+{
+  "meta": {
+    "description": "Bangladesh government utility/infrastructure offices: WASA (Water Supply & Sewerage Authority), DESA's successor companies (DESCO/DPDC), and LGED (Local Government Engineering Department) district offices, with contact numbers and geolocation, sourced from Google Places data.",
+    "important_notes": [
+      "WASA is NOT a nationwide organization — it exists as an independent statutory body only in Dhaka, Chattogram, Khulna, and Rajshahi. Other cities' water supply is typically handled by the local City Corporation/Pourashava (municipality), not a separate WASA.",
+      "DESA (Dhaka Electric Supply Authority) was abolished in 2008. Its assets and service area were split between two successor companies: DESCO (serves Mirpur & Gulshan areas of Dhaka) and DPDC (serves the rest of Dhaka city plus Narayanganj/Tongi). Entries under 'desa_successor_offices' represent these two companies, not a currently-operating 'DESA'.",
+      "LGED has an office in every one of Bangladesh's 64 districts (plus HQ and divisional offices); one representative district office is listed per district here, not every upazila sub-office.",
+      "Phone numbers are as publicly listed on Google Places; some offices had no listed number (shown as null)."
+    ],
+    "wasa_count": 7,
+    "desa_successor_count": 3,
+    "lged_count": 65
+  },
+  "wasa_offices": [
+    {
+      "name": "Dhaka WASA Head Office",
+      "latitude": 23.7532387,
+      "longitude": 90.392429,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": null,
+      "address": "98 Kazi Nazrul Islam Ave, Kawran Bazar, Dhaka 1215"
+    },
+    {
+      "name": "Dhaka WASA Zone 8 (MODS) Office",
+      "latitude": 23.7972065,
+      "longitude": 90.4258723,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": null,
+      "address": "House 16, 1/A Madani Ave, Notun Bazar, Badda, Dhaka 1212"
+    },
+    {
+      "name": "Chattogram WASA (CWASA) Head Office",
+      "latitude": 22.3515435,
+      "longitude": 91.8223631,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "phone_number": "+880 31-614269",
+      "address": "WASA Bhaban, WASA Circle, Mohammad Ali Rd, Chattogram 4000"
+    },
+    {
+      "name": "Khulna WASA Headquarters",
+      "latitude": 22.8322012,
+      "longitude": 89.5524412,
+      "division": "Khulna",
+      "district": "Khulna",
+      "phone_number": "+880 41-762996",
+      "address": "7 Roosevelt Jetty Ghat Road, Khulna 9000"
+    },
+    {
+      "name": "Khulna WASA Regional Office (Ka Zone)",
+      "latitude": 22.8927914,
+      "longitude": 89.5117313,
+      "division": "Khulna",
+      "district": "Khulna",
+      "phone_number": null,
+      "address": "Khulna-Jessore-Dhaka Hwy, Khulna"
+    },
+    {
+      "name": "Khulna WASA Regional Office (Ga & Gha Zone)",
+      "latitude": 22.8150636,
+      "longitude": 89.5659961,
+      "division": "Khulna",
+      "district": "Khulna",
+      "phone_number": null,
+      "address": "1A Upper Jessore Rd, Khulna 9100"
+    },
+    {
+      "name": "Rajshahi WASA",
+      "latitude": 24.3782107,
+      "longitude": 88.5969516,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "phone_number": null,
+      "address": "Uposhohor, Rajshahi"
+    }
+  ],
+  "desa_successor_offices": [
+    {
+      "name": "DESCO Head Office (Dhaka Electric Supply Company Ltd.)",
+      "latitude": 23.8320427,
+      "longitude": 90.4187621,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": "+880 2-8900501",
+      "address": "22/B Kobi Faruk Sarani, Nikunja-2, Dhaka 1229"
+    },
+    {
+      "name": "DESCO Rupnagar Sales & Distribution Division",
+      "latitude": 23.8103551,
+      "longitude": 90.3645588,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": "+880 2-9001051",
+      "address": "Plot 1/KA, Block C, Mirpur, Dhaka 1216"
+    },
+    {
+      "name": "Dhaka Power Distribution Company (DPDC) Office",
+      "latitude": 23.7736427,
+      "longitude": 90.3899784,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": "+880 1639-668896",
+      "address": "Bir Uttam Ziaur Rahman Rd, Dhaka 1215"
+    }
+  ],
+  "lged_offices": [
+    {
+      "name": "LGED Headquarters (LGED Bhaban)",
+      "latitude": 23.7775117,
+      "longitude": 90.3779252,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": "+880 2-58152802",
+      "address": "Agargaon, Dhaka 1207"
+    },
+    {
+      "name": "LGED Dhaka Region & District Office",
+      "latitude": 23.780258,
+      "longitude": 90.3709777,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "phone_number": "+880 2-8114804",
+      "address": "Haji Goli, Agargaon, Dhaka"
+    },
+    {
+      "name": "LGED District Office, Faridpur",
+      "latitude": 23.6047385,
+      "longitude": 89.842327,
+      "division": "Dhaka",
+      "district": "Faridpur",
+      "phone_number": null,
+      "address": "Rajendra College Rd, Faridpur 7800"
+    },
+    {
+      "name": "LGED Bhaban, Gazipur",
+      "latitude": 23.9909652,
+      "longitude": 90.3880402,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "phone_number": "+880 2-9263989",
+      "address": "Gazipur"
+    },
+    {
+      "name": "LGED District Office, Comilla",
+      "latitude": 23.4674846,
+      "longitude": 91.1768294,
+      "division": "Chattogram",
+      "district": "Comilla",
+      "phone_number": "+880 1708-123190",
+      "address": "Shaheed Dhirendranath Dhatta Rd, Cumilla"
+    },
+    {
+      "name": "LGED District Office, Chattogram",
+      "latitude": 22.3684964,
+      "longitude": 91.8275172,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "phone_number": "+880 31-651403",
+      "address": "37, 7 CDA Ave, Chittagong 4000"
+    },
+    {
+      "name": "LGED Office, Cox's Bazar",
+      "latitude": 21.4364992,
+      "longitude": 91.9718759,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "phone_number": "+880 1843-858143",
+      "address": "Motel Rd, Cox's Bazar 4700"
+    },
+    {
+      "name": "LGED District Office, Rajshahi",
+      "latitude": 24.3690117,
+      "longitude": 88.5687101,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "phone_number": "+880 721-775553",
+      "address": "Zaidur Rahman Ave, Rajshahi"
+    },
+    {
+      "name": "LGED District Office, Bogura",
+      "latitude": 24.8574074,
+      "longitude": 89.353078,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "phone_number": "+880 51-60096",
+      "address": "Santahar Rd, Bogura"
+    },
+    {
+      "name": "LGED, Khulna (Divisional Office)",
+      "latitude": 22.8046709,
+      "longitude": 89.5778527,
+      "division": "Khulna",
+      "district": "Khulna",
+      "phone_number": "+880 41-723183",
+      "address": "Rupsha Strand Rd, Khulna"
+    },
+    {
+      "name": "LGED District Office, Jashore",
+      "latitude": 23.1787359,
+      "longitude": 89.1910226,
+      "division": "Khulna",
+      "district": "Jashore",
+      "phone_number": null,
+      "address": "Airport Bypass Rd, Jessore 7400"
+    },
+    {
+      "name": "LGED Barisal (Divisional & District Office)",
+      "latitude": 22.6921744,
+      "longitude": 90.3704342,
+      "division": "Barishal",
+      "district": "Barisal",
+      "phone_number": "+880 431-71054",
+      "address": "Barishal"
+    },
+    {
+      "name": "LGED Office, Sylhet (Divisional Office)",
+      "latitude": 24.8966706,
+      "longitude": 91.8490091,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "phone_number": null,
+      "address": "Nobab Rd, Sylhet"
+    },
+    {
+      "name": "LGED Bhaban, Rangpur (Divisional Office)",
+      "latitude": 25.7589639,
+      "longitude": 89.2411566,
+      "division": "Rangpur",
+      "district": "Rangpur",
+      "phone_number": "+880 521-62362",
+      "address": "Dhaap Road, Rangpur"
+    },
+    {
+      "name": "LGED Office, Mymensingh (Divisional Office)",
+      "latitude": 24.748748,
+      "longitude": 90.4188627,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "phone_number": null,
+      "address": "Patgudam Rd, Mymensingh"
+    },
+    {
+      "name": "LGED District Office, Feni",
+      "latitude": 23.0196488,
+      "longitude": 91.3894175,
+      "division": "Chattogram",
+      "district": "Feni",
+      "phone_number": null,
+      "address": "Grand Trunk Rd, Feni 3900"
+    },
+    {
+      "name": "LGED District Office, Brahmanbaria",
+      "latitude": 23.9575508,
+      "longitude": 91.1106474,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "phone_number": "+880 1836-838187",
+      "address": "Kawtoli, Brahmanbaria 3400"
+    },
+    {
+      "name": "LGED, Rangamati",
+      "latitude": 22.6618882,
+      "longitude": 92.1660994,
+      "division": "Chattogram",
+      "district": "Rangamati",
+      "phone_number": null,
+      "address": "Rangamati 4500"
+    },
+    {
+      "name": "LGED Office, Bandarban",
+      "latitude": 22.1942901,
+      "longitude": 92.2199655,
+      "division": "Chattogram",
+      "district": "Bandarban",
+      "phone_number": null,
+      "address": "Judges' Ct Rd, Bandarban"
+    },
+    {
+      "name": "LGED Office, Khagrachari",
+      "latitude": 23.2038998,
+      "longitude": 91.921387,
+      "division": "Chattogram",
+      "district": "Khagrachhari",
+      "phone_number": "+880 1708-123205",
+      "address": "Panchari-Khagrachari Rd, Khagrachhari 4400"
+    },
+    {
+      "name": "LGED District Office, Chandpur",
+      "latitude": 23.2321958,
+      "longitude": 90.663207,
+      "division": "Chattogram",
+      "district": "Chandpur",
+      "phone_number": "+880 1708-123187",
+      "address": "Taltala, Chandpur"
+    },
+    {
+      "name": "LGED District Office, Lakshmipur",
+      "latitude": 22.9415625,
+      "longitude": 90.8485537,
+      "division": "Chattogram",
+      "district": "Lakshmipur",
+      "phone_number": "+880 1611-051208",
+      "address": "R140, Lakshmipur 3700"
+    },
+    {
+      "name": "LGED District Office, Noakhali",
+      "latitude": 22.871138,
+      "longitude": 91.0943189,
+      "division": "Chattogram",
+      "district": "Noakhali",
+      "phone_number": "+880 321-61340",
+      "address": "Hospital Rd, Noakhali 3800"
+    },
+    {
+      "name": "LGED Office, Narayanganj",
+      "latitude": 23.6348018,
+      "longitude": 90.4948549,
+      "division": "Dhaka",
+      "district": "Narayanganj",
+      "phone_number": "+880 1748-202018",
+      "address": "Narayanganj"
+    },
+    {
+      "name": "LGED Office, Narsingdi",
+      "latitude": 23.9331525,
+      "longitude": 90.7099981,
+      "division": "Dhaka",
+      "district": "Narsingdi",
+      "phone_number": null,
+      "address": "Narsingdi 1600"
+    },
+    {
+      "name": "LGED District Office, Madaripur",
+      "latitude": 23.1636582,
+      "longitude": 90.1869019,
+      "division": "Dhaka",
+      "district": "Madaripur",
+      "phone_number": "+880 661-62445",
+      "address": "Madaripur"
+    },
+    {
+      "name": "LGED Office, Shariatpur",
+      "latitude": 23.2057647,
+      "longitude": 90.350204,
+      "division": "Dhaka",
+      "district": "Shariatpur",
+      "phone_number": "+880 1716-612286",
+      "address": "Shariatpur"
+    },
+    {
+      "name": "Gopalganj LGED",
+      "latitude": 22.9972853,
+      "longitude": 89.8145058,
+      "division": "Dhaka",
+      "district": "Gopalganj",
+      "phone_number": null,
+      "address": "Gopalganj Town Rd, Gopalganj"
+    },
+    {
+      "name": "LGED Bhaban, Kishoreganj",
+      "latitude": 24.4268943,
+      "longitude": 90.7873833,
+      "division": "Dhaka",
+      "district": "Kishoreganj",
+      "phone_number": null,
+      "address": "Station Rd, Kishoreganj 2300"
+    },
+    {
+      "name": "LGED District Office, Manikganj",
+      "latitude": 23.8550087,
+      "longitude": 90.000743,
+      "division": "Dhaka",
+      "district": "Manikganj",
+      "phone_number": "+880 1324-966882",
+      "address": "Beutha Rd, Manikganj"
+    },
+    {
+      "name": "LGED District Office, Munshiganj",
+      "latitude": 23.5416946,
+      "longitude": 90.5334228,
+      "division": "Dhaka",
+      "district": "Munshiganj",
+      "phone_number": "+880 1875-440069",
+      "address": "Munshiganj 1500"
+    },
+    {
+      "name": "LGED, Rajbari",
+      "latitude": 23.7361471,
+      "longitude": 89.6550914,
+      "division": "Dhaka",
+      "district": "Rajbari",
+      "phone_number": null,
+      "address": "Rajbari"
+    },
+    {
+      "name": "LGED District Office, Tangail",
+      "latitude": 24.2722798,
+      "longitude": 89.921112,
+      "division": "Dhaka",
+      "district": "Tangail",
+      "phone_number": "+880 921-64261",
+      "address": "Medical College Rd, Tangail"
+    },
+    {
+      "name": "LGED Office, Joypurhat",
+      "latitude": 25.0929519,
+      "longitude": 89.0503237,
+      "division": "Rajshahi",
+      "district": "Joypurhat",
+      "phone_number": "+880 571-63558",
+      "address": "Sadar Rd, Joypurhat 5900"
+    },
+    {
+      "name": "LGED Office, Naogaon",
+      "latitude": 24.8291122,
+      "longitude": 88.9269799,
+      "division": "Rajshahi",
+      "district": "Naogaon",
+      "phone_number": null,
+      "address": "Naogaon"
+    },
+    {
+      "name": "LGED Office, Natore",
+      "latitude": 24.4204812,
+      "longitude": 88.9990716,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "phone_number": "+880 1716-185295",
+      "address": "Natore"
+    },
+    {
+      "name": "LGED Office, Chapainawabganj",
+      "latitude": 24.5952079,
+      "longitude": 88.2835022,
+      "division": "Rajshahi",
+      "district": "Chapainawabganj",
+      "phone_number": null,
+      "address": "Chapai Nawabganj"
+    },
+    {
+      "name": "LGED Office, Pabna",
+      "latitude": 24.0063063,
+      "longitude": 89.2237184,
+      "division": "Rajshahi",
+      "district": "Pabna",
+      "phone_number": null,
+      "address": "Mental Rd, Pabna"
+    },
+    {
+      "name": "LGED Office, Sirajganj",
+      "latitude": 24.451154,
+      "longitude": 89.6815521,
+      "division": "Rajshahi",
+      "district": "Sirajganj",
+      "phone_number": null,
+      "address": "R451, Sirajganj"
+    },
+    {
+      "name": "LGED, Bagerhat",
+      "latitude": 22.6589561,
+      "longitude": 89.7786906,
+      "division": "Khulna",
+      "district": "Bagerhat",
+      "phone_number": "+880 468-63096",
+      "address": "Dashani Rd, Bagerhat"
+    },
+    {
+      "name": "LGED, Chuadanga",
+      "latitude": 23.6356887,
+      "longitude": 88.8222755,
+      "division": "Khulna",
+      "district": "Chuadanga",
+      "phone_number": null,
+      "address": "Koborsthan Para, Chuadanga"
+    },
+    {
+      "name": "LGED District Office, Jhenaidah",
+      "latitude": 23.5463617,
+      "longitude": 89.155004,
+      "division": "Khulna",
+      "district": "Jhenaidah",
+      "phone_number": "+880 1759-923487",
+      "address": "Chuadanga-Jhenaidah Hwy, Jhenaidah"
+    },
+    {
+      "name": "LGED Office, Kushtia",
+      "latitude": 23.9010125,
+      "longitude": 89.118371,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "phone_number": "+880 7161-177",
+      "address": "Kushtia"
+    },
+    {
+      "name": "LGED Office, Magura",
+      "latitude": 23.4857666,
+      "longitude": 89.4085833,
+      "division": "Khulna",
+      "district": "Magura",
+      "phone_number": "+880 1817-091168",
+      "address": "Magura"
+    },
+    {
+      "name": "LGED, Meherpur",
+      "latitude": 23.7618048,
+      "longitude": 88.6341726,
+      "division": "Khulna",
+      "district": "Meherpur",
+      "phone_number": "+880 791-63436",
+      "address": "Meherpur"
+    },
+    {
+      "name": "LGED Office, Narail",
+      "latitude": 23.1777897,
+      "longitude": 89.5022163,
+      "division": "Khulna",
+      "district": "Narail",
+      "phone_number": "+880 481-62331",
+      "address": "Magura-Narail Rd, Narail 7500"
+    },
+    {
+      "name": "LGED, Satkhira",
+      "latitude": 22.7261324,
+      "longitude": 89.0660629,
+      "division": "Khulna",
+      "district": "Satkhira",
+      "phone_number": "+880 471-63413",
+      "address": "Satkhira-Kalaroa Rd, Satkhira"
+    },
+    {
+      "name": "LGED Bhaban, Barguna",
+      "latitude": 22.1561678,
+      "longitude": 90.1261711,
+      "division": "Barishal",
+      "district": "Barguna",
+      "phone_number": "+880 448-62542",
+      "address": "Hospital Rd, Barguna"
+    },
+    {
+      "name": "LGED XEN Office, Bhola",
+      "latitude": 22.6622467,
+      "longitude": 90.662918,
+      "division": "Barishal",
+      "district": "Bhola",
+      "phone_number": null,
+      "address": "Bhola"
+    },
+    {
+      "name": "LGED Office, Jhalokathi",
+      "latitude": 22.6436184,
+      "longitude": 90.2138428,
+      "division": "Barishal",
+      "district": "Jhalakathi",
+      "phone_number": null,
+      "address": "Jhalakathi"
+    },
+    {
+      "name": "LGED, Patuakhali",
+      "latitude": 22.3569258,
+      "longitude": 90.332033,
+      "division": "Barishal",
+      "district": "Patuakhali",
+      "phone_number": null,
+      "address": "Patuakhali"
+    },
+    {
+      "name": "LGED, Pirojpur",
+      "latitude": 22.5742552,
+      "longitude": 89.9799308,
+      "division": "Barishal",
+      "district": "Pirojpur",
+      "phone_number": "+880 461-62463",
+      "address": "Pirojpur Pourashava"
+    },
+    {
+      "name": "LGED Office, Moulvibazar",
+      "latitude": 24.4892569,
+      "longitude": 91.7507385,
+      "division": "Sylhet",
+      "district": "Moulvibazar",
+      "phone_number": "+880 861-62802",
+      "address": "Moulvibazar"
+    },
+    {
+      "name": "LGED Office, Habiganj",
+      "latitude": 24.3484028,
+      "longitude": 91.4264262,
+      "division": "Sylhet",
+      "district": "Habiganj",
+      "phone_number": "+880 1708-123199",
+      "address": "Shaistaganj-Habiganj Hwy, Habiganj"
+    },
+    {
+      "name": "LGED, Sunamganj",
+      "latitude": 25.0603431,
+      "longitude": 91.3903916,
+      "division": "Sylhet",
+      "district": "Sunamganj",
+      "phone_number": null,
+      "address": "Sunamganj"
+    },
+    {
+      "name": "LGED District Office, Dinajpur",
+      "latitude": 25.6112971,
+      "longitude": 88.6282891,
+      "division": "Rangpur",
+      "district": "Dinajpur",
+      "phone_number": null,
+      "address": "Dinajpur 5200"
+    },
+    {
+      "name": "LGED Office, Kurigram",
+      "latitude": 25.8089981,
+      "longitude": 89.640686,
+      "division": "Rangpur",
+      "district": "Kurigram",
+      "phone_number": "+880 581-61691",
+      "address": "Kurigram"
+    },
+    {
+      "name": "LGED Office, Gaibandha",
+      "latitude": 25.3268149,
+      "longitude": 89.5240732,
+      "division": "Rangpur",
+      "district": "Gaibandha",
+      "phone_number": null,
+      "address": "Gaibandha"
+    },
+    {
+      "name": "LGED Bhaban, Nilphamari",
+      "latitude": 25.9312626,
+      "longitude": 88.8583821,
+      "division": "Rangpur",
+      "district": "Nilphamari",
+      "phone_number": null,
+      "address": "Dak Bangla Rd, Nilphamari"
+    },
+    {
+      "name": "LGED Bhaban, Panchagarh",
+      "latitude": 26.3444183,
+      "longitude": 88.5577689,
+      "division": "Rangpur",
+      "district": "Panchagarh",
+      "phone_number": null,
+      "address": "Dhaka-Rangpur Hwy, Panchagarh 5000"
+    },
+    {
+      "name": "LGED, Thakurgaon",
+      "latitude": 26.038775,
+      "longitude": 88.4478295,
+      "division": "Rangpur",
+      "district": "Thakurgaon",
+      "phone_number": null,
+      "address": "Baliadangi Road, Thakurgaon"
+    },
+    {
+      "name": "LGED Office, Lalmonirhat",
+      "latitude": 25.9128079,
+      "longitude": 89.4297507,
+      "division": "Rangpur",
+      "district": "Lalmonirhat",
+      "phone_number": "+880 591-61393",
+      "address": "Lalmonirhat"
+    },
+    {
+      "name": "LGED Office, Jamalpur",
+      "latitude": 24.944579,
+      "longitude": 89.9311685,
+      "division": "Mymensingh",
+      "district": "Jamalpur",
+      "phone_number": null,
+      "address": "Jamalpur"
+    },
+    {
+      "name": "LGED Bhaban, Netrokona",
+      "latitude": 24.8750488,
+      "longitude": 90.7221043,
+      "division": "Mymensingh",
+      "district": "Netrokona",
+      "phone_number": null,
+      "address": "Netrokona-Mymensingh Rd, Netrokona"
+    },
+    {
+      "name": "LGED Bhaban, Sherpur",
+      "latitude": 25.020078,
+      "longitude": 90.0050677,
+      "division": "Mymensingh",
+      "district": "Sherpur",
+      "phone_number": "+880 1708-123239",
+      "address": "Sherpur"
+    }
+  ]
+}

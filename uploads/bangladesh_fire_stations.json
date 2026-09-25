@@ -1,0 +1,1063 @@
+{
+  "meta": {
+    "description": "List of Bangladesh Fire Service & Civil Defence stations covering all 64 districts across all 8 divisions, sourced from Google Places data.",
+    "source": "Google Places (via places_search)",
+    "note": "At least one station is included per district nationwide; larger cities/districts include multiple stations.",
+    "total_count": 117
+  },
+  "fire_stations": [
+    {
+      "name": "Fire Service & Civil Defence Station, Cumilla",
+      "latitude": 23.4638837,
+      "longitude": 91.1716828,
+      "division": "Chattogram",
+      "district": "Comilla",
+      "rating": 4.4,
+      "address": "Cumilla 3500"
+    },
+    {
+      "name": "EPZ Fire Service & Civil Defence, Comilla",
+      "latitude": 23.4413423,
+      "longitude": 91.178877,
+      "division": "Chattogram",
+      "district": "Comilla",
+      "rating": 4.1,
+      "address": "EPZ 2nd Gate Rd, Comilla"
+    },
+    {
+      "name": "Fire Service & Civil Defense, Cumilla Sadar South",
+      "latitude": 23.4104189,
+      "longitude": 91.1978276,
+      "division": "Chattogram",
+      "district": "Comilla",
+      "rating": 4.3,
+      "address": "Lakhinagar Rd, Comilla"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Feni",
+      "latitude": 23.009563,
+      "longitude": 91.3947831,
+      "division": "Chattogram",
+      "district": "Feni",
+      "rating": 4.4,
+      "address": "Shahid Shahidullah Kaisar Rd, Feni"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Brahmanbaria",
+      "latitude": 23.9734228,
+      "longitude": 91.1101966,
+      "division": "Chattogram",
+      "district": "Brahmanbaria",
+      "rating": 4.0,
+      "address": "Telephone Bhavan, Brahmanbaria"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Rangamati",
+      "latitude": 22.6492784,
+      "longitude": 92.1847984,
+      "division": "Chattogram",
+      "district": "Rangamati",
+      "rating": 4.5,
+      "address": "N106, Rangamati"
+    },
+    {
+      "name": "Maijdee Fire Station, Noakhali",
+      "latitude": 22.8737906,
+      "longitude": 91.0965351,
+      "division": "Chattogram",
+      "district": "Noakhali",
+      "rating": 4.7,
+      "address": "Chowmohani-Maijdee Rd, Noakhali"
+    },
+    {
+      "name": "Fire Service & Civil Defence Office, Chandpur",
+      "latitude": 23.2284189,
+      "longitude": 90.6651141,
+      "division": "Chattogram",
+      "district": "Chandpur",
+      "rating": 4.7,
+      "address": "Stadium Rd, Chandpur"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Chandpur South",
+      "latitude": 23.2263858,
+      "longitude": 90.6438047,
+      "division": "Chattogram",
+      "district": "Chandpur",
+      "rating": 4.5,
+      "address": "Poran Bazar Ghat, Chandpur"
+    },
+    {
+      "name": "Chandpur Fire Service (Bongobondhu Road)",
+      "latitude": 23.2281641,
+      "longitude": 90.6651131,
+      "division": "Chattogram",
+      "district": "Chandpur",
+      "rating": 5.0,
+      "address": "Bongobondhu Road, Chandpur"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Lakshmipur",
+      "latitude": 22.9448854,
+      "longitude": 90.8243078,
+      "division": "Chattogram",
+      "district": "Lakshmipur",
+      "rating": 4.2,
+      "address": "R140, Lakshmipur"
+    },
+    {
+      "name": "Bangladesh Fire Service, Agrabad, Chattogram",
+      "latitude": 22.3353526,
+      "longitude": 91.8127598,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.4,
+      "address": "Sheikh Mujib Rd, Dewan Haat, Chattogram"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Chandanpura, Chattogram",
+      "latitude": 22.3498842,
+      "longitude": 91.8388454,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.4,
+      "address": "Nabab Sirajuddaula Rd, Chattogram"
+    },
+    {
+      "name": "Chittagong Fire Service & Civil Defence, Bayazid",
+      "latitude": 22.3919217,
+      "longitude": 91.8113505,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.3,
+      "address": "Bayazid Bostami Rd, Chattogram"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Sheikh Mujib Road, Chattogram",
+      "latitude": 22.3294053,
+      "longitude": 91.8124464,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": null,
+      "address": "Sheikh Mujib Rd, Chattogram"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Nandankanon, Chattogram",
+      "latitude": 22.3370861,
+      "longitude": 91.8344922,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.6,
+      "address": "Chattogram 4000"
+    },
+    {
+      "name": "Bandar Fire Service & Civil Defence Station, Chattogram",
+      "latitude": 22.3133714,
+      "longitude": 91.8012636,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.1,
+      "address": "Port Internal Rd, Chattogram"
+    },
+    {
+      "name": "Kalurghat Modern Fire Service & Civil Defence Station",
+      "latitude": 22.3882597,
+      "longitude": 91.8627163,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": 4.6,
+      "address": "BFIDC Rd, Kalurghat, Chattogram"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Chattogram (South)",
+      "latitude": 22.2675108,
+      "longitude": 91.8008113,
+      "division": "Chattogram",
+      "district": "Chattogram",
+      "rating": null,
+      "address": "Chattogram"
+    },
+    {
+      "name": "Fire Service & Civil Defense, Cox's Bazar",
+      "latitude": 21.4433165,
+      "longitude": 91.9777492,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 4.2,
+      "address": "Bazar Ghata Rd, Cox's Bazar"
+    },
+    {
+      "name": "Cox's Bazar Fire Service and Civil Defense (2nd station)",
+      "latitude": 21.432171,
+      "longitude": 91.975307,
+      "division": "Chattogram",
+      "district": "Cox's Bazar",
+      "rating": 5.0,
+      "address": "Cox's Bazar"
+    },
+    {
+      "name": "Khagrachari Fire Station",
+      "latitude": 23.1079918,
+      "longitude": 91.9706833,
+      "division": "Chattogram",
+      "district": "Khagrachhari",
+      "rating": 4.6,
+      "address": "College Rd, Khagrachhari"
+    },
+    {
+      "name": "Office of Assistant Director, Fire Service, Bandarban",
+      "latitude": 22.1947607,
+      "longitude": 92.2230902,
+      "division": "Chattogram",
+      "district": "Bandarban",
+      "rating": null,
+      "address": "Forest Colony, Bandarban"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Sirajganj",
+      "latitude": 24.461194,
+      "longitude": 89.7073961,
+      "division": "Rajshahi",
+      "district": "Sirajganj",
+      "rating": 4.7,
+      "address": "Sirajganj"
+    },
+    {
+      "name": "Pabna Fire Station",
+      "latitude": 23.998322,
+      "longitude": 89.2381776,
+      "division": "Rajshahi",
+      "district": "Pabna",
+      "rating": 4.3,
+      "address": "R601, Pabna"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Bogura",
+      "latitude": 24.8313904,
+      "longitude": 89.3761414,
+      "division": "Rajshahi",
+      "district": "Bogura",
+      "rating": 4.5,
+      "address": "Sherpur Rd, Bogura"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Rajshahi",
+      "latitude": 24.3674129,
+      "longitude": 88.5897689,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 4.6,
+      "address": "Saheb Bazar Rd, Rajshahi"
+    },
+    {
+      "name": "Chowddopai Fire Service & Civil Defence Station, Rajshahi",
+      "latitude": 24.3675268,
+      "longitude": 88.6550408,
+      "division": "Rajshahi",
+      "district": "Rajshahi",
+      "rating": 4.2,
+      "address": "Rajshahi"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Natore",
+      "latitude": 24.4119224,
+      "longitude": 88.9913107,
+      "division": "Rajshahi",
+      "district": "Natore",
+      "rating": 4.4,
+      "address": "Dhaka-Rajshahi Hwy, Natore"
+    },
+    {
+      "name": "Joypurhat Fire Station",
+      "latitude": 25.1044825,
+      "longitude": 89.0256249,
+      "division": "Rajshahi",
+      "district": "Joypurhat",
+      "rating": 4.7,
+      "address": "Sugar Mill Road, Joypurhat"
+    },
+    {
+      "name": "Fire Service & Civil Defense, Chapainawabganj",
+      "latitude": 24.6020736,
+      "longitude": 88.2824434,
+      "division": "Rajshahi",
+      "district": "Chapainawabganj",
+      "rating": 4.4,
+      "address": "Nayagola Rd, Chapainawabganj"
+    },
+    {
+      "name": "Naogaon Fire Service & Civil Defence Station",
+      "latitude": 24.8057132,
+      "longitude": 88.951821,
+      "division": "Rajshahi",
+      "district": "Naogaon",
+      "rating": 4.7,
+      "address": "R545, Naogaon"
+    },
+    {
+      "name": "Fire Service & Civil Defense Divisional HQ, Khulna",
+      "latitude": 22.8311416,
+      "longitude": 89.5457518,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.6,
+      "address": "Khulna-Jessore-Dhaka Hwy, Khulna"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Khalishpur, Khulna",
+      "latitude": 22.857857,
+      "longitude": 89.5473497,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.4,
+      "address": "Khalishpur, Khulna"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Tootpara, Khulna",
+      "latitude": 22.805045,
+      "longitude": 89.5702551,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.3,
+      "address": "Khan Jahan Ali Rd, Khulna"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Daulatpur, Khulna",
+      "latitude": 22.8724982,
+      "longitude": 89.5191339,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 4.2,
+      "address": "Satkhira Rd, Khulna"
+    },
+    {
+      "name": "Dighalia Fire Service & Civil Defence",
+      "latitude": 22.8709994,
+      "longitude": 89.5331283,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 3.9,
+      "address": "Khulna"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Khanjahan Ali, Khulna",
+      "latitude": 22.9295961,
+      "longitude": 89.4859163,
+      "division": "Khulna",
+      "district": "Khulna",
+      "rating": 3.4,
+      "address": "Khulna City Bypass"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Jashore",
+      "latitude": 23.1609831,
+      "longitude": 89.209718,
+      "division": "Khulna",
+      "district": "Jashore",
+      "rating": 4.4,
+      "address": "Kashoblal Rd, Jashore"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Jessore Cantonment",
+      "latitude": 23.1981799,
+      "longitude": 89.17792,
+      "division": "Khulna",
+      "district": "Jashore",
+      "rating": 2.0,
+      "address": "Cantonment Link Rd, Jashore"
+    },
+    {
+      "name": "Keshabpur Fire Service & Civil Defence",
+      "latitude": 22.9013311,
+      "longitude": 89.2218918,
+      "division": "Khulna",
+      "district": "Jashore",
+      "rating": 5.0,
+      "address": "Jashore-Chuknagar Rd"
+    },
+    {
+      "name": "Bangladesh Fire Service & Civil Defense, Noapara",
+      "latitude": 23.0225284,
+      "longitude": 89.4062575,
+      "division": "Khulna",
+      "district": "Jashore",
+      "rating": 4.5,
+      "address": "Jashore-Khulna-Dhaka Hwy, Noapara"
+    },
+    {
+      "name": "Satkhira Fire Service & Civil Defence Station",
+      "latitude": 22.7077719,
+      "longitude": 89.0772135,
+      "division": "Khulna",
+      "district": "Satkhira",
+      "rating": 4.8,
+      "address": "Satkhira-Asashuni Rd, Satkhira"
+    },
+    {
+      "name": "Kushtia Fire Service & Civil Defence Station",
+      "latitude": 23.9093985,
+      "longitude": 89.1258857,
+      "division": "Khulna",
+      "district": "Kushtia",
+      "rating": 4.6,
+      "address": "NS Rd, Kushtia"
+    },
+    {
+      "name": "Chuadanga Fire Service & Civil Defense Station",
+      "latitude": 23.6494976,
+      "longitude": 88.8415663,
+      "division": "Khulna",
+      "district": "Chuadanga",
+      "rating": 4.8,
+      "address": "Alukdia, Chuadanga"
+    },
+    {
+      "name": "Meherpur Fire Service & Civil Defence Station",
+      "latitude": 23.7706087,
+      "longitude": 88.6412288,
+      "division": "Khulna",
+      "district": "Meherpur",
+      "rating": 4.3,
+      "address": "College Rd, Meherpur"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Darsana",
+      "latitude": 23.5460873,
+      "longitude": 88.7936688,
+      "division": "Khulna",
+      "district": "Chuadanga",
+      "rating": 4.0,
+      "address": "Jashore-Chuadanga Rd, Darsana"
+    },
+    {
+      "name": "Bamundi Fire Service & Civil Defence Station",
+      "latitude": 23.8847693,
+      "longitude": 88.7981082,
+      "division": "Khulna",
+      "district": "Meherpur",
+      "rating": 4.6,
+      "address": "Kushtia-Meherpur Hwy"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Bagerhat",
+      "latitude": 22.6592772,
+      "longitude": 89.7873504,
+      "division": "Khulna",
+      "district": "Bagerhat",
+      "rating": 4.5,
+      "address": "Old Rupsa Bagerhat Rd, Bagerhat"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Kachua, Bagerhat",
+      "latitude": 22.655666,
+      "longitude": 89.8900316,
+      "division": "Khulna",
+      "district": "Bagerhat",
+      "rating": 5.0,
+      "address": "Kachua, Bagerhat"
+    },
+    {
+      "name": "Jhenaidah Fire Station",
+      "latitude": 23.5440591,
+      "longitude": 89.1650122,
+      "division": "Khulna",
+      "district": "Jhenaidah",
+      "rating": 4.7,
+      "address": "Jora Pukur Rd, Jhenaidah"
+    },
+    {
+      "name": "Magura Fire Station",
+      "latitude": 23.4859171,
+      "longitude": 89.416207,
+      "division": "Khulna",
+      "district": "Magura",
+      "rating": 4.6,
+      "address": "Magura 7600"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Chitalmari",
+      "latitude": 22.7724774,
+      "longitude": 89.8642222,
+      "division": "Khulna",
+      "district": "Bagerhat",
+      "rating": 4.0,
+      "address": "Chitalmari, Bagerhat"
+    },
+    {
+      "name": "Fire Service, Narail",
+      "latitude": 23.1719122,
+      "longitude": 89.5003573,
+      "division": "Khulna",
+      "district": "Narail",
+      "rating": 4.9,
+      "address": "Jashore-Narail Road, Boakhali, Narail"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Lohagara, Narail",
+      "latitude": 23.1840959,
+      "longitude": 89.6243253,
+      "division": "Khulna",
+      "district": "Narail",
+      "rating": 4.8,
+      "address": "Lohagara, Narail"
+    },
+    {
+      "name": "Sharankhola Fire Service",
+      "latitude": 22.3196689,
+      "longitude": 89.8473877,
+      "division": "Khulna",
+      "district": "Bagerhat",
+      "rating": 4.3,
+      "address": "Sharankhola, Bagerhat"
+    },
+    {
+      "name": "Bangladesh Fire Service & Civil Defense Headquarters",
+      "latitude": 23.7227803,
+      "longitude": 90.4060623,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.5,
+      "address": "38-46 Kazi Alauddin Rd, Dhaka"
+    },
+    {
+      "name": "Fire Service & Civil Defence Training Complex, Mirpur",
+      "latitude": 23.8073666,
+      "longitude": 90.3674466,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.5,
+      "address": "Mirpur 10, Dhaka"
+    },
+    {
+      "name": "Bangladesh Fire Service & Civil Defense, Mohammadpur",
+      "latitude": 23.7586236,
+      "longitude": 90.3736438,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.4,
+      "address": "Mirpur Rd, Dhaka"
+    },
+    {
+      "name": "Fire Service & Civil Defense Department, Mirpur DOHS",
+      "latitude": 23.8427414,
+      "longitude": 90.3650239,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 3.9,
+      "address": "Kazi Alauddin Rd, Dhaka"
+    },
+    {
+      "name": "Fire Service & Civil Defense, Tejgaon Fire Station",
+      "latitude": 23.7645059,
+      "longitude": 90.4005309,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.4,
+      "address": "Shaheed Tajuddin Ahmed Ave, Dhaka"
+    },
+    {
+      "name": "Dhaka Fire Service & Civil Defense HQ Building, Mirpur",
+      "latitude": 23.807414,
+      "longitude": 90.367818,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 5.0,
+      "address": "Fire Service Rd, Dhaka"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Baridhara",
+      "latitude": 23.7980081,
+      "longitude": 90.4240608,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.4,
+      "address": "Madani Ave, Dhaka"
+    },
+    {
+      "name": "Kallyanpur Fire Service & Civil Defence Station",
+      "latitude": 23.7822427,
+      "longitude": 90.349354,
+      "division": "Dhaka",
+      "district": "Dhaka",
+      "rating": 4.5,
+      "address": "Majar Rd, Dhaka"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Narayanganj",
+      "latitude": 23.6095371,
+      "longitude": 90.5021481,
+      "division": "Dhaka",
+      "district": "Narayanganj",
+      "rating": 4.3,
+      "address": "Narayanganj"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Kapasia, Gazipur",
+      "latitude": 24.1187919,
+      "longitude": 90.5676433,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "rating": 4.9,
+      "address": "Kapasia Upazila, Gazipur"
+    },
+    {
+      "name": "Pagla Land and River Fire Service Station, Narayanganj",
+      "latitude": 23.6479397,
+      "longitude": 90.4681782,
+      "division": "Dhaka",
+      "district": "Narayanganj",
+      "rating": 4.0,
+      "address": "Pagla, Narayanganj"
+    },
+    {
+      "name": "Gazipur Fire Station",
+      "latitude": 24.0027764,
+      "longitude": 90.4254062,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "rating": 4.0,
+      "address": "Uttar Chhayabithy Rd, Gazipur"
+    },
+    {
+      "name": "Hazigonj Fire Station, Narayanganj",
+      "latitude": 23.633385,
+      "longitude": 90.514033,
+      "division": "Dhaka",
+      "district": "Narayanganj",
+      "rating": 4.1,
+      "address": "Kella Rd, Narayanganj"
+    },
+    {
+      "name": "Tongi Fire Service & Civil Defence Station",
+      "latitude": 23.8903367,
+      "longitude": 90.4019341,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "rating": 4.3,
+      "address": "Dhaka-Mymensingh Rd, Tongi"
+    },
+    {
+      "name": "Modern Fire Service & Civil Defense, Gazipur",
+      "latitude": 23.9772435,
+      "longitude": 90.3770633,
+      "division": "Dhaka",
+      "district": "Gazipur",
+      "rating": 3.9,
+      "address": "Gazipur"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Tangail",
+      "latitude": 24.2508533,
+      "longitude": 89.920099,
+      "division": "Dhaka",
+      "district": "Tangail",
+      "rating": 4.6,
+      "address": "Fire Service Rd, Tangail"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Narsingdi",
+      "latitude": 23.9216219,
+      "longitude": 90.7193252,
+      "division": "Dhaka",
+      "district": "Narsingdi",
+      "rating": 4.4,
+      "address": "Raipur Highway, Narsingdi"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Madaripur",
+      "latitude": 23.1668495,
+      "longitude": 90.1972016,
+      "division": "Dhaka",
+      "district": "Madaripur",
+      "rating": 4.6,
+      "address": "Dhaka Mahasadak, Madaripur"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Shariatpur Sadar",
+      "latitude": 23.2232945,
+      "longitude": 90.3493145,
+      "division": "Dhaka",
+      "district": "Shariatpur",
+      "rating": 4.4,
+      "address": "Shariatpur"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Faridpur",
+      "latitude": 23.6040242,
+      "longitude": 89.8360585,
+      "division": "Dhaka",
+      "district": "Faridpur",
+      "rating": 4.3,
+      "address": "Mujib Sharak, Faridpur 7800"
+    },
+    {
+      "name": "Gopalganj Fire Station",
+      "latitude": 23.0135124,
+      "longitude": 89.8429644,
+      "division": "Dhaka",
+      "district": "Gopalganj",
+      "rating": 4.2,
+      "address": "Bedgram Fire Service Rd, Gopalganj"
+    },
+    {
+      "name": "Kishoreganj Fire Service and Civil Defense",
+      "latitude": 24.4361815,
+      "longitude": 90.7788148,
+      "division": "Dhaka",
+      "district": "Kishoreganj",
+      "rating": 4.5,
+      "address": "Ishakha Rd, Kishoreganj"
+    },
+    {
+      "name": "Fire Service Station, Manikganj",
+      "latitude": 23.8515845,
+      "longitude": 90.0016383,
+      "division": "Dhaka",
+      "district": "Manikganj",
+      "rating": 4.5,
+      "address": "Beutha Rd, Manikganj"
+    },
+    {
+      "name": "Bangladesh Fire Service and Civil Defense, Munshiganj",
+      "latitude": 23.5600886,
+      "longitude": 90.5285976,
+      "division": "Dhaka",
+      "district": "Munshiganj",
+      "rating": 4.3,
+      "address": "R813, Munshiganj 1500"
+    },
+    {
+      "name": "Fire Service and Civil Defense, Rajbari",
+      "latitude": 23.7470114,
+      "longitude": 89.6454763,
+      "division": "Dhaka",
+      "district": "Rajbari",
+      "rating": 4.6,
+      "address": "R710, Rajbari"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Mymensingh",
+      "latitude": 24.7628374,
+      "longitude": 90.401301,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": 4.3,
+      "address": "Mymensingh 2200"
+    },
+    {
+      "name": "Mymensingh Agri University Fire Service Building",
+      "latitude": 24.7235999,
+      "longitude": 90.4164656,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": 5.0,
+      "address": "Mymensingh"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Digerkanda, Mymensingh",
+      "latitude": 24.7235577,
+      "longitude": 90.4164707,
+      "division": "Mymensingh",
+      "district": "Mymensingh",
+      "rating": 5.0,
+      "address": "Digerkanda, Mymensingh"
+    },
+    {
+      "name": "Jamalpur Fire Service & Civil Defense Station",
+      "latitude": 24.9212485,
+      "longitude": 89.9512731,
+      "division": "Mymensingh",
+      "district": "Jamalpur",
+      "rating": 4.6,
+      "address": "Station Rd, Jamalpur"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Sherpur Sadar",
+      "latitude": 25.0188014,
+      "longitude": 90.0248903,
+      "division": "Mymensingh",
+      "district": "Sherpur",
+      "rating": 4.7,
+      "address": "Nalitabari-Sherpur Rd, Sherpur"
+    },
+    {
+      "name": "Bangladesh Fire Service & Civil Defense, Sherpur (Bogura border)",
+      "latitude": 24.6854372,
+      "longitude": 89.4099342,
+      "division": "Mymensingh",
+      "district": "Sherpur",
+      "rating": 4.7,
+      "address": "Dhaka-Rangpur Hwy, Sherpur"
+    },
+    {
+      "name": "Sarishabari Fire Service & Civil Defence Station, Jamalpur",
+      "latitude": 24.7700602,
+      "longitude": 89.8436862,
+      "division": "Mymensingh",
+      "district": "Jamalpur",
+      "rating": 4.2,
+      "address": "Jamalpur Rd, Sarishabari"
+    },
+    {
+      "name": "Fire Service Netrokona",
+      "latitude": 24.8820836,
+      "longitude": 90.7360575,
+      "division": "Mymensingh",
+      "district": "Netrokona",
+      "rating": 4.9,
+      "address": "Muktijuddah Meher Ali Road, Netrokona 2400"
+    },
+    {
+      "name": "Fire Service and Civil Defense Station, Purbadhala, Netrokona",
+      "latitude": 24.9262609,
+      "longitude": 90.6130336,
+      "division": "Mymensingh",
+      "district": "Netrokona",
+      "rating": 3.8,
+      "address": "Shamganj, Netrokona"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Sylhet",
+      "latitude": 24.8905216,
+      "longitude": 91.8644101,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 4.4,
+      "address": "Sheikhghat-Kazirbazar Rd, Sylhet"
+    },
+    {
+      "name": "Fire Service & Civil Defence, VIP Road, Sylhet",
+      "latitude": 24.892812,
+      "longitude": 91.8605608,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 4.3,
+      "address": "VIP Rd, Sylhet"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Gotatikor, Sylhet",
+      "latitude": 24.8748209,
+      "longitude": 91.8921868,
+      "division": "Sylhet",
+      "district": "Sylhet",
+      "rating": 5.0,
+      "address": "Gotatikor, Sylhet"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Moulvibazar",
+      "latitude": 24.4825562,
+      "longitude": 91.7659193,
+      "division": "Sylhet",
+      "district": "Moulvibazar",
+      "rating": 4.5,
+      "address": "N207, Moulvibazar"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Rajnagar, Moulvibazar",
+      "latitude": 24.5214573,
+      "longitude": 91.8630513,
+      "division": "Sylhet",
+      "district": "Moulvibazar",
+      "rating": 5.0,
+      "address": "Moulvibazar-Fenchuganj Rd"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Kamalganj",
+      "latitude": 24.3588217,
+      "longitude": 91.8541647,
+      "division": "Sylhet",
+      "district": "Moulvibazar",
+      "rating": 4.0,
+      "address": "Kamalganj, Moulvibazar"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Habiganj",
+      "latitude": 24.3706556,
+      "longitude": 91.416254,
+      "division": "Sylhet",
+      "district": "Habiganj",
+      "rating": 4.1,
+      "address": "Fire Service Rd, Habiganj"
+    },
+    {
+      "name": "Sreemangal Fire Station",
+      "latitude": 24.3092671,
+      "longitude": 91.726622,
+      "division": "Sylhet",
+      "district": "Moulvibazar",
+      "rating": 4.6,
+      "address": "Dhaka-Mowlavibazar Rd, Sreemangal"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Sunamganj",
+      "latitude": 25.0708719,
+      "longitude": 91.4093372,
+      "division": "Sylhet",
+      "district": "Sunamganj",
+      "rating": 4.7,
+      "address": "Kazir Point, Sunamganj 3000"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Barishal Sadar",
+      "latitude": 22.7017196,
+      "longitude": 90.3740605,
+      "division": "Barishal",
+      "district": "Barisal",
+      "rating": 4.6,
+      "address": "Fazlul Haque Ave, Barisal"
+    },
+    {
+      "name": "Fire Service & Civil Defense Divisional HQ, Barisal",
+      "latitude": 22.7393583,
+      "longitude": 90.3258656,
+      "division": "Barishal",
+      "district": "Barisal",
+      "rating": 4.8,
+      "address": "Barisal"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Kashipur, Barisal",
+      "latitude": 22.7273667,
+      "longitude": 90.3374757,
+      "division": "Barishal",
+      "district": "Barisal",
+      "rating": 5.0,
+      "address": "Bhanga-Barisal Hwy"
+    },
+    {
+      "name": "Banaripara Fire Station, Barisal",
+      "latitude": 22.7777895,
+      "longitude": 90.1633247,
+      "division": "Barishal",
+      "district": "Barisal",
+      "rating": 3.9,
+      "address": "Swarupkathi-Barisal Rd, Banaripara"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Bakerganj",
+      "latitude": 22.5288823,
+      "longitude": 90.3402607,
+      "division": "Barishal",
+      "district": "Barisal",
+      "rating": 3.6,
+      "address": "Bakerganj, Barisal"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Patuakhali",
+      "latitude": 22.3639436,
+      "longitude": 90.3318436,
+      "division": "Barishal",
+      "district": "Patuakhali",
+      "rating": 4.8,
+      "address": "Old Ferry Ghat Rd, Patuakhali"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Bhola",
+      "latitude": 22.6569388,
+      "longitude": 90.6625693,
+      "division": "Barishal",
+      "district": "Bhola",
+      "rating": 4.6,
+      "address": "Bhola"
+    },
+    {
+      "name": "Barguna Fire Service Station",
+      "latitude": 22.1586345,
+      "longitude": 90.1076344,
+      "division": "Barishal",
+      "district": "Barguna",
+      "rating": 3.9,
+      "address": "Barguna"
+    },
+    {
+      "name": "Fire Service & Civil Defence Station, Pirojpur",
+      "latitude": 22.5792912,
+      "longitude": 89.9871781,
+      "division": "Barishal",
+      "district": "Pirojpur",
+      "rating": 4.4,
+      "address": "Pirojpur Pourashava"
+    },
+    {
+      "name": "Fire Service & Civil Defense Station, Jhalokathi",
+      "latitude": 22.6424502,
+      "longitude": 90.198641,
+      "division": "Barishal",
+      "district": "Jhalakathi",
+      "rating": 4.3,
+      "address": "Thana Rd, Jhalokathi"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Rangpur",
+      "latitude": 25.7473355,
+      "longitude": 89.2590545,
+      "division": "Rangpur",
+      "district": "Rangpur",
+      "rating": 4.4,
+      "address": "Fire Station Rd, Rangpur"
+    },
+    {
+      "name": "Fire Service & Civil Defence, Dinajpur",
+      "latitude": 25.6304984,
+      "longitude": 88.6350654,
+      "division": "Rangpur",
+      "district": "Dinajpur",
+      "rating": 4.2,
+      "address": "Station Rd, Dinajpur"
+    },
+    {
+      "name": "Thakurgaon Fire Station",
+      "latitude": 26.0295689,
+      "longitude": 88.4742744,
+      "division": "Rangpur",
+      "district": "Thakurgaon",
+      "rating": 4.6,
+      "address": "Bangabandhu Rd, Thakurgaon"
+    },
+    {
+      "name": "Fire Service & Civil Defense, Lalmonirhat",
+      "latitude": 25.9080103,
+      "longitude": 89.4478093,
+      "division": "Rangpur",
+      "district": "Lalmonirhat",
+      "rating": 4.4,
+      "address": "Telipara Rd, Lalmonirhat"
+    },
+    {
+      "name": "Fire Service and Civil Defense Station, Sadar Kurigram",
+      "latitude": 25.8092308,
+      "longitude": 89.6415365,
+      "division": "Rangpur",
+      "district": "Kurigram",
+      "rating": 4.4,
+      "address": "Kurigram - Chilmari Rd, Kurigram 5600"
+    },
+    {
+      "name": "Gaibandha Fire Station",
+      "latitude": 25.3293045,
+      "longitude": 89.538937,
+      "division": "Rangpur",
+      "district": "Gaibandha",
+      "rating": 4.2,
+      "address": "Dhaka - Gaibandha Hwy, Gaibandha"
+    },
+    {
+      "name": "Fire Service and Civil Defense Nilphamari",
+      "latitude": 25.9413375,
+      "longitude": 88.8467444,
+      "division": "Rangpur",
+      "district": "Nilphamari",
+      "rating": 4.8,
+      "address": "Shakamacha Rd, Nilphamari 5300"
+    },
+    {
+      "name": "Fire Station And Civil Defense Station, Sadar Panchagarh",
+      "latitude": 26.3478708,
+      "longitude": 88.5585205,
+      "division": "Rangpur",
+      "district": "Panchagarh",
+      "rating": 4.5,
+      "address": "Panchagarh 5000"
+    }
+  ]
+}

@@ -1,0 +1,304 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Theme tokens
+   Dark is the default on <html>; html.light flips every token.
+   Tailwind utilities (text-white, bg-white/5, text-slate-400 …)
+   all resolve through these variables, so the whole app
+   re-themes without touching component classes.
+   ============================================================ */
+:root {
+  --ns-night: 5 7 15;            /* page background (dark) */
+  --ns-panel: 11 16 32;          /* glass-strong panel */
+  --ns-fg: 255 255 255;          /* primary foreground */
+  --ns-black: 0 0 0;
+  --ns-on-accent: 255 255 255;   /* text on solid accent */
+
+  --ns-slate-50: 248 250 252;
+  --ns-slate-100: 241 245 249;
+  --ns-slate-200: 226 232 240;
+  --ns-slate-300: 203 213 225;
+  --ns-slate-400: 148 163 184;
+  --ns-slate-500: 100 116 139;
+  --ns-slate-600: 71 85 105;
+  --ns-slate-700: 51 65 85;
+  --ns-slate-800: 30 41 59;
+  --ns-slate-900: 15 23 42;
+
+  --ns-accent: 91 140 255;
+  --ns-accent2: 167 108 255;
+  --ns-accent3: 255 108 181;
+  --ns-mint: 45 212 191;
+  --ns-amber: 251 191 36;
+
+  --ns-sky-300: 125 211 252;
+  --ns-sky-400: 56 189 248;
+  --ns-sky-500: 14 165 233;
+  --ns-violet-300: 196 181 253;
+  --ns-violet-400: 167 139 250;
+  --ns-violet-500: 139 92 246;
+  --ns-warn-300: 252 211 77;
+  --ns-warn-400: 251 191 36;
+  --ns-warn-500: 245 158 11;
+  --ns-emerald-300: 110 231 183;
+  --ns-emerald-400: 52 211 153;
+  --ns-emerald-500: 16 185 129;
+  --ns-rose-300: 253 164 175;
+  --ns-rose-400: 251 113 133;
+  --ns-rose-500: 244 63 94;
+
+  --ns-glass-bg: 255 255 255;    /* glass fill RGB (used with low alpha) */
+  --ns-glass-border: 255 255 255;
+  --ns-grid-line: 148 163 184;
+  --ns-scrollbar-track: 7 11 22;
+  --ns-scrollbar-thumb-a: 43 58 99;
+  --ns-scrollbar-thumb-b: 26 35 64;
+  --ns-scrollbar-hover: 59 79 133;
+  --ns-leaflet-bg: 10 14 29;
+}
+
+html.light {
+  --ns-night: 244 246 252;       /* soft blue-white page */
+  --ns-panel: 255 255 255;
+  --ns-fg: 15 23 42;             /* slate-900 for text-white */
+  --ns-black: 15 23 42;
+  --ns-on-accent: 255 255 255;
+
+  --ns-slate-50: 2 6 23;
+  --ns-slate-100: 51 65 85;
+  --ns-slate-200: 71 85 105;
+  --ns-slate-300: 100 116 139;
+  --ns-slate-400: 148 163 184;
+  --ns-slate-500: 71 85 105;
+  --ns-slate-600: 100 116 139;
+  --ns-slate-700: 203 213 225;
+  --ns-slate-800: 226 232 240;
+  --ns-slate-900: 15 23 42;
+
+  --ns-accent: 59 110 245;
+  --ns-accent2: 138 79 255;
+  --ns-accent3: 236 72 153;
+  --ns-mint: 13 148 136;
+  --ns-amber: 217 119 6;
+
+  --ns-sky-300: 2 132 199;
+  --ns-sky-400: 14 165 233;
+  --ns-sky-500: 2 132 199;
+  --ns-violet-300: 124 58 237;
+  --ns-violet-400: 139 92 246;
+  --ns-violet-500: 124 58 237;
+  --ns-warn-300: 180 83 9;
+  --ns-warn-400: 217 119 6;
+  --ns-warn-500: 217 119 6;
+  --ns-emerald-300: 4 120 87;
+  --ns-emerald-400: 5 150 105;
+  --ns-emerald-500: 5 150 105;
+  --ns-rose-300: 190 18 60;
+  --ns-rose-400: 225 29 72;
+  --ns-rose-500: 225 29 72;
+
+  --ns-glass-bg: 255 255 255;
+  --ns-glass-border: 15 23 42;
+  --ns-grid-line: 100 116 139;
+  --ns-scrollbar-track: 226 232 240;
+  --ns-scrollbar-thumb-a: 203 213 225;
+  --ns-scrollbar-thumb-b: 203 213 225;
+  --ns-scrollbar-hover: 148 163 184;
+  --ns-leaflet-bg: 233 238 247;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-night text-slate-200 font-body antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(91, 140, 255, 0.35);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--ns-scrollbar-track));
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(rgb(var(--ns-scrollbar-thumb-a)), rgb(var(--ns-scrollbar-thumb-b)));
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--ns-scrollbar-hover));
+}
+
+@layer components {
+  .glass {
+    @apply rounded-2xl border backdrop-blur-xl;
+    background: rgb(var(--ns-glass-bg) / 0.04);
+    border-color: rgb(var(--ns-glass-border) / 0.1);
+  }
+  html.light .glass {
+    background: rgb(var(--ns-glass-bg) / 0.72);
+    border-color: rgb(var(--ns-glass-border) / 0.08);
+    box-shadow: 0 1px 3px rgb(15 23 42 / 0.06), 0 8px 24px -12px rgb(15 23 42 / 0.12);
+  }
+  .glass-strong {
+    @apply rounded-2xl backdrop-blur-2xl;
+    background: rgb(var(--ns-panel) / 0.85);
+    border: 1px solid rgb(var(--ns-glass-border) / 0.1);
+  }
+  html.light .glass-strong {
+    background: rgb(255 255 255 / 0.92);
+    border-color: rgb(15 23 42 / 0.08);
+    box-shadow: 0 2px 6px rgb(15 23 42 / 0.06), 0 16px 40px -16px rgb(15 23 42 / 0.16);
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(92deg, #5b8cff, #a76cff 52%, #ff6cb5);
+  }
+  html.light .text-gradient {
+    background-image: linear-gradient(92deg, #3b6ef5, #8a4fff 52%, #ec4899);
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-300 hover:-translate-y-0.5;
+    color: rgb(var(--ns-on-accent));
+    background-image: linear-gradient(92deg, #4c7dff, #9257ff 55%, #ff5fae);
+    box-shadow: 0 10px 30px -10px rgba(124, 108, 255, 0.65);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 16px 40px -10px rgba(124, 108, 255, 0.8);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-300;
+    color: rgb(var(--ns-fg) / 0.9);
+    background: rgb(var(--ns-fg) / 0.05);
+    border: 1px solid rgb(var(--ns-fg) / 0.15);
+  }
+  .btn-ghost:hover {
+    background: rgb(var(--ns-fg) / 0.1);
+    border-color: rgb(var(--ns-fg) / 0.3);
+  }
+  .input {
+    @apply w-full rounded-xl px-4 py-3 outline-none transition;
+    color: rgb(var(--ns-fg));
+    background: rgb(var(--ns-fg) / 0.04);
+    border: 1px solid rgb(var(--ns-fg) / 0.1);
+  }
+  .input::placeholder {
+    color: rgb(var(--ns-slate-500) / 0.8);
+  }
+  .input:focus {
+    border-color: rgb(var(--ns-accent) / 0.6);
+    background: rgb(var(--ns-fg) / 0.06);
+  }
+  .chip {
+    @apply cursor-pointer select-none rounded-full border px-4 py-1.5 text-sm transition;
+  }
+  .chip-active {
+    border-color: rgb(var(--ns-accent) / 0.6);
+    background: rgb(var(--ns-accent) / 0.2);
+    color: rgb(var(--ns-on-accent));
+  }
+  html.light .chip-active {
+    color: rgb(37 64 143);
+    background: rgb(var(--ns-accent) / 0.14);
+    border-color: rgb(var(--ns-accent) / 0.45);
+  }
+  .chip-idle {
+    border-color: rgb(var(--ns-fg) / 0.1);
+    background: rgb(var(--ns-fg) / 0.03);
+    color: rgb(var(--ns-slate-400));
+  }
+  .chip-idle:hover {
+    border-color: rgb(var(--ns-fg) / 0.25);
+    color: rgb(var(--ns-slate-200));
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider;
+    color: rgb(var(--ns-slate-400));
+  }
+}
+
+.leaflet-container {
+  background: rgb(var(--ns-leaflet-bg)) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ---------- Bangla language mode: classic premium fonts ---------- */
+html.bn-mode body {
+  font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
+html.bn-mode .font-display,
+html.bn-mode h1,
+html.bn-mode h2,
+html.bn-mode h3 {
+  font-family: 'Noto Serif Bengali', serif !important;
+  letter-spacing: 0 !important;
+}
+html.bn-mode [class*="tracking-"] {
+  letter-spacing: 0.08em !important;
+}
+
+/* ---------- Dropdowns: readable list in both themes ---------- */
+/* The closed select follows the input token colors; the native
+   popup list gets a light readable sheet in both themes. */
+select.input {
+  color: rgb(var(--ns-fg));
+  background-color: rgb(var(--ns-fg) / 0.04);
+}
+select.input option {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+.leaflet-control-attribution {
+  background: rgb(var(--ns-night) / 0.7) !important;
+  color: rgb(var(--ns-slate-400)) !important;
+}
+.leaflet-control-attribution a {
+  color: rgb(var(--ns-slate-500)) !important;
+}
+.leaflet-bar a {
+  background: rgb(var(--ns-panel)) !important;
+  color: rgb(var(--ns-slate-300)) !important;
+  border-color: rgb(var(--ns-fg) / 0.1) !important;
+}
+.ns-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  font-size: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Landing CTA gradient panel ---------- */
+.land-cta-panel {
+  background-image: linear-gradient(120deg, rgba(76,125,255,.18), rgba(146,87,255,.16) 50%, rgba(255,95,174,.15));
+}
+html.light .land-cta-panel {
+  background-image: linear-gradient(120deg, rgba(59,110,245,.10), rgba(138,79,255,.10) 50%, rgba(236,72,153,.08));
+}
+
+/* ---------- Ambient background glows (BackgroundFX) ---------- */
+html.light .ns-bgfx > div:nth-child(1) { opacity: 0.55; }
+html.light .ns-bgfx > div:nth-child(2) { opacity: 0.5; }
+html.light .ns-bgfx > div:nth-child(3) { opacity: 0.4; }
+.ns-grid {
+  background-image:
+    linear-gradient(rgb(var(--ns-grid-line) / 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--ns-grid-line) / 0.35) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 30%, transparent 75%);
+}
+html.light .ns-grid { opacity: 0.08 !important; }

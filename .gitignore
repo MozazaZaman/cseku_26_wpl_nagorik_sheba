@@ -7,3 +7,6 @@ mobile/build/
 *.db
 *.db-wal
 *.db-shm
+.env
+server/.env
+*.env

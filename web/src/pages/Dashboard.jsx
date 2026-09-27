@@ -88,7 +88,7 @@ export default function Dashboard() {
                   </div>
                   <StatusBadge status={c.status} />
                 </div>
-                <p className="mt-2 font-display font-bold text-white">{c.title}</p>
+                <p className="mt-2 break-words font-display font-bold text-white">{c.title}</p>
                 <p className="mt-1 text-xs text-slate-500">
                   {c.authority_name || t('dash.routing')} · ▲ {c.vote_count} {t('exp.votes')} · {fmtDate(c.created_at)}
                   {c.status === 'in_process' && c.eta_hours ? ` · ${t('det.eta')} ${c.eta_hours}h` : ''}

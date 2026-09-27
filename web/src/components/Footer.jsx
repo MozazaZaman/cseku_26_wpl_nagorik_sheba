@@ -13,7 +13,7 @@ export default function Footer() {
             {t('footer.about')}
           </span>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
           <Link to="/explore" className="hover:text-slate-300">{t('footer.explore')}</Link>
           <Link to="/emergency" className="hover:text-slate-300">{t('footer.emergency')}</Link>
           <Link to="/submit" className="hover:text-slate-300">{t('footer.report')}</Link>

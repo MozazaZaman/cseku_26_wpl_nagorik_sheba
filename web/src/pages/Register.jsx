@@ -141,16 +141,19 @@ export default function Register() {
 
   return (
     <main className="mx-auto flex min-h-[90vh] max-w-lg flex-col justify-center px-4 py-10">
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="glass-strong p-8">
+      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="glass-strong p-5 sm:p-8">
         <h1 className="font-display text-2xl font-extrabold text-white">{t('reg.title')}</h1>
         <p className="mt-1 text-sm text-slate-400">{t('reg.sub')}</p>
 
         <div className="mt-6 flex items-center gap-2">
           {steps.map((s, i) => (
-            <div key={s} className="flex flex-1 flex-col gap-1.5">
+            <div key={s} className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className={`h-1.5 rounded-full transition-all ${i <= step ? 'bg-gradient-to-r from-accent to-accent3' : 'bg-white/10'}`} />
-              <span className={`text-[10px] font-bold uppercase tracking-wider ${i <= step ? 'text-accent' : 'text-slate-600'}`}>
+              <span className={`hidden truncate text-[10px] font-bold uppercase tracking-wider sm:block ${i <= step ? 'text-accent' : 'text-slate-600'}`}>
                 {i + 1}. {s}
+              </span>
+              <span className={`text-[10px] font-bold sm:hidden ${i <= step ? 'text-accent' : 'text-slate-600'}`}>
+                {i + 1}
               </span>
             </div>
           ))}
@@ -271,9 +274,9 @@ export default function Register() {
               </div>
               <p className="mt-3 text-sm text-slate-400">{t('reg.ready.desc')}</p>
             </div>
-            <div className="glass p-4 text-sm">
+            <div className="glass break-words p-4 text-sm">
               <p><span className="text-slate-500">{t('reg.name')}:</span> {form.full_name}</p>
-              <p><span className="text-slate-500">{t('reg.email')}:</span> {form.email}</p>
+              <p><span className="text-slate-500">{t('reg.email')}:</span> <span className="break-all">{form.email}</span></p>
             </div>
           </div>
         )}

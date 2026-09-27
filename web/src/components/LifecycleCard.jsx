@@ -32,7 +32,7 @@ function StepRow({ icon, tone, title, date, comment, by, byRole, extra = null })
           {date && <p className="text-[11px] text-slate-500">{fmtDate(date)}</p>}
         </div>
         {comment && (
-          <p className="mt-1 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-slate-300">
+          <p className="mt-1 break-words rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-slate-300">
             “{comment}”
           </p>
         )}

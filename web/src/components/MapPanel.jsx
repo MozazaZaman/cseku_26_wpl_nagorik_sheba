@@ -114,6 +114,7 @@ export default function MapPanel({
   routeCoords = null,
   onPick,
   height = '380px',
+  heightClass = '',
   zoom = 14,
   defaultLayer = 'map',
   recenterSignal = 0,
@@ -127,7 +128,10 @@ export default function MapPanel({
   const showHeat = heatPoints && heatPoints.length > 0;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10" style={{ height }}>
+    <div
+      className={`relative isolate z-0 overflow-hidden rounded-2xl border border-white/10 ${heightClass}`}
+      style={heightClass ? undefined : { height }}
+    >
       <MapContainer center={[center.lat, center.lng]} zoom={zoom} scrollWheelZoom style={{ height: '100%' }}>
         <TileLayer key={layer} url={l.url} attribution={l.attribution} />
         <ClickCatcher onPick={onPick} />
@@ -147,13 +151,13 @@ export default function MapPanel({
           </>
         )}
       </MapContainer>
-      <div className="absolute right-2 top-2 z-[500] flex gap-1 rounded-lg bg-night/85 p-1 backdrop-blur">
+      <div className="absolute right-2 top-2 z-[500] flex max-w-[calc(100%-1rem)] flex-wrap justify-end gap-1 rounded-lg bg-night/85 p-1 backdrop-blur">
         {Object.entries(LAYERS).map(([key, val]) => (
           <button
             key={key}
             type="button"
             onClick={() => setLayer(key)}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition ${
+            className={`min-h-[36px] rounded-md px-3 py-1.5 text-[11px] font-bold transition ${
               layer === key ? 'bg-accent text-onaccent' : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -164,7 +168,7 @@ export default function MapPanel({
           <button
             type="button"
             onClick={() => { setHeat(!heat); onHeatToggle?.(!heat); }}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition ${
+            className={`min-h-[36px] rounded-md px-3 py-1.5 text-[11px] font-bold transition ${
               heat ? 'bg-rose-500 text-white' : 'text-slate-400 hover:text-white'
             }`}
           >

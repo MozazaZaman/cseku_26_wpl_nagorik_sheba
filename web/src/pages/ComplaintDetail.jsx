@@ -117,12 +117,12 @@ export default function ComplaintDetail() {
               <SlaBadge complaint={c} />
               <span className="text-xs text-slate-500">{t('det.ticket')}{c.complaint_id}</span>
             </div>
-            <h1 className="mt-4 font-display text-2xl font-extrabold text-white">{c.title}</h1>
-            <p className="mt-1 text-xs text-slate-500">
+            <h1 className="mt-4 break-words font-display text-2xl font-extrabold text-white">{c.title}</h1>
+            <p className="mt-1 break-words text-xs text-slate-500">
               {t('det.reportedBy')} {c.submitter_name} · {fmtDate(c.created_at)}
               {c.eta_hours ? ` · ${t('det.eta')} ${c.eta_hours}h` : ''}
             </p>
-            <p className="mt-4 leading-relaxed text-slate-300">{c.description}</p>
+            <p className="mt-4 break-words leading-relaxed text-slate-300">{c.description}</p>
             {c.image_url && (
               <img src={c.image_url} alt="evidence" className="mt-4 max-h-80 rounded-xl border border-white/10 object-cover" />
             )}
@@ -168,7 +168,7 @@ export default function ComplaintDetail() {
                     <div className="mt-3">
                       <textarea className="input min-h-[72px]" value={disputeReason}
                         placeholder={t('det.dispute.ph')} onChange={(e) => setDisputeReason(e.target.value)} />
-                      <div className="mt-2 flex gap-2">
+                      <div className="mt-2 flex flex-wrap gap-2">
                         <button onClick={disputeResolution} disabled={busy || !disputeReason.trim()}
                           className="btn-primary !py-2 text-xs">{t('det.dispute.send')}</button>
                         <button onClick={() => setShowDispute(false)} className="btn-ghost !py-2 text-xs">{t('staff.cancel')}</button>
@@ -190,7 +190,7 @@ export default function ComplaintDetail() {
               />
             )}
 
-            <div className="mt-5 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
               <div>
                 <p className="font-display text-2xl font-extrabold text-white">▲ {c.vote_count}</p>
                 <p className="text-[11px] uppercase tracking-wider text-slate-500">{t('det.votes')}</p>
@@ -221,9 +221,9 @@ export default function ComplaintDetail() {
               <ol className="mt-4 space-y-3">
                 {data.agents.map((a, i) => (
                   <li key={i} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-accent">{agentName(a.agent_name)}</p>
-                      <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[11px] font-semibold text-slate-300">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="min-w-0 break-words text-sm font-bold text-accent">{agentName(a.agent_name)}</p>
+                      <span className="shrink-0 rounded-full bg-white/5 px-2.5 py-0.5 text-[11px] font-semibold text-slate-300">
                         {a.decision}
                       </span>
                     </div>
@@ -254,10 +254,10 @@ export default function ComplaintDetail() {
             <label className="label">{t('det.location')}</label>
             <MapPanel center={{ lat: c.latitude, lng: c.longitude }}
               markers={[{ lat: c.latitude, lng: c.longitude, emoji: '📌', color: '#ff6cb5' }]}
-              height="280px" zoom={16} />
-            {c.address_text && <p className="mt-3 text-sm text-slate-400">📍 {c.address_text}</p>}
+              heightClass="h-[220px] sm:h-[280px]" zoom={16} />
+            {c.address_text && <p className="mt-3 break-words text-sm text-slate-400">📍 {c.address_text}</p>}
             {c.full_address && (
-              <p className="mt-2 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 text-xs leading-relaxed text-slate-400">
+              <p className="mt-2 break-words rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 text-xs leading-relaxed text-slate-400">
                 🏠 {c.full_address}
               </p>
             )}
@@ -265,11 +265,11 @@ export default function ComplaintDetail() {
 
           <div className="glass space-y-3 p-5 text-sm">
             <h2 className="font-display text-base font-bold text-white">{t('det.routing')}</h2>
-            <div className="flex justify-between"><span className="text-slate-500">{t('det.authority')}</span><span className="font-semibold text-white">{c.authority_name || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">{t('det.type')}</span><span className="capitalize text-slate-300">{(c.authority_type || '').replace('_', ' ').toLowerCase()}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">{t('det.staff')}</span><span className="text-slate-300">{c.executor_name || c.staff_name || t('det.awaitingAssignment')}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">{t('det.priority')}</span><span className="font-bold text-accent">{c.priority_score}</span></div>
-            {c.resolved_at && <div className="flex justify-between"><span className="text-slate-500">{t('det.resolvedAt')}</span><span className="text-mint">{fmtDate(c.resolved_at)}</span></div>}
+            <div className="flex justify-between gap-4"><span className="min-w-0 shrink-0 text-slate-500">{t('det.authority')}</span><span className="min-w-0 break-words text-right font-semibold text-white">{c.authority_name || '—'}</span></div>
+            <div className="flex justify-between gap-4"><span className="min-w-0 shrink-0 text-slate-500">{t('det.type')}</span><span className="min-w-0 break-words text-right capitalize text-slate-300">{(c.authority_type || '').replace('_', ' ').toLowerCase()}</span></div>
+            <div className="flex justify-between gap-4"><span className="min-w-0 shrink-0 text-slate-500">{t('det.staff')}</span><span className="min-w-0 break-words text-right text-slate-300">{c.executor_name || c.staff_name || t('det.awaitingAssignment')}</span></div>
+            <div className="flex justify-between gap-4"><span className="min-w-0 shrink-0 text-slate-500">{t('det.priority')}</span><span className="shrink-0 font-bold text-accent">{c.priority_score}</span></div>
+            {c.resolved_at && <div className="flex justify-between gap-4"><span className="min-w-0 shrink-0 text-slate-500">{t('det.resolvedAt')}</span><span className="min-w-0 break-words text-right text-mint">{fmtDate(c.resolved_at)}</span></div>}
           </div>
 
           {/* Public authority performance — transparency block */}

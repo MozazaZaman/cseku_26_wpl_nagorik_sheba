@@ -35,7 +35,7 @@ export default function ComplaintCard({ c, index = 0, onVote, voted, locked }) {
                   onVote(c);
                 }}
                 disabled={voted || locked}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition ${
                   voted
                     ? 'cursor-default bg-mint/15 text-mint'
                     : locked

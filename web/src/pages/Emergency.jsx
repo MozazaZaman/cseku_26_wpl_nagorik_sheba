@@ -115,7 +115,7 @@ export default function Emergency() {
           </h1>
           <p className="mt-2 text-slate-400">{t('em.sub')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link to="/faq" className="btn-ghost !py-2.5 text-sm">❔ {t('nav.faq')}</Link>
           <button onClick={locate} className="btn-ghost !py-2.5 text-sm">
             📍 {geoState === 'locating' ? t('em.locating') : t('em.refresh')}
@@ -138,7 +138,7 @@ export default function Emergency() {
       </div>
 
       {routeCoords && routeInfo && (
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-2.5 text-sm">
+        <div className="mt-4 flex flex-wrap items-center gap-2 gap-x-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-2.5 text-sm">
           <span className="text-accent">🧭 {routeInfo.dist} · ~{routeInfo.mins} min</span>
           <span className="text-slate-500">— route shown on map</span>
           <button onClick={() => { setRouteCoords(null); setSelectedId(null); setRouteInfo(null); }} className="ml-auto text-xs font-bold text-slate-400 hover:text-white">✕ Clear</button>
@@ -147,10 +147,10 @@ export default function Emergency() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.15fr]">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-          <MapPanel center={loc || undefined} markers={markers} routeCoords={routeCoords} height="480px" zoom={14} />
+          <MapPanel center={loc || undefined} markers={markers} routeCoords={routeCoords} heightClass="h-[300px] lg:h-[480px]" zoom={14} />
         </motion.div>
 
-        <div className="max-h-[480px] space-y-3 overflow-y-auto pr-1">
+        <div className="space-y-3 lg:max-h-[480px] lg:overflow-y-auto lg:pr-1">
           {services.length === 0 && loc && (
             <p className="glass p-6 text-center text-slate-400">{t('em.none')}</p>
           )}
@@ -162,7 +162,7 @@ export default function Emergency() {
               transition={{ delay: i * 0.05 }}
               className={`glass p-4 transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-glow ${s.service_id === selectedId ? 'border-accent/60 shadow-glow' : ''}`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex flex-wrap items-start gap-4">
                 <div
                   className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl"
                   style={{ background: (COLORS[s.type] || '#5b8cff') + '26' }}
@@ -178,14 +178,14 @@ export default function Emergency() {
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
                       onClick={() => handleDirections(s)}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${s.service_id === selectedId ? 'bg-accent text-onaccent' : 'bg-accent/15 text-accent hover:bg-accent/30'}`}
+                      className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition ${s.service_id === selectedId ? 'bg-accent text-onaccent' : 'bg-accent/15 text-accent hover:bg-accent/30'}`}
                     >
                       🧭 Directions
                     </button>
                     {hasPhone(s) && (
                       <a
                         href={`tel:${s.phone.split('/')[0].trim()}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-white/10"
+                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
                       >
                         📞 Call
                       </a>

@@ -24,13 +24,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-night/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src="/logo.svg" alt="logo" className="h-9 w-9" />
-          <div className="leading-tight">
+        <Link to="/" className="flex min-w-0 items-center gap-2.5">
+          <img src="/logo.svg" alt="logo" className="h-9 w-9 shrink-0" />
+          <div className="hidden leading-tight min-[420px]:block">
             <span className="font-display text-lg font-extrabold tracking-tight text-white">
               Nagorik<span className="text-gradient">Sheba</span>
             </span>
-            <span className="block text-[10px] uppercase tracking-[0.28em] text-slate-500">
+            <span className="hidden text-[10px] uppercase tracking-[0.28em] text-slate-500 sm:block">
               {t('brand.tag')}
             </span>
           </div>
@@ -62,7 +62,7 @@ export default function Navbar() {
             onClick={openDrawer}
             aria-label={t('drawer.open')}
             aria-haspopup="dialog"
-            className="rounded-lg p-2 text-slate-300 transition hover:bg-white/5 hover:text-white"
+            className="min-h-[40px] min-w-[40px] rounded-lg p-2.5 text-slate-300 transition hover:bg-white/5 hover:text-white"
           >
             <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M4 7h16M4 12h16M4 17h16" />

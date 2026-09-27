@@ -59,7 +59,7 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-5 rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs leading-relaxed text-slate-500">
+        <div className="mt-5 break-all rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs leading-relaxed text-slate-500">
           <p className="font-semibold text-slate-400">{t('login.demo')}</p>
           <p>Citizen: rahim@example.com / password123</p>
           <p>Staff (City Corp): shirin.city@nagorik.bd / staff123</p>

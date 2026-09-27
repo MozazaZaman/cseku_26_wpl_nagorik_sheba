@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../api_service.dart';
-import '../api_service.dart';
 import '../auth_provider.dart';
+import '../api_service.dart';
 import '../config.dart';
 import '../i18n.dart';
 import '../theme.dart';
 import '../widgets/camera_capture.dart';
 import '../widgets/widgets.dart';
+import 'forgot_password_screen.dart';
 import 'home_shell.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool busy = false;
+  bool _showPass = false;
   String? error;
 
   Future<void> _go() async {
@@ -51,6 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<Lang>();
+    final s = Theme.of(context).extension<NSScheme>()!;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -61,16 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(gradient: NSGradient.box, borderRadius: BorderRadius.circular(18)),
-                    child: const Icon(Icons.location_city_rounded, color: Colors.white, size: 32),
-                  ),
+                  const AppLogo(size: 64, radius: 16),
                   const SizedBox(height: 18),
-                  Text(lang.t('login.welcome'), style: whiteTitle()),
-                  Text(lang.t('login.sub'),
-                      style: TextStyle(color: Colors.white38, fontSize: 13.5)),
+                  Text(lang.t('login.welcome'), style: whiteTitle(context)),
+                  Text(lang.t('login.sub'), style: TextStyle(color: s.sub, fontSize: 13.5)),
                   const SizedBox(height: 22),
                   TextField(
                     controller: _email,
@@ -80,14 +76,29 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _password,
-                    obscureText: true,
-                    decoration: InputDecoration(hintText: lang.t('login.password')),
+                    obscureText: !_showPass,
+                    decoration: InputDecoration(
+                      hintText: lang.t('login.password'),
+                      suffixIcon: IconButton(
+                        icon: Icon(_showPass ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                            color: s.faint, size: 19),
+                        onPressed: () => setState(() => _showPass = !_showPass),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                      child: Text(lang.t('fp.title'), style: const TextStyle(fontSize: 12.5)),
+                    ),
                   ),
                   if (error != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 4),
                     ErrorBanner(error!),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   FilledButton(
                     onPressed: busy ? null : _go,
                     child: busy
@@ -99,12 +110,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(lang.t('login.new'), style: TextStyle(color: Colors.white38, fontSize: 13)),
+                      Text(lang.t('login.new'), style: TextStyle(color: s.sub, fontSize: 13)),
                       TextButton(
                         onPressed: () => Navigator.push(context,
                             MaterialPageRoute(builder: (_) => const RegisterScreen())),
                         child: Text(lang.t('login.create'),
-                            style: TextStyle(color: NSColors.accent, fontWeight: FontWeight.w700)),
+                            style: const TextStyle(color: NSColors.accent, fontWeight: FontWeight.w700)),
                       ),
                     ],
                   ),
@@ -247,6 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<Lang>();
+    final s = Theme.of(context).extension<NSScheme>()!;
     return Scaffold(
       appBar: AppBar(title: Text(step == 0 ? lang.t('reg.title') : lang.t('reg.step'))),
       body: SingleChildScrollView(
@@ -270,9 +282,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               })),
               const SizedBox(height: 16),
               if (step == 0) ...[
-                Text(lang.t('reg.title'), style: whiteTitle()),
+                Text(lang.t('reg.title'), style: whiteTitle(context)),
                 Text(lang.t('reg.sub'),
-                    style: TextStyle(color: Colors.white38, fontSize: 13)),
+                    style: TextStyle(color: s.sub, fontSize: 13)),
                 const SizedBox(height: 18),
                 TextField(controller: _name, decoration: InputDecoration(hintText: lang.t('reg.name'))),
                 const SizedBox(height: 12),
@@ -288,23 +300,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: InputDecoration(hintText: lang.t('reg.password'))),
               ],
               if (step == 1) ...[
-                Text(lang.t('reg.selfieStep'), style: whiteTitle(size: 18)),
+                Text(lang.t('reg.selfieStep'), style: whiteTitle(context, size: 18)),
                 Text(lang.t('reg.selfieHint'),
-                    style: TextStyle(color: Colors.white38, fontSize: 12.5)),
+                    style: TextStyle(color: s.sub, fontSize: 12.5)),
                 const SizedBox(height: 14),
                 Center(
                   child: GestureDetector(
                     onTap: () => _take(false),
                     child: Container(
                       width: 180, height: 180,
-                      decoration: glassDecoration(border: NSColors.accent.withOpacity(0.4)),
+                      decoration: glassDecoration(context).copyWith(
+                          border: Border.all(color: NSColors.accent.withOpacity(0.4))),
                       child: selfie != null
                           ? ClipRRect(borderRadius: BorderRadius.circular(18),
                               child: Image.file(selfie!, fit: BoxFit.cover, width: 180, height: 180))
                           : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                               Icon(Icons.photo_camera_front_rounded, size: 44, color: NSColors.accent),
                               SizedBox(height: 8),
-                              Text(lang.t('reg.takeSelfie'), style: TextStyle(color: Colors.white60, fontSize: 12.5)),
+                              Text(lang.t('reg.takeSelfie'), style: TextStyle(color: s.sub, fontSize: 12.5)),
                             ]),
                     ),
                   ),
@@ -314,27 +327,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextButton(
                   onPressed: () => _pickGallery(false),
                   child: Text(lang.t('reg.uploadInstead'),
-                      style: TextStyle(color: Colors.white38, fontSize: 12)),
+                      style: TextStyle(color: s.sub, fontSize: 12)),
                 ),
               ],
               if (step == 2) ...[
-                Text(lang.t('reg.idStep'), style: whiteTitle(size: 18)),
+                Text(lang.t('reg.idStep'), style: whiteTitle(context, size: 18)),
                 Text(lang.t('reg.idHint'),
-                    style: TextStyle(color: Colors.white38, fontSize: 12.5)),
+                    style: TextStyle(color: s.sub, fontSize: 12.5)),
                 const SizedBox(height: 14),
                 Center(
                   child: GestureDetector(
                     onTap: () => _take(true),
                     child: Container(
                       width: 240, height: 150,
-                      decoration: glassDecoration(border: NSColors.accent2.withOpacity(0.4)),
+                      decoration: glassDecoration(context).copyWith(
+                          border: Border.all(color: NSColors.accent2.withOpacity(0.4))),
                       child: idPhoto != null
                           ? ClipRRect(borderRadius: BorderRadius.circular(18),
                               child: Image.file(idPhoto!, fit: BoxFit.cover, width: 240, height: 150))
                           : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                               Icon(Icons.badge_rounded, size: 44, color: NSColors.accent2),
                               SizedBox(height: 8),
-                              Text(lang.t('reg.takeId'), style: TextStyle(color: Colors.white60, fontSize: 12.5)),
+                              Text(lang.t('reg.takeId'), style: TextStyle(color: s.sub, fontSize: 12.5)),
                             ]),
                     ),
                   ),
@@ -344,7 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextButton(
                   onPressed: () => _pickGallery(true),
                   child: Text(lang.t('reg.uploadInstead'),
-                      style: TextStyle(color: Colors.white38, fontSize: 12)),
+                      style: TextStyle(color: s.sub, fontSize: 12)),
                 ),
                 const SizedBox(height: 10),
                 InfoBanner(lang.t('reg.note'), color: NSColors.amber),
@@ -374,7 +388,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(lang.t('reg.unchanged'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white24, fontSize: 11)),
+                      style: TextStyle(color: s.faint, fontSize: 11)),
                 ),
             ],
           ),

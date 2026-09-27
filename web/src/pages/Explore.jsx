@@ -132,7 +132,7 @@ export default function Explore() {
           <MapPanel
             center={{ lat: 23.685, lng: 90.3563 }}
             zoom={6}
-            height="340px"
+            heightClass="h-[260px] sm:h-[340px]"
             defaultLayer="dark"
             heatPoints={heatPoints}
             heatOn

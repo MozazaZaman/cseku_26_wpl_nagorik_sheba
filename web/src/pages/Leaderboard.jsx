@@ -56,8 +56,8 @@ export default function Leaderboard() {
       {data && (
         <>
           {/* Ranked table */}
-          <div className="glass mt-6 overflow-hidden">
-            <table className="w-full text-left text-sm">
+          <div className="glass mt-6 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-500">
                   <th className="px-4 py-3">#</th>
@@ -77,7 +77,7 @@ export default function Leaderboard() {
                     className="border-b border-white/5 hover:bg-white/[0.03]">
                     <td className="px-4 py-3 font-bold text-slate-300">{medal(i)}</td>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-white">{a.name}</p>
+                      <p className="max-w-[10rem] truncate font-semibold text-white sm:max-w-none" title={a.name}>{a.name}</p>
                       <p className="text-[11px] text-slate-500">{typeLabel(a.type)}</p>
                     </td>
                     <td className="hidden px-4 py-3 text-slate-400 sm:table-cell">{a.division} · {a.district}</td>

@@ -24,7 +24,7 @@ export default function SatisfactionRating({ existingScore, existingComment, onS
       <div className="mt-4 rounded-xl border border-mint/30 bg-mint/10 px-4 py-3 text-sm font-semibold text-mint">
         <span className="mr-1.5 text-base">{tier?.emoji}</span>
         {t('sat.thanks')} {existingComment ? (
-          <span className="mt-1.5 block font-normal text-slate-300">“{existingComment}”</span>
+          <span className="mt-1.5 block break-words font-normal text-slate-300">“{existingComment}”</span>
         ) : null}
       </div>
     );
@@ -92,7 +92,7 @@ export default function SatisfactionRating({ existingScore, existingComment, onS
       <button
         onClick={submit}
         disabled={busy || score == null}
-        className={`btn-primary mt-3 !py-2 text-xs ${score == null ? 'cursor-not-allowed opacity-50' : ''}`}
+        className={`btn-primary mt-3 !min-h-[40px] !py-2.5 text-xs ${score == null ? 'cursor-not-allowed opacity-50' : ''}`}
       >
         {busy ? t('sat.submitting') : t('sat.submit')}
       </button>

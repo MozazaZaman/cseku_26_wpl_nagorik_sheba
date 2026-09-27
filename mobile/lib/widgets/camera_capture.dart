@@ -10,7 +10,10 @@ import '../theme.dart';
 /// photo is lost" bug).
 class CameraCaptureScreen extends StatefulWidget {
   final bool front;
-  const CameraCaptureScreen({super.key, required this.front});
+  /// Optional override for the top-bar title (defaults to Selfie / ID Card
+  /// for the registration flow). Used by the report page for evidence photos.
+  final String? title;
+  const CameraCaptureScreen({super.key, required this.front, this.title});
 
   @override
   State<CameraCaptureScreen> createState() => _CameraCaptureScreenState();
@@ -111,7 +114,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen> {
                 icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
               ),
               Text(
-                widget.front ? 'Selfie' : 'ID Card',
+                widget.title ?? (widget.front ? 'Selfie' : 'ID Card'),
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
               ),
               IconButton(

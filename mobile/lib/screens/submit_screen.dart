@@ -12,6 +12,8 @@ import '../i18n.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../utils/location.dart';
+import '../widgets/camera_capture.dart';
+import '../widgets/map_layers.dart';
 import '../widgets/widgets.dart';
 import 'complaint_detail_screen.dart';
 
@@ -29,6 +31,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
   final _address = TextEditingController();
   final _speech = SpeechToText();
   final _picker = ImagePicker();
+  final _mapCtl = MapController();
 
   bool speechReady = false;
   bool listening = false;
@@ -37,6 +40,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
   bool geocoding = false;
 
   String locMode = 'gps'; // gps | address
+  String categoryHint = 'auto';
   List<Map<String, dynamic>> divisions = [];
   List<dynamic> authorities = [];
   List<String> availableTypes = [];
@@ -57,8 +61,9 @@ class _SubmitScreenState extends State<SubmitScreen> {
   String gpsNote = '…';
   String? error;
   String? geoNote;
+  final _layer = ValueNotifier<String>('map');
 
-  @override
+  // All 8 divisions + districts as an offline fallback; replaced by /api/geo.
   static const _fallbackDivs = [
     {'name': 'Dhaka', 'districts': ['Dhaka','Faridpur','Gazipur','Gopalganj','Kishoreganj','Madaripur','Manikganj','Munshiganj','Narayanganj','Narsingdi','Rajbari','Shariatpur','Tangail']},
     {'name': 'Chattogram', 'districts': ['Bandarban','Brahmanbaria','Chandpur','Chattogram','Cumilla',"Cox's Bazar",'Feni','Khagrachhari','Lakshmipur','Noakhali','Rangamati']},
@@ -70,6 +75,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
     {'name': 'Mymensingh', 'districts': ['Jamalpur','Mymensingh','Netrokona','Sherpur']},
   ];
 
+  @override
   void initState() {
     super.initState();
     gpsNote = context.read<Lang>().t('sub.gpsDefault');
@@ -80,8 +86,19 @@ class _SubmitScreenState extends State<SubmitScreen> {
     _autoLocate();
   }
 
+  /// Recenter the map after a location change (guarded: the controller may not
+  /// be attached yet on the very first frame).
+  void _recenter() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        _mapCtl.move(LatLng(lat, lng), _mapCtl.camera.zoom);
+      } catch (_) {}
+    });
+  }
+
   Future<void> _autoLocate() async {
-    final lang = Lang();
+    final lang = context.read<Lang>();
     try {
       final p = await getCurrentPosition();
       if (!mounted) return;
@@ -90,10 +107,9 @@ class _SubmitScreenState extends State<SubmitScreen> {
         lng = p.longitude;
         gpsNote = '${lang.t('sub.gpsLocked')}${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
       });
+      _recenter();
     } catch (_) {
-      if (mounted) {
-        setState(() => gpsNote = lang.t('sub.gpsUnavailable'));
-      }
+      if (mounted) setState(() => gpsNote = lang.t('sub.gpsUnavailable'));
     }
   }
 
@@ -146,6 +162,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
   }
 
   Future<void> _toggleVoice() async {
+    final lang = context.read<Lang>();
     if (listening) {
       await _speech.stop();
       setState(() => listening = false);
@@ -154,7 +171,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
     if (!speechReady) {
       speechReady = await _speech.initialize();
       if (!speechReady) {
-        setState(() => error = 'Speech recognition not available on this device');
+        setState(() => error = lang.t('reg.err.camera').replaceAll('Camera', 'Speech'));
         return;
       }
     }
@@ -173,21 +190,51 @@ class _SubmitScreenState extends State<SubmitScreen> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final x = await _picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-    if (x != null) setState(() => image = File(x.path));
+  /// In-app camera capture — never leaves the Flutter activity, so Android
+  /// cannot kill the app while taking the photo (fixes the restart bug that
+  /// the system-camera intent caused on the report page).
+  Future<void> _takePhoto() async {
+    final lang = context.read<Lang>();
+    try {
+      final path = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+            builder: (_) => CameraCaptureScreen(front: false, title: lang.t('sub.photoTitle'))),
+      );
+      if (path == null) return;
+      if (!mounted) return;
+      setState(() => image = File(path));
+    } catch (_) {
+      if (mounted) setState(() => error = lang.t('reg.err.camera'));
+    }
+  }
+
+  /// Gallery fallback — picking from Photos is also safe from the restart bug.
+  Future<void> _pickGallery() async {
+    try {
+      final x = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1600,
+      );
+      if (x == null) return;
+      if (!mounted) return;
+      setState(() => image = File(x.path));
+    } catch (_) {}
   }
 
   Future<void> _useGps() async {
+    final lang = context.read<Lang>();
     try {
       final p = await getCurrentPosition();
       setState(() {
         lat = p.latitude;
         lng = p.longitude;
-        gpsNote = 'GPS locked: ${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
+        gpsNote = '${lang.t('sub.gpsLocked')}${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
       });
+      _recenter();
     } catch (_) {
-      setState(() => gpsNote = 'GPS unavailable — using default location');
+      setState(() => gpsNote = lang.t('sub.gpsUnavailable'));
     }
   }
 
@@ -232,6 +279,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
         geoNote = lang.t('sub.found');
         geocoding = false;
       });
+      _recenter();
     } else {
       final auth = authorities.firstWhere((a) => a['authority_id'] == authorityId, orElse: () => null);
       if (auth != null && auth['center_lat'] != null) {
@@ -241,6 +289,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
           geoNote = lang.t('sub.notFound');
           geocoding = false;
         });
+        _recenter();
       } else {
         setState(() {
           geocoding = false;
@@ -276,6 +325,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
         longitude: lng,
         address: _address.text.trim(),
         image: image,
+        categoryHint: categoryHint,
         authorityId: locMode == 'address' ? authorityId : null,
         division: locMode == 'address' ? division : null,
         district: locMode == 'address' ? district : null,
@@ -287,16 +337,16 @@ class _SubmitScreenState extends State<SubmitScreen> {
         upazila: locMode == 'address' && isUnion ? _upazila.text.trim() : null,
       );
       if (!mounted) return;
-      final lang = context.read<Lang>();
+      final lang2 = context.read<Lang>();
       final action = res['action'];
       if (action == 'created') {
         final c = res['complaint'] as Complaint;
         _showResult(
           icon: Icons.check_circle_rounded,
           color: NSColors.mint,
-          title: lang.t('res.created'),
-          body: '${lang.t('res.createdBody')}${res['routed_to']}\n\n${lang.t('res.ticket')}${c.id}',
-          actionLabel: lang.t('res.track'),
+          title: lang2.t('res.created'),
+          body: '${lang2.t('res.createdBody')}${res['routed_to']}\n\n${lang2.t('res.ticket')}${c.id}',
+          actionLabel: lang2.t('res.track'),
           onAction: () {
             Navigator.pop(context);
             Navigator.pushReplacement(context,
@@ -308,10 +358,10 @@ class _SubmitScreenState extends State<SubmitScreen> {
         _showResult(
           icon: Icons.how_to_vote_rounded,
           color: NSColors.accent,
-          title: lang.t('res.mergedTitle'),
+          title: lang2.t('res.mergedTitle'),
           body:
-              '${lang.t('res.mergedBody')}${o.id} "${o.title}", ${o.voteCount}${lang.t('res.mergedBody2')}',
-          actionLabel: lang.t('res.viewOriginal'),
+              '${lang2.t('res.mergedBody')}${o.id} "${o.title}", ${o.voteCount}${lang2.t('res.mergedBody2')}',
+          actionLabel: lang2.t('res.viewOriginal'),
           onAction: () {
             Navigator.pop(context);
             Navigator.pushReplacement(context,
@@ -323,13 +373,13 @@ class _SubmitScreenState extends State<SubmitScreen> {
           icon: Icons.hourglass_top_rounded,
           color: NSColors.amber,
           title: res['alert'],
-          body: '${res['detail'] ?? ''}${lang.t('res.blockedNote')}',
+          body: '${res['detail'] ?? ''}${lang2.t('res.blockedNote')}',
         );
       } else {
         _showResult(
           icon: Icons.gpp_bad_rounded,
           color: NSColors.rose,
-          title: lang.t('res.rejectedTitle'),
+          title: lang2.t('res.rejectedTitle'),
           body: res['reason'] ?? '',
         );
       }
@@ -359,7 +409,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => Dialog(
-        backgroundColor: NSColors.card,
+        backgroundColor: Theme.of(context).extension<NSScheme>()!.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -370,7 +420,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                 style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: color)),
             const SizedBox(height: 10),
             Text(body, textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 13.5, height: 1.45)),
+                style: TextStyle(color: Theme.of(context).extension<NSScheme>()!.sub, fontSize: 13.5, height: 1.45)),
             const SizedBox(height: 20),
             FilledButton(onPressed: onAction ?? () => Navigator.pop(context),
                 child: Text(actionLabel ?? 'Close')),
@@ -390,84 +440,131 @@ class _SubmitScreenState extends State<SubmitScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<Lang>();
+    final s = Theme.of(context).extension<NSScheme>()!;
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 100),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(lang.t('sub.title'),
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white)),
-          SizedBox(height: 4),
-          Text(lang.t('sub.sub'),
-              style: TextStyle(color: Colors.white38, fontSize: 13)),
-          SizedBox(height: 18),
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: s.text)),
+          const SizedBox(height: 4),
+          Text(lang.t('sub.sub'), style: TextStyle(color: s.sub, fontSize: 13)),
+          const SizedBox(height: 18),
 
           GlassBox(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              TextField(controller: _title,
-                  decoration: _dec(lang.t('sub.titleField'))),
-              SizedBox(height: 12),
-              TextField(controller: _desc, maxLines: 4,
-                  decoration: _dec(lang.t('sub.desc'))),
-              SizedBox(height: 14),
+              TextField(controller: _title, decoration: _dec(lang.t('sub.titleField'))),
+              const SizedBox(height: 12),
+              TextField(controller: _desc, maxLines: 4, decoration: _dec(lang.t('sub.desc'))),
+              const SizedBox(height: 14),
               Row(children: [
                 GestureDetector(
                   onTap: _toggleVoice,
                   child: Container(
                     width: 46, height: 46,
                     decoration: BoxDecoration(
-                      gradient: listening ? LinearGradient(colors: [NSColors.rose, Color(0xFFFF8A65)]) : NSGradient.box,
+                      gradient: listening ? const LinearGradient(colors: [NSColors.rose, Color(0xFFFF8A65)]) : NSGradient.box,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(listening ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.white),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(listening ? lang.t('sub.listening') : lang.t('sub.voice'),
-                      style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                      style: TextStyle(color: s.sub, fontWeight: FontWeight.w700, fontSize: 13.5)),
                   GestureDetector(
                     onTap: () => setState(() => bnLang = !bnLang),
                     child: Text('${lang.t('sub.langSwitch')}${bnLang ? "English" : "বাংলা"}',
-                        style: TextStyle(color: NSColors.accent, fontSize: 11.5)),
+                        style: const TextStyle(color: NSColors.accent, fontSize: 11.5)),
                   ),
                 ])),
               ]),
-            ],
+            ]),
           ),
+          const SizedBox(height: 16),
+
+          // ---- Category hint (optional; web's "force category") ----
+          GlassBox(
+            child: Row(children: [
+              const Icon(Icons.category_rounded, color: NSColors.accent3, size: 20),
+              const SizedBox(width: 12),
+              Expanded(child: Text(lang.t('sub.catHint'),
+                  style: TextStyle(color: s.sub, fontSize: 12.5, fontWeight: FontWeight.w600))),
+              DropdownButton<String>(
+                value: categoryHint,
+                underline: const SizedBox(),
+                style: TextStyle(color: NSColors.accent, fontSize: 12.5, fontWeight: FontWeight.w800),
+                items: [
+                  DropdownMenuItem(value: 'auto', child: Text(lang.t('sub.catAuto'))),
+                  ...['road', 'electricity', 'water', 'gas', 'sanitation', 'other']
+                      .map((k) => DropdownMenuItem(value: k, child: Text(lang.t('cat.$k')))),
+                ],
+                onChanged: (v) => setState(() => categoryHint = v!),
+              ),
+            ]),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-          Row(children: [
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                width: 92, height: 92,
-                decoration: glassDecoration(),
-                child: image != null
-                    ? ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(image!, fit: BoxFit.cover))
-                    : Icon(Icons.add_a_photo_rounded, color: Colors.white24, size: 30),
+          // ---- Photo evidence (single block) ----
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Column(children: [
+              GestureDetector(
+                onTap: _takePhoto,
+                child: Container(
+                  width: 92, height: 92,
+                  decoration: glassDecoration(context),
+                  child: image != null
+                      ? ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(image!, fit: BoxFit.cover))
+                      : Icon(Icons.add_a_photo_rounded, color: s.faint, size: 30),
+                ),
               ),
-            ),
-            SizedBox(width: 14),
-            Expanded(child: InfoBanner(lang.t('sub.photo'), color: NSColors.accent)),
+              if (image != null)
+                TextButton(
+                  onPressed: () => setState(() => image = null),
+                  style: TextButton.styleFrom(
+                    foregroundColor: NSColors.rose,
+                    minimumSize: const Size(0, 28),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    textStyle: const TextStyle(fontSize: 11),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded, size: 15),
+                ),
+            ]),
+            const SizedBox(width: 14),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              InfoBanner(lang.t('sub.photo'), color: NSColors.accent),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _takePhoto,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      minimumSize: const Size(0, 34),
+                      textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                    ),
+                    icon: const Icon(Icons.photo_camera_rounded, size: 15),
+                    label: Text(image != null ? lang.t('reg.retake') : lang.t('sub.photoTitle')),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _pickGallery,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      minimumSize: const Size(0, 34),
+                      textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                    ),
+                    icon: const Icon(Icons.photo_library_rounded, size: 15),
+                    label: Text(lang.t('reg.uploadInstead'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+              ]),
+            ])),
           ]),
-          SizedBox(height: 16),
-
-          Row(children: [
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                width: 92, height: 92,
-                decoration: glassDecoration(),
-                child: image != null
-                    ? ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.file(image!, fit: BoxFit.cover))
-                    : Icon(Icons.add_a_photo_rounded, color: Colors.white24, size: 30),
-              ),
-            ),
-            SizedBox(width: 14),
-            Expanded(child: InfoBanner('Photo evidence is optional but speeds up verification.', color: NSColors.accent)),
-          ]),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // ---------- LOCATION ----------
           GlassBox(
@@ -477,49 +574,49 @@ class _SubmitScreenState extends State<SubmitScreen> {
                   child: GestureDetector(
                     onTap: () => setState(() => locMode = 'gps'),
                     child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: locMode == 'gps' ? NSColors.accent.withOpacity(0.25) : Colors.white.withOpacity(0.03),
+                        color: locMode == 'gps' ? NSColors.accent.withOpacity(0.25) : s.fill,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: locMode == 'gps' ? NSColors.accent : Colors.white10),
+                        border: Border.all(color: locMode == 'gps' ? NSColors.accent : s.line),
                       ),
                       child: Center(child: Text(lang.t('sub.mode.gps'), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700))),
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => locMode = 'address'),
                     child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: locMode == 'address' ? NSColors.accent2.withOpacity(0.25) : Colors.white.withOpacity(0.03),
+                        color: locMode == 'address' ? NSColors.accent2.withOpacity(0.25) : s.fill,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: locMode == 'address' ? NSColors.accent2 : Colors.white10),
+                        border: Border.all(color: locMode == 'address' ? NSColors.accent2 : s.line),
                       ),
                       child: Center(child: Text(lang.t('sub.mode.addr'), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700))),
                     ),
                   ),
                 ),
               ]),
-              SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-              if (locMode == 'gps') ...[
+              if (locMode == 'gps')
                 Row(children: [
                   Icon(Icons.location_on_rounded, color: NSColors.accent3, size: 18),
-                  SizedBox(width: 8),
-                  Expanded(child: Text(gpsNote, style: TextStyle(color: Colors.white60, fontSize: 12))),
-                  TextButton(onPressed: _useGps, child: Text(lang.t('sub.useGps'), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12))),
-                ]),
-              ] else ...[
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(gpsNote, style: TextStyle(color: s.sub, fontSize: 12))),
+                  TextButton(onPressed: _useGps, child: Text(lang.t('sub.useGps'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12))),
+                ])
+              else ...[
                 DropdownButtonFormField<String>(
                   value: division,
                   decoration: _dec(lang.t('sub.division')),
                   items: divisions.map((d) => DropdownMenuItem(value: d['name'] as String, child: Text(d['name'] as String))).toList(),
                   onChanged: (v) => setState(() { division = v; district = null; authorityId = null; authorities = []; availableTypes = []; availableUpazilas = []; _upazila.text = ''; }),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: district,
                   decoration: _dec(lang.t('sub.district')),
@@ -530,7 +627,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                   })(),
                   onChanged: division == null ? null : (v) { setState(() { district = v; authorityId = null; }); _loadTypes(); },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   value: availableTypes.contains(authType) ? authType : null,
                   decoration: _dec(lang.t('sub.type')),
@@ -545,7 +642,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                     if (v == 'UNION_PARISHAD') _loadUpazilas(); else _loadAuthorities();
                   },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 if (isUnion) ...[
                   DropdownButtonFormField<String>(
                     value: _upazila.text.isNotEmpty && availableUpazilas.contains(_upazila.text) ? _upazila.text : null,
@@ -553,7 +650,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                     items: availableUpazilas.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
                     onChanged: district == null ? null : (v) { setState(() { _upazila.text = v!; authorityId = null; }); _loadAuthorities(); },
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ],
                 DropdownButtonFormField<int>(
                   value: authorityId,
@@ -562,69 +659,77 @@ class _SubmitScreenState extends State<SubmitScreen> {
                       value: a['authority_id'] as int, child: Text(a['name'] as String, overflow: TextOverflow.ellipsis))).toList(),
                   onChanged: district == null || (isUnion && _upazila.text.isEmpty) ? null : (v) => setState(() => authorityId = v),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 if (isUnion) ...[
                   TextField(controller: _village, decoration: _dec(lang.t('sub.village'))),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ] else ...[
                   TextField(controller: _area, decoration: _dec(lang.t('sub.area'))),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(controller: _ward, decoration: _dec(lang.t('sub.ward'))),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ],
                 TextField(controller: _road, decoration: _dec(lang.t('sub.road'))),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextField(controller: _sector, decoration: _dec(lang.t('sub.sector'))),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: geocoding ? null : _geocode,
                   icon: geocoding
-                      ? SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : Icon(Icons.travel_explore_rounded, size: 18),
+                      ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.travel_explore_rounded, size: 18),
                   label: Text(lang.t('sub.find')),
                 ),
-                if (geoNote != null) ...[SizedBox(height: 8), Text(geoNote!, style: TextStyle(color: NSColors.mint, fontSize: 11.5))],
+                if (geoNote != null) ...[const SizedBox(height: 8), Text(geoNote!, style: const TextStyle(color: NSColors.mint, fontSize: 11.5))],
                 if (composedAddress.isNotEmpty) ...[
-                  SizedBox(height: 8),
-                  Text(composedAddress, style: TextStyle(color: Colors.white38, fontSize: 11)),
+                  const SizedBox(height: 8),
+                  Text(composedAddress, style: TextStyle(color: s.sub, fontSize: 11)),
                 ],
-                SizedBox(height: 12),
-                SizedBox(
-                  height: 180,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    key: ValueKey('map-$lat-$lng'),
-                    child: FlutterMap(
-                      options: MapOptions(initialCenter: LatLng(lat, lng), initialZoom: 15,
-                          interactionOptions: InteractionOptions(flags: InteractiveFlag.none)),
-                      children: [
-                        TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
-                        MarkerLayer(markers: [
-                          Marker(point: LatLng(lat, lng), width: 40, height: 40,
-                              child: Text('📌', style: TextStyle(fontSize: 26))),
-                        ]),
-                      ],
-                    ),
+              ],
+              const SizedBox(height: 12),
+
+              // ---- Map preview (both modes; tap to fine-tune the pin) ----
+              Text(lang.t('sub.find'), style: TextStyle(color: s.faint, fontSize: 11.5, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 180,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: NsMap(
+                    controller: _mapCtl,
+                    layer: _layer,
+                    initialCenter: LatLng(lat, lng),
+                    initialZoom: 15,
+                    onTap: (_, point) => setState(() {
+                      lat = point.latitude;
+                      lng = point.longitude;
+                      if (locMode == 'gps') gpsNote = '${lang.t('sub.gpsLocked')}${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
+                    }),
+                    children: [
+                      MarkerLayer(markers: [
+                        Marker(point: LatLng(lat, lng), width: 40, height: 40,
+                            child: const Text('📍', style: TextStyle(fontSize: 28))),
+                      ]),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ]),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           GlassBox(
-            child: TextField(controller: _address,
-                decoration: _dec(lang.t('sub.landmark'))),
+            child: TextField(controller: _address, decoration: _dec(lang.t('sub.landmark'))),
           ),
 
-          if (error != null) ...[SizedBox(height: 14), ErrorBanner(error!)],
-          SizedBox(height: 20),
+          if (error != null) ...[const SizedBox(height: 14), ErrorBanner(error!)],
+          const SizedBox(height: 20),
 
           FilledButton.icon(
             onPressed: busy ? null : _submit,
             icon: busy
-                ? SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Icon(Icons.rocket_launch_rounded),
+                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Icon(Icons.rocket_launch_rounded),
             label: Text(busy ? lang.t('sub.processing') : lang.t('sub.submit')),
           ),
         ]),

@@ -26,7 +26,7 @@ export default function AuthorityStats({ authorityId, compact = false }) {
       <h2 className="font-display text-base font-bold text-white">{t('an.performance')}</h2>
       <p className="text-xs text-slate-500">{data.authority.name} · {t('an.publicData')}</p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
           <p className="font-display text-xl font-extrabold text-mint">{m.resolution_rate}%</p>
           <p className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500 leading-tight text-balance break-words">{t('an.resolutionRate')}</p>

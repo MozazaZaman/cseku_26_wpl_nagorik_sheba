@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../auth_provider.dart';
+import '../i18n.dart';
 import '../theme.dart';
+import '../widgets/widgets.dart';
 import 'home_shell.dart';
-import 'login_screen.dart';
+import 'landing_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -25,13 +27,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _route() async {
     await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
     final auth = context.read<AuthProvider>();
+    // Wait (briefly) for the saved session to be re-validated before deciding
+    // the first screen, so a slow network never sends a logged-in user to login.
+    for (int i = 0; i < 30 && !auth.ready; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
+        // Web-like flow: logged-in users land in the app, guests land on the
+        // landing page (which holds login / register / browse actions).
         pageBuilder: (_, __, ___) =>
-            (auth.ready && auth.user != null) ? const HomeShell(initialTab: 0) : const LoginScreen(),
+            (auth.ready && auth.user != null) ? const HomeShell(initialTab: 0) : const LandingScreen(),
         transitionsBuilder: (_, a, __, child) =>
             FadeTransition(opacity: CurvedAnimation(parent: a, curve: Curves.easeOut), child: child),
       ),
@@ -40,6 +49,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final s = Theme.of(context).extension<NSScheme>()!;
     return Scaffold(
       body: Center(
         child: FadeTransition(
@@ -49,25 +59,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(gradient: NSGradient.box, borderRadius: BorderRadius.circular(26)),
-                  child: const Icon(Icons.location_city_rounded, size: 48, color: Colors.white),
-                ),
+                const AppLogo(size: 96, radius: 26),
                 const SizedBox(height: 20),
                 RichText(
                   text: TextSpan(
-                    style: DefaultTextStyle.of(context).style.copyWith(fontSize: 28, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: s.text),
                     children: [
-                      const TextSpan(text: 'Nagorik', style: TextStyle(color: Colors.white)),
-                      TextSpan(text: 'Sheba', style: TextStyle(color: NSColors.accent)),
+                      const TextSpan(text: 'Nagorik'),
+                      TextSpan(text: 'Sheba', style: const TextStyle(color: NSColors.accent)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text('Your city, one complaint at a time',
-                    style: TextStyle(color: Colors.white38, fontSize: 13)),
+                Text(context.read<Lang>().t('land.tagline'),
+                    style: TextStyle(color: s.faint, fontSize: 13)),
               ],
             ),
           ),

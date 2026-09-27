@@ -154,9 +154,17 @@ router.post('/login', (req, res) => {
 
 router.get('/me', requireAuth, (req, res) => {
   if (req.auth.role === 'staff') {
-    const row = db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
+    // The staff table has no `role` column, so it must be injected —
+    // otherwise the client falls back to 'citizen' and a mayor/staff
+    // appears as a citizen after the app is reopened.
+    const row = db.prepare(
+      `SELECT s.*, a.name AS authority_name
+         FROM staff s
+         JOIN authorities a ON a.authority_id = s.authority_id
+        WHERE s.staff_id = ?`
+    ).get(req.auth.id);
     if (!row) return res.status(404).json({ error: 'Account not found' });
-    return res.json({ user: publicUser(row) });
+    return res.json({ user: publicUser({ ...row, role: 'staff' }) });
   }
   const row = db.prepare('SELECT * FROM users WHERE user_id = ?').get(req.auth.id);
   if (!row) return res.status(404).json({ error: 'Account not found' });

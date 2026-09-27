@@ -113,11 +113,12 @@ class ApiService {
     return User.fromJson(b['user'] as Map<String, dynamic>);
   }
 
-  Future<List<Complaint>> complaints({String? q, String? category, String? status}) async {
+  Future<List<Complaint>> complaints({String? q, String? category, String? status, String? sort}) async {
     final params = <String, String>{};
     if (q != null && q.isNotEmpty) params['q'] = q;
     if (category != null && category != 'all') params['category'] = category;
     if (status != null && status != 'all') params['status'] = status;
+    if (sort != null && sort != 'newest') params['sort'] = sort;
     final uri = Uri.parse('$kApiBase/complaints').replace(queryParameters: params);
     final b = _check(await http.get(uri, headers: _headers));
     return (b['complaints'] as List).map((e) => Complaint.fromJson(e as Map<String, dynamic>)).toList();
@@ -136,22 +137,31 @@ class ApiService {
       'agents': (b['agents'] as List).map((e) => AgentLogItem.fromJson(e as Map<String, dynamic>)).toList(),
       'workflow': (b['workflow'] as List? ?? []).map((e) => WorkflowStep.fromJson(e as Map<String, dynamic>)).toList(),
       'my_actions': (b['my_actions'] as List? ?? []).cast<String>(),
+      'duplicates': (b['duplicate_reports'] as List? ?? [])
+          .map((e) => DuplicateReport.fromJson(e as Map<String, dynamic>))
+          .toList(),
     };
   }
 
-  /// Hierarchical workflow action (field/mid/mayor chain).
+  /// Hierarchical workflow action (field/mid/mayor chain). `resolutionPhoto`
+  /// is required when a field worker marks work solved (before/after proof).
   Future<Complaint> workflowAction(int complaintId, String action,
-      {String? comment, int? etaHours, int? executorStaffId}) async {
-    final b = _check(await http.post(
-      Uri.parse('$kApiBase/complaints/$complaintId/workflow'),
-      headers: _headers,
-      body: jsonEncode({
-        'action': action,
-        'comment': comment ?? '',
-        if (etaHours != null) 'eta_hours': etaHours,
-        if (executorStaffId != null) 'executor_staff_id': executorStaffId,
-      }),
-    ));
+      {String? comment, int? etaHours, int? executorStaffId, File? resolutionPhoto}) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$kApiBase/complaints/$complaintId/workflow'))
+      ..headers.addAll(_headers)
+      ..fields['action'] = action
+      ..fields['comment'] = comment ?? '';
+    if (etaHours != null) req.fields['eta_hours'] = '$etaHours';
+    if (executorStaffId != null) req.fields['executor_staff_id'] = '$executorStaffId';
+    if (resolutionPhoto != null) {
+      req.files.add(await http.MultipartFile.fromPath('resolution_photo', resolutionPhoto.path));
+    }
+    final streamed = await req.send();
+    final r = await http.Response.fromStream(streamed);
+    final b = _decode(r);
+    if (r.statusCode >= 400) {
+      throw ApiException(r.statusCode, b is Map ? (b as Map<String, dynamic>) : <String, dynamic>{});
+    }
     return Complaint.fromJson(b['complaint'] as Map<String, dynamic>);
   }
 
@@ -288,14 +298,28 @@ class ApiService {
     return (b['services'] as List).map((e) => ServiceItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  /// Reverse geocode GPS -> readable address (mirrors the web Emergency page).
+  Future<String?> reverseGeocode(double lat, double lng) async {
+    try {
+      final uri = Uri.parse('$kApiBase/reverse').replace(queryParameters: {'lat': '$lat', 'lng': '$lng'});
+      final r = await http.get(uri, headers: _headers);
+      if (r.statusCode != 200) return null;
+      final b = _decode(r);
+      if (b is Map && b['found'] == true) return (b['display_name'] ?? '').toString();
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<NotificationItem>> notifications() async {
     final b = _check(await http.get(Uri.parse('$kApiBase/my/notifications'), headers: _headers));
     return (b['notifications'] as List).map((e) => NotificationItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<List<Complaint>> staffQueue({String category = 'all', String status = 'all'}) async {
+  Future<List<Complaint>> staffQueue({String category = 'all', String status = 'all', String view = 'mine'}) async {
     final uri = Uri.parse('$kApiBase/complaints/staff/queue')
-        .replace(queryParameters: {'category': category, 'status': status});
+        .replace(queryParameters: {'category': category, 'status': status, 'view': view});
     final b = _check(await http.get(uri, headers: _headers));
     return (b['complaints'] as List).map((e) => Complaint.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -315,5 +339,107 @@ class ApiService {
 
   Future<Map<String, dynamic>> stats() async {
     return _check(await http.get(Uri.parse('$kApiBase/stats'))) as Map<String, dynamic>;
+  }
+
+  // ---------- Analytics ----------
+  Future<Map<String, dynamic>> leaderboard({String? division, int days = 90, int min = 5}) async {
+    final params = <String, String>{'window': '$days', 'min': '$min'};
+    if (division != null) params['division'] = division;
+    final uri = Uri.parse('$kApiBase/analytics/leaderboard').replace(queryParameters: params);
+    return _check(await http.get(uri, headers: _headers)) as Map<String, dynamic>;
+  }
+
+  Future<List<dynamic>> heatmapPoints() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/analytics/heatmap-points'), headers: _headers));
+    return (b['points'] as List? ?? []);
+  }
+
+  Future<Map<String, dynamic>> authorityAnalytics(int id) async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/analytics/authority/$id'), headers: _headers));
+    return b as Map<String, dynamic>;
+  }
+
+  // ---------- Notifications ----------
+  Future<int> unreadCount() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/notifications/unread-count'), headers: _headers));
+    return (b['unread'] ?? b['count'] ?? 0) as int;
+  }
+
+  Future<void> markNotificationRead(int id) async {
+    _check(await http.patch(Uri.parse('$kApiBase/notifications/$id/read'), headers: _headers));
+  }
+
+  Future<void> deleteNotification(int id) async {
+    _check(await http.delete(Uri.parse('$kApiBase/notifications/$id'), headers: _headers));
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    _check(await http.patch(Uri.parse('$kApiBase/notifications/read-all'), headers: _headers));
+  }
+
+  Future<void> clearAllNotifications() async {
+    _check(await http.delete(Uri.parse('$kApiBase/notifications/clear-all'), headers: _headers));
+  }
+
+  // ---------- Resolution feedback (citizen) ----------
+  Future<void> confirmResolution(int id) async {
+    _check(await http.post(Uri.parse('$kApiBase/complaints/$id/confirm'), headers: _headers));
+  }
+
+  Future<void> disputeResolution(int id, String reason) async {
+    _check(await http.post(Uri.parse('$kApiBase/complaints/$id/dispute'),
+        headers: _headers, body: jsonEncode({'reason': reason})));
+  }
+
+  Future<void> satisfaction(int id, int score, {String? comment}) async {
+    _check(await http.post(Uri.parse('$kApiBase/complaints/$id/satisfaction'),
+        headers: _headers,
+        body: jsonEncode({'satisfaction_score': score, 'satisfaction_comment': comment ?? ''})));
+  }
+
+  // ---------- Staff gamification ----------
+  Future<Map<String, dynamic>> myBadges() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/staff/badges'), headers: _headers));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<List<dynamic>> teamBadges() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/staff/team/badges'), headers: _headers));
+    return (b['team'] as List? ?? []);
+  }
+
+  Future<Map<String, dynamic>> staffReviews() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/complaints/staff/reviews'), headers: _headers));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<void> recognizeStaff(int staffId, String note) async {
+    _check(await http.post(Uri.parse('$kApiBase/staff/$staffId/recognize'),
+        headers: _headers, body: jsonEncode({'note': note})));
+  }
+
+  // ---------- AI assistant ----------
+  Future<String> assistantChat(String message, {List<Map<String, dynamic>> history = const []}) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/assistant/chat'),
+        headers: _headers,
+        body: jsonEncode({'message': message, 'conversation_history': history})));
+    return (b['reply'] ?? '').toString();
+  }
+
+  // ---------- Password reset ----------
+  Future<void> forgotPassword(String email) async {
+    _check(await http.post(Uri.parse('$kApiBase/auth/forgot-password'),
+        headers: _headers, body: jsonEncode({'email': email})));
+  }
+
+  Future<String> verifyOtp(String email, String code) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/auth/verify-otp'),
+        headers: _headers, body: jsonEncode({'email': email, 'otp_code': code})));
+    return (b['reset_token'] ?? '').toString();
+  }
+
+  Future<void> resetPassword(String token, String password) async {
+    _check(await http.post(Uri.parse('$kApiBase/auth/reset-password'),
+        headers: _headers, body: jsonEncode({'reset_token': token, 'password': password})));
   }
 }

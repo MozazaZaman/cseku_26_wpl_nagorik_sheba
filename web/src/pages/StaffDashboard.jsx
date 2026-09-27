@@ -273,12 +273,12 @@ export default function StaffDashboard() {
                         </span>
                       )}
                     </div>
-                    <Link to={`/complaints/${c.complaint_id}`} className="mt-2 block font-display font-bold text-white hover:text-gradient">
+                    <Link to={`/complaints/${c.complaint_id}`} className="mt-2 block break-words font-display font-bold text-white hover:text-gradient">
                       #{c.complaint_id} · {c.title}
                     </Link>
-                    <p className="mt-1 line-clamp-1 text-sm text-slate-400">{c.description}</p>
+                    <p className="mt-1 line-clamp-1 break-words text-sm text-slate-400">{c.description}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
-                      <span>{c.full_address || c.address_text || `${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`}</span>
+                      <span className="min-w-0 break-words">{c.full_address || c.address_text || `${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`}</span>
                       <span>{t('exp.by')} {c.submitter_name} · {fmtDate(c.created_at)}</span>
                       <span>
                         <span className="text-slate-500">{t('wf.by')}:</span>{' '}
@@ -290,7 +290,7 @@ export default function StaffDashboard() {
                     <WorkflowActions complaint={c} myActions={actions} executors={executors} onDone={load} compact />
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <Link to={`/complaints/${c.complaint_id}`} className="btn-ghost !px-4 !py-2 text-xs">
+                    <Link to={`/complaints/${c.complaint_id}`} className="btn-ghost !min-h-[40px] !px-4 !py-2.5 text-xs">
                       {t('det.review')}
                     </Link>
                   </div>

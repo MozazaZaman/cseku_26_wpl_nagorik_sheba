@@ -300,7 +300,7 @@ export default function Submit() {
               <p><span className="text-slate-500">{t('res.priority')}</span> {result.complaint.priority_score}</p>
               <p><span className="text-slate-500">{t('res.status')}</span> {t('res.statusV')}</p>
             </div>
-            <div className="mt-7 flex justify-center gap-3">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Link to={`/complaints/${result.complaint.complaint_id}`} className="btn-primary">{t('res.track')}</Link>
               <button onClick={reset} className="btn-ghost">{t('res.another')}</button>
             </div>
@@ -319,7 +319,7 @@ export default function Submit() {
               <p className="font-semibold text-white">{result.original.title}</p>
               <p className="mt-1 text-slate-400">{t('res.merged.votes')} {result.original.vote_count}</p>
             </div>
-            <div className="mt-7 flex justify-center gap-3">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Link to={`/complaints/${result.original.complaint_id}`} className="btn-primary">{t('res.viewOriginal')}</Link>
               <button onClick={reset} className="btn-ghost">{t('res.different')}</button>
             </div>
@@ -344,7 +344,7 @@ export default function Submit() {
             <h1 className="mt-5 font-display text-2xl font-extrabold text-amber-300">{result.alert}</h1>
             <p className="mt-2 text-slate-400">{result.detail}</p>
             <p className="mt-1 text-sm text-slate-500">{t('res.blocked.note')}</p>
-            <div className="mt-7 flex justify-center gap-3">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               {result.original_id && (
                 <Link to={`/complaints/${result.original_id}`} className="btn-primary">{t('res.blocked.track')}</Link>
               )}
@@ -374,14 +374,14 @@ export default function Submit() {
             <textarea className="input min-h-[130px]" required value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t('sub.desc.ph')} />
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <VoiceInput onText={(txt) => setDescription((d) => (d ? `${d} ${txt}` : txt))} />
               <span className="text-xs text-slate-500">{description.trim().length} {t('sub.chars')}</span>
             </div>
           </div>
 
           <div className="glass p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="label !mb-0">{t('sub.photo')}</label>
               <select className="input !w-auto !py-1.5 text-xs" value={categoryHint}
                 onChange={(e) => setCategoryHint(e.target.value)}>
@@ -432,7 +432,7 @@ export default function Submit() {
                 {geoState === 'denied' && <p className="mb-2 text-xs text-amber-300">{t('sub.denied')}</p>}
                 {geoState === 'fallback' && <p className="mb-2 text-xs text-amber-300">{t('sub.fallback')}</p>}
                 <MapPanel center={loc} markers={[{ ...loc, emoji: '📌', color: '#ff6cb5' }]}
-                  onPick={setLoc} height="280px" recenterSignal={recenterSignal} />
+                  onPick={setLoc} heightClass="h-[220px] sm:h-[280px]" recenterSignal={recenterSignal} />
                 <p className="mt-2 text-xs text-slate-500">
                   {t('sub.picked')} {loc.lat.toFixed(5)}, {loc.lng.toFixed(5)} — {t('sub.tapAdjust')}
                 </p>
@@ -514,7 +514,7 @@ export default function Submit() {
                   </p>
                 )}
                 <div className="mt-3">
-                  <MapPanel center={loc} markers={[{ ...loc, emoji: '📌', color: '#ff6cb5' }]} height="220px" zoom={15} />
+                  <MapPanel center={loc} markers={[{ ...loc, emoji: '📌', color: '#ff6cb5' }]} heightClass="h-[200px] sm:h-[220px]" zoom={15} />
                 </div>
               </>
             )}

@@ -146,7 +146,7 @@ export default function PublicReviews() {
               </div>
 
               <Link to={`/complaints/${r.complaint_id}`}
-                className="mt-2 block font-display font-bold text-white hover:text-gradient">
+                className="mt-2 block break-words font-display font-bold text-white hover:text-gradient">
                 {r.title}
               </Link>
 
@@ -154,7 +154,7 @@ export default function PublicReviews() {
                 <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.02] p-3.5">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">{t('pr.commentLabel')}</p>
                   {r.satisfaction_comment ? (
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-200">“{r.satisfaction_comment}”</p>
+                    <p className="mt-1.5 break-words text-sm leading-relaxed text-slate-200">“{r.satisfaction_comment}”</p>
                   ) : (
                     <p className="mt-1.5 text-xs italic text-slate-500">—</p>
                   )}
@@ -164,7 +164,7 @@ export default function PublicReviews() {
                 <p className="mt-2 text-xs text-slate-500">{t('pr.noFeedbackSub')}</p>
               )}
 
-              <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-3">
                 <span className="text-[11px] text-slate-600">
                   {t('pr.resolvedOn')} · {fmtDate(r.resolved_at)}
                 </span>

@@ -19,19 +19,20 @@ class NagorikShebaApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..bootstrap()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..load()),
         ChangeNotifierProvider(create: (_) => Lang()..load()),
       ],
-      child: Consumer<Lang>(
-        builder: (context, lang, _) {
-          final base = buildTheme();
-          if (!lang.ready) {
+      child: Consumer2<ThemeProvider, Lang>(
+        builder: (context, theme, lang, _) {
+          if (!theme.ready || !lang.ready) {
             return MaterialApp(
               title: 'Nagorik Sheba',
               debugShowCheckedModeBanner: false,
-              theme: base,
+              theme: buildTheme(true),
               home: const SplashScreen(),
             );
           }
+          final base = buildTheme(theme.isDark);
           final titleStyle = base.appBarTheme.titleTextStyle;
           return MaterialApp(
             title: 'Nagorik Sheba',

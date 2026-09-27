@@ -21,6 +21,7 @@ class _StaffScreenState extends State<StaffScreen> {
   List<Complaint> queue = [];
   bool loading = true;
   String cat = 'all', status = 'all';
+  String view = 'mine';
   String? banner;
 
   static const cats = ['all', 'road', 'electricity', 'water', 'gas', 'sanitation', 'other'];
@@ -32,11 +33,12 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   String get _staffRole => context.read<AuthProvider>().user?.staffRole ?? 'junior';
+  bool get _canOversight => _staffRole == 'senior' || _staffRole == 'mayor';
 
   Future<void> _load() async {
     setState(() => loading = true);
     try {
-      final q = await api.staffQueue(category: cat, status: status);
+      final q = await api.staffQueue(category: cat, status: status, view: view);
       if (!mounted) return;
       setState(() {
         queue = q;
@@ -47,9 +49,32 @@ class _StaffScreenState extends State<StaffScreen> {
     }
   }
 
+  int _count(bool Function(Complaint) test) => queue.where(test).length;
+
+  Widget _counter(String label, int value, Color color) {
+    final s = Theme.of(context).extension<NSScheme>()!;
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        decoration: BoxDecoration(
+          color: s.fill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: s.line),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$value', style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 19)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: s.sub, fontSize: 10.5, fontWeight: FontWeight.w600)),
+        ]),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<Lang>();
+    final s = Theme.of(context).extension<NSScheme>()!;
     final staffRole = _staffRole;
 
     final statusOptions = <(String, String)>[
@@ -75,7 +100,7 @@ class _StaffScreenState extends State<StaffScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Text(lang.t('staff.title'),
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white)),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: s.text)),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -100,6 +125,59 @@ class _StaffScreenState extends State<StaffScreen> {
                               : lang.t('st.junior_review'),
               style: const TextStyle(color: NSColors.mint, fontSize: 12.5, fontWeight: FontWeight.w600),
             ),
+            const SizedBox(height: 12),
+            // ---- Queue summary counters ----
+            if (!loading)
+              Row(children: [
+                _counter(lang.t('staff.myQueue'), queue.length, NSColors.accent),
+                _counter(
+                    lang.t('staff.awaiting'),
+                    _count((c) => ['verified', 'junior_review', 'senior_review', 'mayor_review', 'wit_review', 'approved']
+                        .contains(c.status)),
+                    NSColors.accent2),
+                _counter(lang.t('staff.wip'), _count((c) => ['assigned', 'in_process'].contains(c.status)), NSColors.amber),
+                _counter(lang.t('staff.overdue'), _count((c) => c.overdue), NSColors.rose),
+              ]),
+            if (_canOversight) ...[
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() { view = 'mine'; _load(); }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      decoration: BoxDecoration(
+                        color: view == 'mine' ? NSColors.accent.withOpacity(0.25) : s.fill,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: view == 'mine' ? NSColors.accent : s.line),
+                      ),
+                      child: Center(child: Text(lang.t('staff.myQueue'),
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700))),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() { view = 'oversight'; _load(); }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      decoration: BoxDecoration(
+                        color: view == 'oversight' ? NSColors.accent2.withOpacity(0.25) : s.fill,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: view == 'oversight' ? NSColors.accent2 : s.line),
+                      ),
+                      child: Center(child: Text(lang.t('staff.oversight'),
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700))),
+                    ),
+                  ),
+                ),
+              ]),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(lang.t('staff.oversightHint'), style: TextStyle(color: s.faint, fontSize: 10.5)),
+              ),
+            ],
           ]),
         ),
         const SizedBox(height: 12),
@@ -128,7 +206,7 @@ class _StaffScreenState extends State<StaffScreen> {
           child: loading
               ? Center(child: CircularProgressIndicator(color: NSColors.accent))
               : queue.isEmpty
-                  ? Center(child: Text(lang.t('staff.clear'), style: const TextStyle(color: Colors.white24)))
+                  ? Center(child: Text(lang.t('staff.clear'), style: TextStyle(color: s.faint)))
                   : RefreshIndicator(
                       color: NSColors.accent,
                       onRefresh: _load,
@@ -154,6 +232,23 @@ class _StaffScreenState extends State<StaffScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   StatusChip(c.status),
+                                  if (c.overdue) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: NSColors.rose.withOpacity(0.16),
+                                        borderRadius: BorderRadius.circular(999),
+                                        border: Border.all(color: NSColors.rose.withOpacity(0.45)),
+                                      ),
+                                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                        const Icon(Icons.error_outline_rounded, size: 11, color: NSColors.rose),
+                                        const SizedBox(width: 3),
+                                        Text(lang.t('staff.overdue'),
+                                            style: const TextStyle(color: NSColors.rose, fontSize: 10, fontWeight: FontWeight.w800)),
+                                      ]),
+                                    ),
+                                  ],
                                   const Spacer(),
                                   Text('P${c.priorityScore}',
                                       style: TextStyle(color: NSColors.amber, fontWeight: FontWeight.w800, fontSize: 12)),
@@ -163,16 +258,16 @@ class _StaffScreenState extends State<StaffScreen> {
                                   onTap: () => Navigator.push(context, MaterialPageRoute(
                                       builder: (_) => ComplaintDetailScreen(id: c.id))).then((_) => _load()),
                                   child: Text(c.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+                                      style: TextStyle(color: s.text, fontWeight: FontWeight.w700, fontSize: 15)),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(c.description, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                                    style: TextStyle(color: s.sub, fontSize: 12)),
                                 const SizedBox(height: 6),
                                 Text(
                                   '${c.addressText ?? ""} · ▲${c.voteCount} ${lang.t('exp.votes')} · ${lang.t('exp.by')} ${c.submitterName ?? "?"}'
                                   '${c.executorName != null ? " · ${lang.t('wf.executor')}: ${c.executorName}" : ""}',
-                                  style: const TextStyle(color: Colors.white24, fontSize: 11)),
+                                  style: TextStyle(color: s.faint, fontSize: 11)),
                                 const SizedBox(height: 10),
                                 // Role-aware action buttons — the heavy actions
                                 // (comment, executor pick, ETA) live in the detail sheet.

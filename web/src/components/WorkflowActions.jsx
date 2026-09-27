@@ -72,7 +72,7 @@ export default function WorkflowActions({ complaint, myActions, executors = [], 
 
   const quick = (action, cls, primary = false) => (
     <button key={action} onClick={() => { setOpen(action); setErr(''); setPhoto(null); }}
-      className={`rounded-xl px-4 py-2 text-xs font-bold transition ${primary ? 'btn-primary !px-4 !py-2 text-xs' : cls}`}>
+      className={`min-h-[40px] rounded-xl px-4 py-2.5 text-xs font-bold transition ${primary ? 'btn-primary !px-4 !py-2.5 text-xs' : cls}`}>
       {t(`act.${action}`)}
     </button>
   );
@@ -93,7 +93,7 @@ export default function WorkflowActions({ complaint, myActions, executors = [], 
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setOpen(false)}>
-          <div className="glass-strong w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="glass-strong max-h-[90vh] w-full max-w-md overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-display text-lg font-bold text-white">{t(`act.${open}`)}</h3>
             <p className="mt-1 text-xs text-slate-400">#{complaint.complaint_id} · {complaint.title}</p>
 

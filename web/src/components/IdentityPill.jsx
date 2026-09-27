@@ -24,12 +24,12 @@ export default function IdentityPill({ onClick }) {
       onClick={onClick}
       title={`${user.name} · ${roleLabel(user, t)}`}
       aria-haspopup="dialog"
-      className="flex max-w-[14rem] items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-3 transition hover:bg-white/10"
+      className="flex max-w-[7rem] items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-3 transition hover:bg-white/10 sm:max-w-[14rem]"
     >
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent3 text-xs font-bold text-white">
         {initials || '?'}
       </span>
-      <span className="truncate whitespace-nowrap text-xs font-semibold text-white">
+      <span className="hidden truncate whitespace-nowrap text-xs font-semibold text-white min-[420px]:block">
         {firstName} <span className="text-slate-400">·</span> {roleLabel(user, t)}
       </span>
     </button>

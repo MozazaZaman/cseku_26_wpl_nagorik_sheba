@@ -43,7 +43,7 @@ export default function VerifyOtp() {
           <div>
             <label className="label">{t('fp.code')}</label>
             <input
-              className="input text-center text-lg tracking-[0.5em]"
+              className="input pl-[0.5em] text-center text-lg tracking-[0.35em] sm:tracking-[0.5em]"
               required
               inputMode="numeric"
               autoComplete="one-time-code"

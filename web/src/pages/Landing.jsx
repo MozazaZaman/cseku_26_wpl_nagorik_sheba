@@ -79,7 +79,7 @@ export default function Landing() {
         </motion.div>
 
         <motion.h1 variants={fadeUp} initial="hidden" animate="show" custom={1}
-          className="max-w-4xl font-display text-5xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-6xl md:text-7xl">
+          className="max-w-4xl break-words font-display text-4xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-5xl md:text-7xl">
           {t('land.title.pre')}<span className="text-gradient">{t('land.title.hl')}</span>{t('land.title.post')}
         </motion.h1>
 
@@ -137,7 +137,7 @@ export default function Landing() {
         <div className="grid gap-5 md:grid-cols-2">
           {features.map((f, i) => (
             <motion.div key={f.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i}>
-              <Link to={f.to} className="glass group flex h-full items-start gap-5 p-7 transition-all hover:-translate-y-1 hover:border-accent/40 hover:shadow-glow">
+              <Link to={f.to} className="glass group flex h-full items-start gap-4 p-5 transition-all hover:-translate-y-1 hover:border-accent/40 hover:shadow-glow sm:gap-5 sm:p-7">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/25 to-accent3/25 text-2xl">
                   {f.icon}
                 </div>
@@ -152,10 +152,10 @@ export default function Landing() {
       </section>
 
       <motion.section initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-        className="land-cta-panel relative mb-4 overflow-hidden rounded-3xl border border-white/10 p-12 text-center">
+        className="land-cta-panel relative mb-4 overflow-hidden rounded-3xl border border-white/10 p-6 text-center sm:p-12">
         <h2 className="font-display text-3xl font-extrabold text-white sm:text-4xl">{t('land.cta.title')}</h2>
         <p className="mx-auto mt-3 max-w-lg text-slate-300">{t('land.cta.sub')}</p>
-        <div className="mt-8 flex justify-center gap-4">
+        <div className="mt-8 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
           <Link to="/register" className="btn-primary">{t('land.cta.join')}</Link>
           <Link to="/explore" className="btn-ghost">{t('land.cta.browse')}</Link>
         </div>

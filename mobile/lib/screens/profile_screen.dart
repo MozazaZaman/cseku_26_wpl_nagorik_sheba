@@ -22,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Complaint> mine = [];
   List<NotificationItem> notifs = [];
   bool loading = true;
+  bool showAll = false;
 
   @override
   void initState() {
@@ -48,81 +49,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
     final lang = context.watch<Lang>();
+    final s = Theme.of(context).extension<NSScheme>()!;
     if (user == null) {
-      return Center(child: Text(lang.t('prof.notLoggedIn'), style: TextStyle(color: Colors.white38)));
+      return Center(child: Text(lang.t('prof.notLoggedIn'), style: TextStyle(color: s.sub)));
     }
 
     return SafeArea(
       child: ListView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 90),
-        children: [
-          GlassBox(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 90),
+        children: [          GlassBox(
             child: Row(children: [
               CircleAvatar(
                 radius: 28,
                 backgroundColor: NSColors.accent.withOpacity(0.25),
                 child: Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22)),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22)),
               ),
-              SizedBox(width: 14),
+              const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(user.name, style: whiteTitle(size: 18)),
-                Text(user.email, style: TextStyle(color: Colors.white38, fontSize: 12.5)),
+                Text(user.name, style: whiteTitle(context, size: 18)),
+                Text(user.email, style: TextStyle(color: s.sub, fontSize: 12.5)),
                 if (user.authorityName != null)
-                  Padding(padding: EdgeInsets.only(top: 4),
+                  Padding(padding: const EdgeInsets.only(top: 4),
                       child: Text('${user.authorityName} · ${lang.t('prof.general')}',
-                          style: TextStyle(color: NSColors.mint, fontSize: 11.5))),
+                          style: const TextStyle(color: NSColors.mint, fontSize: 11.5))),
               ])),
             ]),
           ),
-          SizedBox(height: 14),
+          const SizedBox(height: 14),
 
-          // Language toggle row
-          GlassBox(
-            child: Row(children: [
-              Icon(Icons.translate_rounded, color: NSColors.accent2),
-              SizedBox(width: 12),
-              Expanded(child: Text(lang.t('lang.row'),
-                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700, fontSize: 14))),
-              TextButton(
-                onPressed: () => lang.toggle(),
-                child: Text(lang.toggleLabel(),
-                    style: TextStyle(color: NSColors.accent, fontWeight: FontWeight.w800, fontSize: 12.5)),
-              ),
+          // ---- Stats cards (mirrors the web Dashboard) ----
+          if (!loading)
+            Row(children: [
+              _stat(context, lang.t('prof.stat.total'), '${mine.length}', NSColors.accent),
+              _stat(context, lang.t('prof.stat.process'),
+                  '${mine.where((c) => ['assigned', 'in_process'].contains(c.status)).length}', NSColors.amber),
+              _stat(context, lang.t('prof.stat.resolved'),
+                  '${mine.where((c) => c.status == 'resolved').length}', NSColors.mint),
+              _stat(context, lang.t('prof.stat.votes'),
+                  '${mine.fold<int>(0, (s, c) => s + c.voteCount)}', NSColors.accent2),
             ]),
-          ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
 
           if (!context.watch<AuthProvider>().isStaff) ...[
-            Text(lang.t('prof.myComplaints'), style: whiteTitle(size: 17)),
-            SizedBox(height: 10),
+            Text(lang.t('prof.myComplaints'), style: whiteTitle(context, size: 17)),
+            const SizedBox(height: 10),
             if (!loading && mine.isEmpty)
               InfoBanner(lang.t('prof.none'), color: NSColors.accent),
-            ...mine.take(5).map((c) => ComplaintTile(
+            ...(showAll ? mine : mine.take(5)).map((c) => ComplaintTile(
                   complaint: c,
                   onTap: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => ComplaintDetailScreen(id: c.id)))
                       .then((_) => _load()),
                 )),
             if (mine.length > 5)
-              Center(child: TextButton(onPressed: () {}, child: Text('${lang.t('prof.viewAll')}${mine.length})'))),
-            SizedBox(height: 12),
+              Center(
+                child: TextButton(
+                  onPressed: () => setState(() => showAll = !showAll),
+                  child: Text(showAll
+                      ? lang.t('prof.showLess')
+                      : '${lang.t('prof.viewAllFull')} (${mine.length})'),
+                ),
+              ),
+            const SizedBox(height: 12),
           ],
 
-          Text(lang.t('prof.notifs'), style: whiteTitle(size: 17)),
-          SizedBox(height: 10),
+          Text(lang.t('prof.notifs'), style: whiteTitle(context, size: 17)),
+          const SizedBox(height: 10),
           ...notifs.take(8).map((n) => Card(
-                margin: EdgeInsets.only(bottom: 10),
+                margin: const EdgeInsets.only(bottom: 10),
                 child: ListTile(
                   title: Row(children: [
                     Expanded(child: Text(n.title,
                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white))),
-                    Icon(Icons.chevron_right_rounded, size: 18, color: Colors.white24),
+                        style: TextStyle(fontWeight: FontWeight.w700, color: s.text))),
+                    Icon(Icons.chevron_right_rounded, size: 18, color: s.faint),
                   ]),
                   subtitle: Text(n.message,
                       maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.white38, fontSize: 12.5)),
+                      style: TextStyle(color: s.sub, fontSize: 12.5)),
                   onTap: n.complaintId == null
                       ? null
                       : () => Navigator.push(context,
@@ -131,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               )),
 
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () async {
               await context.read<AuthProvider>().logout();
@@ -139,15 +144,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pushAndRemoveUntil(context,
                   MaterialPageRoute(builder: (_) => const LoginScreen()), (_) => false);
             },
-            icon: Icon(Icons.logout_rounded),
+            icon: const Icon(Icons.logout_rounded),
             label: Text(lang.t('prof.logout')),
             style: OutlinedButton.styleFrom(
               foregroundColor: NSColors.rose,
               side: BorderSide(color: NSColors.rose.withOpacity(0.4)),
-              minimumSize: Size.fromHeight(50),
+              minimumSize: const Size.fromHeight(50),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _stat(BuildContext context, String label, String value, Color color) {
+    final s = Theme.of(context).extension<NSScheme>()!;
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: s.fill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: s.line),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 20)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: s.sub, fontSize: 10, fontWeight: FontWeight.w600)),
+        ]),
       ),
     );
   }

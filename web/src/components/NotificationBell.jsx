@@ -209,7 +209,7 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-0 z-50 mt-2 w-[min(92vw,24rem)] overflow-hidden rounded-2xl border border-white/10 bg-night/95 shadow-2xl shadow-black/40 backdrop-blur-2xl"
+            className="absolute right-0 z-50 mt-2 max-w-[calc(100vw-2rem)] w-[min(92vw,24rem)] overflow-hidden rounded-2xl border border-white/10 bg-night/95 shadow-2xl shadow-black/40 backdrop-blur-2xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-white/5 px-3 py-2.5">
               <p className="text-sm font-semibold text-white">{t('notif.title')}</p>
@@ -267,7 +267,7 @@ export default function NotificationBell() {
                       onClick={(e) => { e.stopPropagation(); deleteNotification(notification); }}
                       aria-label={t('notif.delete')}
                       title={t('notif.delete')}
-                      className="absolute right-1.5 top-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-rose-500/15 hover:text-rose-300 group-hover:opacity-100 focus:opacity-100"
+                      className="absolute right-1.5 top-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-rose-500/15 hover:text-rose-300 sm:h-6 sm:w-6 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
                         <path d="M6 6l12 12M18 6L6 18" />

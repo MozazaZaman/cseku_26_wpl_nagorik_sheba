@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import '../auth_provider.dart';
 import '../i18n.dart';
 import '../theme.dart';
+import '../widgets/app_drawer.dart';
+import '../widgets/assistant_widget.dart';
+import '../widgets/notification_bell.dart';
+import '../widgets/widgets.dart';
 import 'explore_screen.dart';
 import 'profile_screen.dart';
 import 'services_screen.dart';
@@ -25,6 +29,7 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final lang = context.watch<Lang>();
+    final s = Theme.of(context).extension<NSScheme>()!;
     final t = (String k) => lang.t(k);
     final isStaff = auth.isStaff;
 
@@ -50,47 +55,58 @@ class _HomeShellState extends State<HomeShell> {
           ];
 
     return Scaffold(
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        leading: Builder(builder: (ctx) => IconButton(
+          tooltip: lang.t('menu.explore'),
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () => Scaffold.of(ctx).openDrawer(),
+        )),
+        title: Row(children: [
+          const AppLogo(size: 30, radius: 8),
+          const SizedBox(width: 9),
+          RichText(
+            text: TextSpan(
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: s.text),
+              children: [
+                const TextSpan(text: 'Nagorik'),
+                TextSpan(text: 'Sheba', style: TextStyle(color: NSColors.accent)),
+              ],
+            ),
+          ),
+        ]),
+        actions: const [NotificationBell()],
+      ),
       body: Stack(
         children: [
           IndexedStack(index: _tab.clamp(0, pages.length - 1), children: pages),
-          Positioned(
-            top: 10,
-            right: 12,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => lang.toggle(),
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    gradient: NSGradient.box,
-                    borderRadius: BorderRadius.circular(999),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 10)],
+          if (!isStaff)
+            Positioned(
+              bottom: 18,
+              right: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const AssistantWidget(),
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: 'report',
+                    backgroundColor: NSColors.accent2,
+                    onPressed: () => setState(() => _tab = 2),
+                    icon: const Icon(Icons.campaign_rounded),
+                    label: Text(t('nav.report'), style: const TextStyle(fontWeight: FontWeight.w800)),
                   ),
-                  child: Text(
-                    lang.toggleLabel(),
-                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
-                  ),
-                ),
+                ],
               ),
             ),
-          ),
         ],
       ),
-      floatingActionButton: isStaff
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => setState(() => _tab = 2),
-              backgroundColor: NSColors.accent2,
-              icon: const Icon(Icons.campaign_rounded),
-              label: Text(t('nav.report'), style: const TextStyle(fontWeight: FontWeight.w800)),
-            ),
       bottomNavigationBar: NavigationBar(
         height: 68,
         selectedIndex: _tab.clamp(0, pages.length - 1),
         onDestinationSelected: (i) => setState(() => _tab = i),
-        backgroundColor: NSColors.card,
+        backgroundColor: s.nav,
         indicatorColor: NSColors.accent.withOpacity(0.25),
         destinations: destinations,
       ),

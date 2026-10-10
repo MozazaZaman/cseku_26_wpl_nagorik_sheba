@@ -301,7 +301,7 @@ const c1 = (await insComplaint.run(
   23.7365, 90.3985, 'Fuller Road, Shahbagh, Dhaka',
   'road', 'senior_review', 34.5, 3, null, '-3 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Shahbagh', 'Fuller Road',
-  'Road Fuller Road, Shahbagh, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
+  'Road Fuller Road, Shahbagh, Dhaka, Dhaka, Bangladesh'
 )).lastInsertRowid;
 
 const c2 = (await insComplaint.run(
@@ -311,7 +311,7 @@ const c2 = (await insComplaint.run(
   23.7330, 90.3945, 'TSC area, DU campus',
   'electricity', 'in_process', 58.0, 6, 48, '-5 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Dhaka University', 'TSC Road',
-  'Road TSC Road, Dhaka University, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
+  'Road TSC Road, Dhaka University, Dhaka, Dhaka, Bangladesh'
 )).lastInsertRowid;
 
 const c3 = (await insComplaint.run(
@@ -321,7 +321,7 @@ const c3 = (await insComplaint.run(
   23.7285, 90.3925, 'Nilkhet, Dhaka',
   'water', 'resolved', 41.0, 4, null, '-12 days', '-2 days', 'now',
   'Dhaka', 'Dhaka', 'Nilkhet', 'Nilkhet Road',
-  'Road Nilkhet Road, Nilkhet, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
+  'Road Nilkhet Road, Nilkhet, Dhaka, Dhaka, Bangladesh'
 )).lastInsertRowid;
 
 const c4 = (await insComplaint.run(
@@ -331,7 +331,7 @@ const c4 = (await insComplaint.run(
   23.8580, 90.2660, 'Savar Bazar Road, Savar',
   'sanitation', 'verified', 18.0, 1, null, '-1 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Savar Bazar', 'Bazar Road',
-  'Road Bazar Road, Savar Bazar, Savar Pourashava, Dhaka, Dhaka, Bangladesh'
+  'Road Bazar Road, Savar Bazar, Dhaka, Dhaka, Bangladesh'
 )).lastInsertRowid;
 
 await insComplaint.run(
@@ -341,7 +341,7 @@ await insComplaint.run(
   23.6740, 90.2870, 'Ruhitpur Bazaar, Keraniganj',
   'water', 'verified', 12.0, 0, null, '-6 hours', '-6 hours', null,
   'Dhaka', 'Dhaka', null, 'Bazaar Road',
-  'Road Bazaar Road, Ruhitpur Union Parishad, Dhaka, Dhaka, Bangladesh'
+  'Road Bazaar Road, Dhaka, Dhaka, Bangladesh'
 );
 
 await insComplaint.run(
@@ -351,7 +351,7 @@ await insComplaint.run(
   23.7375, 90.3965, 'Curzon Hall, DU campus',
   'electricity', 'submitted', 8.0, 0, null, '-2 hours', '-2 hours', null,
   'Dhaka', 'Dhaka', 'Curzon Hall', 'Curzon Hall Road',
-  'Road Curzon Hall Road, Curzon Hall, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
+  'Road Curzon Hall Road, Curzon Hall, Dhaka, Dhaka, Bangladesh'
 );
 
 // Fresh complaint at junior check stage for the Dhaka South junior demo
@@ -362,7 +362,7 @@ const c8 = (await insComplaint.run(
   23.7295, 90.4008, 'DMCH gate, Bakshibazar, Dhaka',
   'road', 'verified', 22.0, 0, null, '-3 hours', '-3 hours', null,
   'Dhaka', 'Dhaka', 'Bakshibazar', 'Bakshibazar Road',
-  'Road Bakshibazar Road, Bakshibazar, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
+  'Road Bakshibazar Road, Bakshibazar, Dhaka, Dhaka, Bangladesh'
 )).lastInsertRowid;
 await db.prepare("UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior' WHERE complaint_id = ?").run(c8);
 
@@ -373,7 +373,7 @@ const c7 = (await insComplaint.run(
   22.8122, 89.5521, 'Shiromoni Crossing, Khulna',
   'gas', 'mayor_review', 27.0, 2, null, '-9 hours', '-2 hours', null,
   'Khulna', 'Khulna', 'Shiromoni', 'Khan Jahan Ali Road',
-  'Road Khan Jahan Ali Road, Shiromoni, Khulna City Corporation, Khulna, Khulna, Bangladesh'
+  'Road Khan Jahan Ali Road, Shiromoni, Khulna, Khulna, Bangladesh'
 )).lastInsertRowid;
 
 await insComplaint.run(
@@ -383,7 +383,7 @@ await insComplaint.run(
   22.3378, 91.8350, 'Reazuddin Bazar, Chattogram',
   'sanitation', 'verified', 15.0, 1, null, '-20 hours', '-20 hours', null,
   'Chattogram', 'Chattogram', 'Reazuddin Bazar', 'Bazar Road',
-  'Road Bazar Road, Reazuddin Bazar, Chattogram City Corporation, Chattogram, Chattogram, Bangladesh'
+  'Road Bazar Road, Reazuddin Bazar, Chattogram, Chattogram, Bangladesh'
 );
 
 await insComplaint.run(
@@ -393,7 +393,7 @@ await insComplaint.run(
   24.8990, 91.8697, 'Amberkhana Point, Sylhet',
   'road', 'submitted', 9.0, 0, null, '-4 hours', '-4 hours', null,
   'Sylhet', 'Sylhet', 'Amberkhana', 'Station Road',
-  'Road Station Road, Amberkhana, Sylhet City Corporation, Sylhet, Sylhet, Bangladesh'
+  'Road Station Road, Amberkhana, Sylhet, Sylhet, Bangladesh'
 );
 
 // Votes

@@ -280,9 +280,7 @@ class ComplaintTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      [c.fullAddress ?? c.addressText ?? '', c.authorityName ?? '']
-                          .where((x) => x.isNotEmpty)
-                          .join(' · '),
+                      c.fullAddress ?? c.addressText ?? '',
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: s.faint, fontSize: 11.5),
                     ),
@@ -292,6 +290,12 @@ class ComplaintTile extends StatelessWidget {
                         style: TextStyle(color: NSColors.amber, fontSize: 11.5, fontWeight: FontWeight.w700)),
                 ],
               ),
+              if ((c.authorityName ?? '').isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text('🏛️ ${c.authorityName ?? ''}',
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: s.faint, fontSize: 11)),
+              ],
             ],
           ),
         ),

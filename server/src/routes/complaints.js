@@ -105,7 +105,7 @@ async function serializeComplaint(row, viewer) {
   return base;
 }
 
-function composeFullAddress(b, authorityName) {
+function composeFullAddress(b) {
   const parts = [
     b.road && `Road ${b.road}`,
     b.sector,
@@ -113,7 +113,6 @@ function composeFullAddress(b, authorityName) {
     b.area_text,
     b.village,
     b.upazila,
-    authorityName,
     b.district,
     b.division,
     'Bangladesh'
@@ -337,8 +336,7 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
     finalAddressText = address_text || gpsReverseName || null;
   } else {
     fullAddress = composeFullAddress(
-      { road, sector, ward, area_text, village, upazila, district, division },
-      authority?.name
+      { road, sector, ward, area_text, village, upazila, district, division }
     );
   }
 

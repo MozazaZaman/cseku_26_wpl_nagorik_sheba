@@ -24,7 +24,7 @@ export default function ComplaintCard({ c, index = 0, onVote, voted, locked }) {
           <p className="mt-2 line-clamp-2 break-words text-sm text-slate-400">{c.description}</p>
           <p className="mt-3 break-words text-xs text-slate-500">
             <span className="line-clamp-1 block truncate">{c.full_address || c.address_text || `${c.latitude?.toFixed(4)}, ${c.longitude?.toFixed(4)}`}</span>
-            {c.authority_name && !c.full_address ? <span className="text-[11px]"> · {c.authority_name}</span> : null}
+            {c.authority_name ? <span className="mt-1 block text-[11px] text-slate-600">🏛️ {t('det.routing')}: {c.authority_name}</span> : null}
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-3">
             <span className="min-w-0 break-words text-xs text-slate-500">{t('exp.by')} {c.submitter_name}</span>

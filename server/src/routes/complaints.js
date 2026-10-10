@@ -296,9 +296,15 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
           const args = [type, `%${normRevDistrict}%`, ...extraArgs];
           return await db.prepare(sql).all(...args);
         };
-        // For unions: try district+upazila+village match
+        // For unions: try district+upazila+village match (skip empty fragments so LIKE '%%' never matches everything)
         if (revVillage) {
-          const cand = await db.prepare(`SELECT * FROM authorities WHERE type='UNION_PARISHAD' AND district LIKE ? AND (name LIKE ? OR upazila LIKE ?) LIMIT 1`).get(`%${normRevDistrict}%`, `%${revVillage}%`, `%${revUpazilaRaw}%`);
+          const conds = ['name LIKE ?'];
+          const cargs = [`%${normRevDistrict}%`, `%${revVillage}%`];
+          if (revUpazilaRaw) {
+            conds.push('upazila LIKE ?');
+            cargs.push(`%${revUpazilaRaw}%`);
+          }
+          const cand = await db.prepare(`SELECT * FROM authorities WHERE type='UNION_PARISHAD' AND district LIKE ? AND (${conds.join(' OR ')}) LIMIT 1`).get(...cargs);
           if (cand) authority = cand;
         }
         if (!authority) {

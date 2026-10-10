@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDb, db, closeDb } from './db.js';
+import { fixAuthorityGeometry, DISTRICT_COORDS } from './utils/authorityGeometry.js';
 
 await initDb();
 
@@ -44,26 +45,7 @@ async function addAuthority(name, type, division, district, upazila, lat, lng, p
   )).lastInsertRowid;
 }
 
-// district center coordinates (used to place authorities when JSON has no lat/lng)
-const DISTRICT_COORDS = {
-  'Dhaka': [23.71,90.41], 'Faridpur': [23.60,89.83], 'Gazipur': [24.00,90.42], 'Gopalganj': [23.01,89.82],
-  'Kishoreganj': [24.43,90.78], 'Madaripur': [23.16,90.20], 'Manikganj': [23.86,90.00], 'Munshiganj': [23.54,90.53],
-  'Narayanganj': [23.62,90.50], 'Narsingdi': [23.93,90.72], 'Rajbari': [23.76,89.64], 'Shariatpur': [23.24,90.36], 'Tangail': [24.25,89.91],
-  'Bandarban': [22.19,92.21], 'Brahmanbaria': [23.96,91.11], 'Chandpur': [23.23,90.65], 'Chattogram': [22.35,91.78],
-  'Cumilla': [23.46,91.18], "Cox's Bazar": [21.42,92.00], 'Feni': [23.01,91.40], 'Khagrachhari': [23.12,91.98],
-  'Lakshmipur': [22.94,90.82], 'Noakhali': [22.82,91.10], 'Rangamati': [22.64,92.19],
-  'Bagerhat': [22.65,89.52], 'Chuadanga': [23.64,88.85], 'Jashore': [23.16,89.20], 'Jhenaidah': [23.54,89.17],
-  'Khulna': [22.84,89.54], 'Kushtia': [23.90,89.12], 'Magura': [23.48,89.41], 'Meherpur': [23.76,88.63],
-  'Narail': [23.17,89.50], 'Satkhira': [22.71,89.07],
-  'Bogura': [24.85,89.37], 'Chapainawabganj': [24.60,88.27], 'Joypurhat': [25.10,89.02], 'Naogaon': [24.80,88.95],
-  'Natore': [24.41,88.93], 'Pabna': [24.00,89.21], 'Rajshahi': [24.37,88.60], 'Sirajganj': [24.45,89.70],
-  'Habiganj': [24.37,91.41], 'Moulvibazar': [24.48,91.77], 'Sunamganj': [25.06,91.39], 'Sylhet': [24.89,91.86],
-  'Barguna': [22.16,90.12], 'Barishal': [22.70,90.35], 'Bhola': [22.68,90.64], 'Jhalokati': [22.64,90.20],
-  'Patuakhali': [22.36,90.33], 'Pirojpur': [22.58,89.98],
-  'Dinajpur': [25.62,88.63], 'Gaibandha': [25.32,89.54], 'Kurigram': [25.80,89.64], 'Lalmonirhat': [25.91,89.45],
-  'Nilphamari': [25.93,88.85], 'Panchagarh': [26.34,88.56], 'Rangpur': [25.74,89.27], 'Thakurgaon': [26.03,88.46],
-  'Jamalpur': [24.93,89.93], 'Mymensingh': [24.74,90.42], 'Netrokona': [24.88,90.73], 'Sherpur': [25.02,90.01],
-};
+// district center coordinates live in utils/authorityGeometry.js (single source of truth).
 
 // normalize division/district names from JSON to match bd-geo.json
 const DIV_NORM = { 'Chattagram':'Chattogram', 'Barisal':'Barishal', 'Chattogram':'Chattogram', 'Dhaka':'Dhaka', 'Khulna':'Khulna', 'Rajshahi':'Rajshahi', 'Sylhet':'Sylhet', 'Rangpur':'Rangpur', 'Mymensingh':'Mymensingh' };
@@ -133,6 +115,8 @@ for (const e of lg.city_corporations) await insertLG(e, 'CITY_CORPORATION', 'nam
 for (const e of lg.pourashava) await insertLG(e, 'POUROSHOVA', 'name', 'division', 'district', null);
 for (const e of lg.unions) await insertLG(e, 'UNION_PARISHAD', 'name', 'division_name', 'district_name', 'upazila_name');
 console.log('Authorities seeded');
+await fixAuthorityGeometry();
+console.log('Authority geometry fixed (city cores exclusive, pouros/unions on outer rings)');
 
 // convenient aliases for demo complaints (lookup by name)
 async function findAuth(name) {

@@ -174,16 +174,34 @@ export async function agentRank(complaint) {
 
 export async function agentRoute(latitude, longitude) {
   const authorities = await db.prepare('SELECT * FROM authorities').all();
+  const centerDist = (a) => haversineMeters(latitude, longitude,
+    (a.min_lat + a.max_lat) / 2, (a.min_lng + a.max_lng) / 2);
+  let best = null;
+  let bestArea = Infinity;
+  let bestDist = Infinity;
   for (const a of authorities) {
     if (latitude >= a.min_lat && latitude <= a.max_lat && longitude >= a.min_lng && longitude <= a.max_lng) {
-      return a;
+      const area = (a.max_lat - a.min_lat) * (a.max_lng - a.min_lng);
+      const d = centerDist(a);
+      if (area < bestArea - 1e-12 ||
+        (Math.abs(area - bestArea) <= 1e-12 && (d < bestDist - 1e-9 ||
+          (Math.abs(d - bestDist) <= 1e-9 && a.authority_id < best.authority_id)))) {
+        best = a;
+        bestArea = area;
+        bestDist = d;
+      }
     }
   }
-  let nearest = null, best = Infinity;
+  if (best) return best;
+  let nearest = null;
+  let nearestDist = Infinity;
   for (const a of authorities) {
-    const d = haversineMeters(latitude, longitude,
-      (a.min_lat + a.max_lat) / 2, (a.min_lng + a.max_lng) / 2);
-    if (d < best) { best = d; nearest = a; }
+    const d = centerDist(a);
+    if (d < nearestDist - 1e-9 ||
+      (Math.abs(d - nearestDist) <= 1e-9 && nearest && a.authority_id < nearest.authority_id)) {
+      nearest = a;
+      nearestDist = d;
+    }
   }
   return nearest;
 }

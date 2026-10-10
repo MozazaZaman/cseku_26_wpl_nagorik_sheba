@@ -24,7 +24,7 @@ class _StaffScreenState extends State<StaffScreen> {
   String view = 'mine';
   String? banner;
 
-  static const cats = ['all', 'road', 'electricity', 'water', 'gas', 'sanitation', 'other'];
+  static const cats = ['all', 'road', 'electricity', 'water', 'gas', 'sanitation', 'encroachment', 'environment', 'public_assets', 'animals', 'markets', 'drugs', 'other'];
 
   @override
   void initState() {

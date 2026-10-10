@@ -7,6 +7,7 @@ class User {
   final int? authorityId;
   final String? authorityName;
   final String? staffRole;
+  final bool isSystemAdmin;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     this.authorityId,
     this.authorityName,
     this.staffRole,
+    this.isSystemAdmin = false,
   });
 
   factory User.fromJson(Map<String, dynamic> j) => User(
@@ -28,6 +30,7 @@ class User {
         authorityId: j['authority_id'],
         authorityName: j['authority_name'],
         staffRole: j['staff_role'],
+        isSystemAdmin: j['is_system_admin'] == true,
       );
 }
 

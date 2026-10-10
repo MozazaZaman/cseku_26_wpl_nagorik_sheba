@@ -198,7 +198,7 @@ export default function Submit() {
 
   const geocodeAddress = async () => {
     setErr('');
-    if (!addr.division || !addr.district || !addr.authority_id || !addr.road || (isUnion && (!addr.village || !addr.upazila))) {
+    if (!addr.division || !addr.district || !addr.authority_id || (isUnion && (!addr.village || !addr.upazila))) {
       setErr(t('sub.completeFields'));
       return;
     }
@@ -225,7 +225,7 @@ export default function Submit() {
   const validate = () => {
     if (description.trim().length < 10) return t('sub.needDesc');
     if (locMode === 'address') {
-      if (!addr.division || !addr.district || !addr.authority_id || !addr.road) return t('sub.needLoc');
+      if (!addr.division || !addr.district || !addr.authority_id) return t('sub.needLoc');
       if (isUnion && (!addr.village || !addr.upazila)) return t('sub.needVillage');
     }
     return null;

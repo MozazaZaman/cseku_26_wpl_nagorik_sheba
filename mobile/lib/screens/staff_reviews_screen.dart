@@ -25,6 +25,18 @@ class _StaffReviewsScreenState extends State<StaffReviewsScreen> {
   double? avg;
   Map<int, int> breakdown = {};
   bool loading = true;
+  String cat = 'all';
+
+  static const cats = [
+    'all', 'road', 'electricity', 'water', 'gas', 'sanitation', 'encroachment',
+    'environment', 'public_assets', 'animals', 'markets', 'drugs', 'other',
+  ];
+  static const catIcons = {
+    'road': '🛣️', 'electricity': '⚡', 'water': '💧', 'gas': '🔥',
+    'sanitation': '🧹', 'encroachment': '🚧', 'environment': '🌿',
+    'public_assets': '🏞️', 'animals': '🐕', 'markets': '🏪',
+    'drugs': '💊', 'other': '📌',
+  };
 
   @override
   void initState() {
@@ -35,7 +47,7 @@ class _StaffReviewsScreenState extends State<StaffReviewsScreen> {
   Future<void> _load() async {
     setState(() => loading = true);
     try {
-      final r = await api.staffReviews();
+      final r = await api.staffReviews(category: cat);
       if (!mounted) return;
       setState(() {
         reviews = r['reviews'] as List? ?? [];
@@ -72,6 +84,24 @@ class _StaffReviewsScreenState extends State<StaffReviewsScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
                 children: [
+                  // ---- Category filter ----
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(children: [
+                      ...cats.map((k) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              avatar: k == 'all'
+                                  ? null
+                                  : Text(catIcons[k] ?? '📌', style: const TextStyle(fontSize: 14)),
+                              label: Text(k == 'all' ? lang.t('staff.all') : lang.t('cat.$k')),
+                              selected: cat == k,
+                              onSelected: (_) => setState(() { cat = k; _load(); }),
+                            ),
+                          )),
+                    ]),
+                  ),
+                  const SizedBox(height: 14),
                   // ---- Aggregate ----
                   GlassBox(
                     child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [

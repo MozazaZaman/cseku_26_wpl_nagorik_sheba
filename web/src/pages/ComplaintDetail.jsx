@@ -190,6 +190,18 @@ export default function ComplaintDetail() {
               />
             )}
 
+            {/* Public citizen rating — visible to every user once resolved.
+                The server exposes the score/comment publicly on resolved
+                complaints; the component renders its read-only state. */}
+            {c.status === 'resolved' && c.satisfaction_score != null &&
+              !(c.is_mine && user?.role === 'citizen') && (
+              <SatisfactionRating
+                existingScore={c.satisfaction_score}
+                existingComment={c.satisfaction_comment}
+                onSubmit={async () => {}}
+              />
+            )}
+
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
               <div>
                 <p className="font-display text-2xl font-extrabold text-white">▲ {c.vote_count}</p>

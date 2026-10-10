@@ -9,7 +9,7 @@ import SlaBadge from '../components/SlaBadge.jsx';
 import WorkflowActions from '../components/WorkflowActions.jsx';
 import AchievementBadges from '../components/AchievementBadges.jsx';
 
-const CAT_ICONS = { road: '🛣️', electricity: '⚡', water: '💧', gas: '🔥', sanitation: '🧹', other: '📌' };
+const CAT_ICONS = { road: '🛣️', electricity: '⚡', water: '💧', gas: '🔥', sanitation: '🧹', encroachment: '🚧', environment: '🌿', public_assets: '🏞️', animals: '🐕', markets: '🏪', drugs: '💊', other: '📌' };
 
 const ROLE_META = {
   junior: { icon: '🧑‍💼', cls: 'border-sky-400/40 bg-sky-500/15 text-sky-300', view: 'queue' },

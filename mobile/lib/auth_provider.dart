@@ -98,6 +98,15 @@ class AuthProvider extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  /// Dual-mode switch for the platform owner (citizen ⇄ super_admin).
+  Future<void> switchMode(String mode) async {
+    final b = await api.rawPost('/auth/mode', {'mode': mode});
+    await api.saveToken(b['token']);
+    user = User.fromJson(b['user']);
+    await _touchActive();
+    notifyListeners();
+  }
+
   bool get isStaff => user?.role == 'staff';
 
   @override

@@ -183,6 +183,12 @@ class CategoryChip extends StatelessWidget {
     'water': '💧',
     'gas': '🔥',
     'sanitation': '🧹',
+    'encroachment': '🚧',
+    'environment': '🌿',
+    'public_assets': '🏞️',
+    'animals': '🐕',
+    'markets': '🏪',
+    'drugs': '💊',
     'other': '📌',
   };
 

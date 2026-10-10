@@ -7,8 +7,10 @@ import multer from 'multer';
 import bcrypt from 'bcryptjs';
 import { db, logAgent } from '../db.js';
 import { signToken, requireAuth } from '../middleware/auth.js';
+import { audit } from '../billing/service.js';
 import { initFaceEngine, compareFaces, engineAvailable } from '../agents/faceEngine.js';
 import { sendMail } from '../utils/emailer.js';
+import { uploadsUseCloudinary, uploadBufferToCloudinary } from '../utils/cloudinary.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const facesDir = path.join(__dirname, '..', '..', 'uploads', 'faces');
@@ -43,7 +45,8 @@ const publicUser = (u) => ({
   department: u.department || null,
   authority_id: u.authority_id || null,
   authority_name: u.authority_name || null,
-  staff_role: u.staff_role || null
+  staff_role: u.staff_role || null,
+  is_system_admin: (u.is_system_admin || 0) === 1
 });
 
 router.post('/register', faceUpload.fields([
@@ -59,7 +62,7 @@ router.post('/register', faceUpload.fields([
   if (!selfie || !idPhoto) {
     return res.status(400).json({ error: 'Selfie and ID card photo are both required for identity verification' });
   }
-  const exists = db.prepare('SELECT user_id FROM users WHERE email = ?').get(email.toLowerCase());
+  const exists = await db.prepare('SELECT user_id FROM users WHERE email = ?').get(email.toLowerCase());
   if (exists) return res.status(409).json({ error: 'An account with this email already exists' });
 
   // AGENT 1 — Face match between selfie and ID document (permissive for authentic users)
@@ -89,7 +92,7 @@ router.post('/register', faceUpload.fields([
   }
 
   if (!verdict.matched) {
-    logAgent({
+    await logAgent({
       agentName: 'agent_1_photo_verifier', decision: 'registration_rejected',
       inputSummary: `face match attempt for ${email.toLowerCase()} distance=${verdict.distance ?? 'n/a'}`,
       outputSummary: verdict.reason || 'Selfie and ID faces did not match'
@@ -105,12 +108,28 @@ router.post('/register', faceUpload.fields([
   }
 
   const hash = bcrypt.hashSync(password, 10);
-  const info = db.prepare(
+  let selfieStored = selfie.filename;
+  let idPhotoStored = idPhoto.filename;
+  if (uploadsUseCloudinary()) {
+    try {
+      const [sUp, idUp] = await Promise.all([
+        uploadBufferToCloudinary(fs.readFileSync(selfie.path), { folder: `${process.env.CLOUDINARY_FOLDER || 'nagorik-sheba'}/faces` }),
+        uploadBufferToCloudinary(fs.readFileSync(idPhoto.path), { folder: `${process.env.CLOUDINARY_FOLDER || 'nagorik-sheba'}/faces` })
+      ]);
+      selfieStored = sUp.secure_url;
+      idPhotoStored = idUp.secure_url;
+      try { fs.unlinkSync(selfie.path); } catch {}
+      try { fs.unlinkSync(idPhoto.path); } catch {}
+    } catch (e) {
+      return res.status(502).json({ error: 'Photo upload failed, please retry registration' });
+    }
+  }
+  const info = await db.prepare(
     `INSERT INTO users (full_name, email, phone, password_hash, role, face_verified, selfie_url, id_photo_url)
      VALUES (?, ?, ?, ?, 'citizen', 1, ?, ?)`
-  ).run(full_name.trim(), email.toLowerCase(), phone || null, hash, selfie.filename, idPhoto.filename);
+  ).run(full_name.trim(), email.toLowerCase(), phone || null, hash, selfieStored, idPhotoStored);
 
-  logAgent({
+  await logAgent({
     agentName: 'agent_1_photo_verifier', decision: 'registration_verified',
     inputSummary: `face match for ${email.toLowerCase()}`,
     outputSummary: verdict.available
@@ -118,21 +137,24 @@ router.post('/register', faceUpload.fields([
       : 'Verified by client device (server engine unavailable)'
   });
 
-  const user = db.prepare('SELECT * FROM users WHERE user_id = ?').get(info.lastInsertRowid);
+  const user = await db.prepare('SELECT * FROM users WHERE user_id = ?').get(info.lastInsertRowid);
   const token = signToken({ id: user.user_id, role: 'citizen', name: user.full_name });
   res.status(201).json({ token, user: publicUser(user), face_verified: true });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  const staff = db.prepare(
+  const staff = await db.prepare(
     `SELECT s.*, a.name AS authority_name FROM staff s
      JOIN authorities a ON a.authority_id = s.authority_id WHERE s.email = ?`
   ).get(email.toLowerCase());
 
   if (staff) {
+    if (staff.is_active === 0) {
+      return res.status(403).json({ error: 'This staff account has been deactivated. Contact your LGI admin.' });
+    }
     if (!bcrypt.compareSync(password, staff.password_hash)) {
       return res.status(401).json({ error: 'Incorrect email or password' });
     }
@@ -144,31 +166,57 @@ router.post('/login', (req, res) => {
     return res.json({ token, user: publicUser({ ...staff, role: 'staff' }) });
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
+  const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ error: 'Incorrect email or password' });
   }
-  const token = signToken({ id: user.user_id, role: 'citizen', name: user.full_name });
+  // Sign the token with the user's REAL role (citizen or super_admin).
+  // Hardcoding 'citizen' here once rendered the whole super-admin console
+  // dead: the UI trusted the user object while every API guard read the JWT.
+  const loginRole = ['citizen', 'super_admin'].includes(user.role) ? user.role : 'citizen';
+  const token = signToken({ id: user.user_id, role: loginRole, name: user.full_name });
   res.json({ token, user: publicUser(user) });
 });
 
-router.get('/me', requireAuth, (req, res) => {
+router.get('/me', requireAuth, async (req, res) => {
   if (req.auth.role === 'staff') {
     // The staff table has no `role` column, so it must be injected —
     // otherwise the client falls back to 'citizen' and a mayor/staff
     // appears as a citizen after the app is reopened.
-    const row = db.prepare(
+    const row = await db.prepare(
       `SELECT s.*, a.name AS authority_name
          FROM staff s
          JOIN authorities a ON a.authority_id = s.authority_id
         WHERE s.staff_id = ?`
     ).get(req.auth.id);
     if (!row) return res.status(404).json({ error: 'Account not found' });
+    if (row.is_active === 0) return res.status(403).json({ error: 'This staff account has been deactivated' });
     return res.json({ user: publicUser({ ...row, role: 'staff' }) });
   }
-  const row = db.prepare('SELECT * FROM users WHERE user_id = ?').get(req.auth.id);
+  const row = await db.prepare('SELECT * FROM users WHERE user_id = ?').get(req.auth.id);
   if (!row) return res.status(404).json({ error: 'Account not found' });
   res.json({ user: publicUser(row) });
+});
+
+// Dual-mode sessions for system administrators. The owner keeps one normal
+// citizen account (indistinguishable from any other citizen's) and may mint
+// a super_admin session — or drop back to citizen — at any time. Switches
+// are audited. Staff sessions can never switch.
+router.post('/mode', requireAuth, async (req, res) => {
+  const { mode } = req.body || {};
+  if (!['citizen', 'admin'].includes(mode)) {
+    return res.status(400).json({ error: "mode must be 'citizen' or 'admin'" });
+  }
+  const row = await db.prepare('SELECT * FROM users WHERE user_id = ?').get(req.auth.id);
+  if (!row || (row.is_system_admin !== 1 && row.role !== 'super_admin')) {
+    return res.status(403).json({ error: 'Account switching is not available for this account' });
+  }
+  const role = mode === 'admin' ? 'super_admin' : 'citizen';
+  const token = signToken({ id: row.user_id, role, name: row.full_name });
+  try {
+    await audit('auth.mode_switch', { actor_type: 'user', actor_id: row.user_id, target_type: 'user', target_id: row.user_id, meta: { mode } });
+  } catch {}
+  res.json({ token, user: publicUser({ ...row, role }) });
 });
 
 // ── Forgot password (email OTP) ────────────────────────────────────
@@ -197,17 +245,17 @@ router.post('/forgot-password', async (req, res) => {
     return res.status(400).json({ error: 'Please enter a valid email address' });
   }
 
-  const user = db.prepare('SELECT user_id, email FROM users WHERE email = ?').get(email);
+  const user = await db.prepare('SELECT user_id, email FROM users WHERE email = ?').get(email);
   if (!user) {
     // No account — respond generically, do not send anything.
     return res.json(GENERIC_SENT);
   }
 
   // Rate limit: count requests for this user inside the window.
-  const recent = db.prepare(
+  const recent = (await db.prepare(
     `SELECT COUNT(*) n FROM password_reset_otps
-     WHERE user_id = ? AND created_at > datetime('now', ?)`
-  ).get(user.user_id, `-${OTP_RATE_WINDOW_MINUTES} minutes`).n;
+     WHERE user_id = $1 AND created_at > NOW() - ($2)::interval`
+  ).get(user.user_id, `-${OTP_RATE_WINDOW_MINUTES} minutes`)).n;
 
   if (recent >= OTP_RATE_LIMIT) {
     console.log(`[otp] rate limit hit for ${user.email}`);
@@ -215,9 +263,9 @@ router.post('/forgot-password', async (req, res) => {
   }
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  db.prepare(
+  await db.prepare(
     `INSERT INTO password_reset_otps (user_id, otp_code, expires_at)
-     VALUES (?, ?, datetime('now', ?))`
+     VALUES ($1, $2, NOW() + ($3)::interval)`
   ).run(user.user_id, otp, `+${OTP_TTL_MINUTES} minutes`);
 
   // The emailer prints the Ethereal preview URL; the console line below
@@ -237,17 +285,17 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // Step 2 — verify the code, mint a one-time reset token.
-router.post('/verify-otp', (req, res) => {
+router.post('/verify-otp', async (req, res) => {
   const email = (req.body?.email || '').trim().toLowerCase();
   const code = (req.body?.otp || '').trim();
   if (!email || !EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) {
     return res.status(400).json({ error: 'Enter the 6-digit code we sent to your email' });
   }
 
-  const user = db.prepare('SELECT user_id FROM users WHERE email = ?').get(email);
+  const user = await db.prepare('SELECT user_id FROM users WHERE email = ?').get(email);
   if (!user) return res.status(400).json(GENERIC_OTP_ERROR);
 
-  const row = db.prepare(
+  const row = await db.prepare(
     `SELECT * FROM password_reset_otps
      WHERE user_id = ? AND used = 0
      ORDER BY created_at DESC LIMIT 1`
@@ -260,33 +308,33 @@ router.post('/verify-otp', (req, res) => {
 
   // Expired — retire it so it can never be retried.
   if (Date.now() > new Date(row.expires_at + 'Z').getTime()) {
-    db.prepare('UPDATE password_reset_otps SET used = 1 WHERE otp_id = ?').run(row.otp_id);
+    await db.prepare('UPDATE password_reset_otps SET used = 1 WHERE otp_id = ?').run(row.otp_id);
     return res.status(400).json(GENERIC_OTP_ERROR);
   }
 
   if (row.otp_code !== code) {
     const attempts = row.failed_attempts + 1;
-    db.prepare('UPDATE password_reset_otps SET failed_attempts = ? WHERE otp_id = ?')
+    await db.prepare('UPDATE password_reset_otps SET failed_attempts = ? WHERE otp_id = ?')
       .run(attempts, row.otp_id);
     if (attempts >= OTP_MAX_FAILED_ATTEMPTS) {
-      db.prepare('UPDATE password_reset_otps SET used = 1 WHERE otp_id = ?').run(row.otp_id);
+      await db.prepare('UPDATE password_reset_otps SET used = 1 WHERE otp_id = ?').run(row.otp_id);
     }
     return res.status(400).json(GENERIC_OTP_ERROR);
   }
 
   // Correct: consume the OTP and issue the reset token.
   const token = crypto.randomBytes(32).toString('hex');
-  db.prepare(
+  await db.prepare(
     `UPDATE password_reset_otps
-        SET used = 1, reset_token = ?, reset_token_expires_at = datetime('now', ?)
-      WHERE otp_id = ?`
+        SET used = 1, reset_token = $1, reset_token_expires_at = NOW() + ($2)::interval
+      WHERE otp_id = $3`
   ).run(token, `+${RESET_TOKEN_TTL_MINUTES} minutes`, row.otp_id);
 
   res.json({ reset_token: token });
 });
 
 // Step 3 — set a new password with the reset token from step 2.
-router.post('/reset-password', (req, res) => {
+router.post('/reset-password', async (req, res) => {
   const token = (req.body?.reset_token || '').trim();
   const newPassword = req.body?.new_password || '';
 
@@ -296,22 +344,22 @@ router.post('/reset-password', (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
-  const row = db.prepare(
+  const row = await db.prepare(
     `SELECT * FROM password_reset_otps WHERE reset_token = ? AND reset_token_used = 0`
   ).get(token);
 
   if (!row) return res.status(400).json({ error: 'This reset link is invalid or has already been used' });
 
   if (Date.now() > new Date(row.reset_token_expires_at + 'Z').getTime()) {
-    db.prepare('UPDATE password_reset_otps SET reset_token_used = 1 WHERE otp_id = ?').run(row.otp_id);
+    await db.prepare('UPDATE password_reset_otps SET reset_token_used = 1 WHERE otp_id = ?').run(row.otp_id);
     return res.status(400).json({ error: 'This reset link has expired — request a new code' });
   }
 
   const hash = bcrypt.hashSync(newPassword, 10);   // same hashing as registration
-  db.prepare('UPDATE users SET password_hash = ? WHERE user_id = ?').run(hash, row.user_id);
+  await db.prepare('UPDATE users SET password_hash = ? WHERE user_id = ?').run(hash, row.user_id);
 
   // Consume this token and clear any leftover codes for the user.
-  db.prepare('DELETE FROM password_reset_otps WHERE user_id = ?').run(row.user_id);
+  await db.prepare('DELETE FROM password_reset_otps WHERE user_id = ?').run(row.user_id);
 
   res.json({ ok: true, message: 'Password updated. You can now log in with your new password.' });
 });

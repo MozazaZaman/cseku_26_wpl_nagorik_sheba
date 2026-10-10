@@ -42,7 +42,7 @@ ${faqBlock}`;
 // SECURITY: the query is scoped to the authenticated citizen's id,
 // taken from req.auth.id (JWT). A user_id supplied by the model or the
 // client is NEVER used — it is not even part of the function schema.
-function myComplaintStatus(authId, complaintId) {
+async function myComplaintStatus(authId, complaintId) {
   const params = [authId];
   let sql = `
     SELECT c.complaint_id, c.title, c.category, c.status,
@@ -58,7 +58,7 @@ function myComplaintStatus(authId, complaintId) {
   }
   sql += ' ORDER BY c.created_at DESC LIMIT 20';
 
-  return db.prepare(sql).all(...params).map((c) => ({
+  return (await db.prepare(sql).all(...params)).map((c) => ({
     complaint_id: c.complaint_id,
     title: c.title,
     category: c.category,
@@ -89,13 +89,13 @@ const tools = [
     ]
   }
 ];
-function executeTool(name, args, authId) {
+async function executeTool(name, args, authId) {
   if (name !== 'get_my_complaint_status') {
     return { error: 'Unknown tool' };
   }
   const raw = args?.complaint_id;
   const complaintId = /^\d+$/.test(String(raw ?? '').trim()) ? Number(String(raw).trim()) : null;
-  return { complaints: myComplaintStatus(authId, complaintId) };
+  return { complaints: await myComplaintStatus(authId, complaintId) };
 }
 
 // ── POST /api/assistant/chat ─────────────────────────────────────
@@ -159,7 +159,7 @@ router.post('/chat', requireAuth, requireCitizen, async (req, res) => {
     }
 
     // SECURITY: req.auth.id is the ONLY identity used — never call args.
-    const toolOutput = executeTool(fnCall.functionCall.name, fnCall.functionCall.args, req.auth.id);
+    const toolOutput = await executeTool(fnCall.functionCall.name, fnCall.functionCall.args, req.auth.id);
 
     const followUp = await fetch(url, {
       method: 'POST',

@@ -14,13 +14,8 @@
  * Safe to re-run: only touches rows where satisfaction_score IS NULL, so it
  * never overwrites feedback a real citizen already submitted.
  */
-import Database from 'better-sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const db = new Database(path.join(__dirname, '..', 'data', 'nagorik.db'));
-db.pragma('journal_mode = WAL');
+import 'dotenv/config';
+import { db, closeDb } from '../src/db.js';
 
 // Weighted rating distribution: most resolutions go well, a minority don't.
 // 5★ 34% · 4★ 27% · 3★ 18% · 2★ 12% · 1★ 9%
@@ -71,7 +66,7 @@ const sqliteDate = (d) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
 
-const pending = db.prepare(
+const pending = await db.prepare(
   `SELECT complaint_id, resolved_at, satisfaction_score
    FROM complaints
    WHERE status = 'resolved' AND satisfaction_score IS NULL
@@ -88,37 +83,37 @@ const upd = db.prepare(
       SET satisfaction_score = ?,
           satisfaction_comment = ?,
           satisfaction_submitted_at = ?,
-          updated_at = datetime('now')
+          updated_at = NOW()
     WHERE complaint_id = ? AND satisfaction_score IS NULL`
 );
 
 let rated = 0, withComment = 0;
-const backfill = db.transaction(() => {
-  for (const c of pending) {
-    const score = weightedRating();
-    // ~70% of reviews carry a comment
-    const comment = Math.random() < 0.7
-      ? COMMENT_BANK[score][Math.floor(Math.random() * COMMENT_BANK[score].length)]
-      : null;
-    // Feedback lands a few hours to ~2 days after the resolution timestamp.
-    const base = c.resolved_at ? new Date(c.resolved_at.replace(' ', 'T') + 'Z') : new Date();
-    const at = new Date(base.getTime() + (3 + Math.random() * 40) * 3600000);
-    upd.run(score, comment, sqliteDate(at), c.complaint_id);
-    rated++;
-    if (comment) withComment++;
-  }
-});
-backfill();
+for (const c of pending) {
+  const score = weightedRating();
+  // ~70% of reviews carry a comment
+  const comment = Math.random() < 0.7
+    ? COMMENT_BANK[score][Math.floor(Math.random() * COMMENT_BANK[score].length)]
+    : null;
+  // Feedback lands a few hours to ~2 days after the resolution timestamp.
+  const base = c.resolved_at ? new Date(c.resolved_at.replace(' ', 'T') + 'Z') : new Date();
+  const at = new Date(base.getTime() + (3 + Math.random() * 40) * 3600000);
+  await upd.run(score, comment, sqliteDate(at), c.complaint_id);
+  rated++;
+  if (comment) withComment++;
+}
 
 console.log(`Backfilled citizen feedback on ${rated} resolved complaint(s).`);
 console.log(`  with comment: ${withComment} · comment-less: ${rated - withComment}`);
 
-const byAuth = db.prepare(
-  `SELECT authority_id, COUNT(*) n, ROUND(AVG(satisfaction_score), 2) avg
+const byAuth = await db.prepare(
+  `SELECT authority_id, COUNT(*) AS n, ROUND(AVG(satisfaction_score), 2) AS avg
    FROM complaints WHERE satisfaction_score IS NOT NULL
-   GROUP BY authority_id HAVING n >= 5 ORDER BY n DESC`
+   GROUP BY authority_id HAVING COUNT(*) >= 5 ORDER BY n DESC`
 ).all();
 console.log(`\nAuthorities now past the 5-rating public threshold: ${byAuth.length}`);
 for (const a of byAuth.slice(0, 12)) {
   console.log(`  authority ${a.authority_id}: ${a.n} ratings, avg ${a.avg}`);
 }
+
+await closeDb();
+process.exit(0);

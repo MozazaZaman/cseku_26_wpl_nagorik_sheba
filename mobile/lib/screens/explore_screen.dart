@@ -32,7 +32,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // Dark base by default, like the web density map; the switcher can change it.
   final _layer = ValueNotifier<String>('dark');
   final _heatVisible = ValueNotifier<bool>(true);
-  final cats = ['all', 'road', 'electricity', 'water', 'gas', 'sanitation', 'other'];
+  final cats = ['all', 'road', 'electricity', 'water', 'gas', 'sanitation', 'encroachment', 'environment', 'public_assets', 'animals', 'markets', 'drugs', 'other'];
   final statuses = ['all', 'submitted', 'review', 'process', 'resolved'];
   final sorts = ['newest', 'priority', 'votes'];
 

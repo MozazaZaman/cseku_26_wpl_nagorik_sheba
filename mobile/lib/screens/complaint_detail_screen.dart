@@ -605,6 +605,21 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                               ]),
                             ],
                           ],
+                          // ---- Public citizen rating (everyone sees it once resolved) ----
+                          if (!c!.isMine &&
+                              c!.status == 'resolved' &&
+                              c!.satisfactionScore != null) ...[
+                            const SizedBox(height: 14),
+                            InfoBanner(
+                                '${lang.t('sat.rated')} ${_emojis[c!.satisfactionScore! - 1]} ${c!.satisfactionScore}★',
+                                color: NSColors.amber),
+                            if (c!.satisfactionComment != null &&
+                                c!.satisfactionComment!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text('“${c!.satisfactionComment}”',
+                                  style: TextStyle(color: s.sub, fontSize: 12.5, fontStyle: FontStyle.italic)),
+                            ],
+                          ],
                           if (!c!.isMine &&
                               ['submitted', 'verified', 'under_field_review', 'mid_review', 'mayor_review']
                                   .contains(c!.status)) ...[

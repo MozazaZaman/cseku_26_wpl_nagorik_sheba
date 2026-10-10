@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const api = axios.create({ baseURL: '/api' });
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('ns_token');
@@ -14,6 +14,12 @@ export const CATEGORIES = [
   { key: 'water', label: 'Water', icon: '💧' },
   { key: 'gas', label: 'Gas', icon: '🔥' },
   { key: 'sanitation', label: 'Sanitation', icon: '🧹' },
+  { key: 'encroachment', label: 'Encroachment', icon: '🚧' },
+  { key: 'environment', label: 'Environment', icon: '🌿' },
+  { key: 'public_assets', label: 'Public Assets', icon: '🏞️' },
+  { key: 'animals', label: 'Animals', icon: '🐕' },
+  { key: 'markets', label: 'Markets', icon: '🏪' },
+  { key: 'drugs', label: 'Drugs', icon: '💊' },
   { key: 'other', label: 'Other', icon: '📌' }
 ];
 

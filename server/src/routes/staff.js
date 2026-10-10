@@ -24,7 +24,7 @@ const router = Router();
  * Mayor-only. The target must be a staff member of the mayor's OWN authority
  * (cross-authority attempts are rejected). A short positive note is required.
  */
-router.post('/:staffId/recognize', requireAuth, requireMayor, (req, res) => {
+router.post('/:staffId/recognize', requireAuth, requireMayor, async (req, res) => {
   const targetId = parseInt(req.params.staffId, 10);
   if (!Number.isInteger(targetId)) {
     return res.status(400).json({ error: 'Invalid staff id' });
@@ -33,7 +33,7 @@ router.post('/:staffId/recognize', requireAuth, requireMayor, (req, res) => {
   if (!note) return res.status(400).json({ error: 'A short note is required' });
   if (note.length > 300) return res.status(400).json({ error: 'Note must be 300 characters or fewer' });
 
-  const target = db.prepare('SELECT staff_id, full_name, authority_id FROM staff WHERE staff_id = ?').get(targetId);
+  const target = await db.prepare('SELECT staff_id, full_name, authority_id FROM staff WHERE staff_id = ?').get(targetId);
   if (!target) return res.status(404).json({ error: 'Staff member not found' });
 
   // Authority scoping: the mayor may only commend within their own office.
@@ -45,17 +45,17 @@ router.post('/:staffId/recognize', requireAuth, requireMayor, (req, res) => {
     return res.status(400).json({ error: 'You cannot commend yourself' });
   }
 
-  db.prepare(
+  const info = await db.prepare(
     `INSERT INTO staff_recognitions (staff_id, awarded_by, note)
      VALUES (?, ?, ?)`
   ).run(target.staff_id, req.auth.id, note);
 
-  const recognition = db.prepare(
+  const recognition = await db.prepare(
     `SELECT r.recognition_id, r.staff_id, r.note, r.awarded_at,
             s.full_name AS awarded_by_name
        FROM staff_recognitions r JOIN staff s ON s.staff_id = r.awarded_by
-      WHERE r.recognition_id = last_insert_rowid()`
-  ).get();
+      WHERE r.recognition_id = ?`
+  ).get(info.lastInsertRowid);
 
   res.status(201).json(recognition);
 });
@@ -63,8 +63,8 @@ router.post('/:staffId/recognize', requireAuth, requireMayor, (req, res) => {
 /* ----------------------------- Badge reads ----------------------------- */
 
 /** Badge rows for one staff member, newest first. */
-function badgesFor(staffId) {
-  return db.prepare(
+async function badgesFor(staffId) {
+  return await db.prepare(
     `SELECT badge_id, staff_id, badge_type, tier, awarded_at, period_start, period_end
        FROM staff_badges
       WHERE staff_id = ?
@@ -79,8 +79,8 @@ function badgesFor(staffId) {
 }
 
 /** Recognitions received by one staff member, newest first. */
-function recognitionsFor(staffId) {
-  return db.prepare(
+async function recognitionsFor(staffId) {
+  return await db.prepare(
     `SELECT r.recognition_id, r.staff_id, r.note, r.awarded_at,
             s.full_name AS awarded_by_name
        FROM staff_recognitions r
@@ -94,10 +94,10 @@ function recognitionsFor(staffId) {
  * GET /api/staff/badges — the caller's own badges + commendations.
  * Any staff role (including mayor) may read their own.
  */
-router.get('/badges', requireAuth, requireStaff, (req, res) => {
+router.get('/badges', requireAuth, requireStaff, async (req, res) => {
   res.json({
-    badges: badgesFor(req.auth.id),
-    recognitions: recognitionsFor(req.auth.id)
+    badges: await badgesFor(req.auth.id),
+    recognitions: await recognitionsFor(req.auth.id)
   });
 });
 
@@ -109,8 +109,8 @@ router.get('/badges', requireAuth, requireStaff, (req, res) => {
  * can never hold a badge, so a mayor viewing the page sees only their
  * junior / senior / WIT / field staff — never their own badge-less row.
  */
-router.get('/team/badges', requireAuth, requireStaff, (req, res) => {
-  const rows = db.prepare(
+router.get('/team/badges', requireAuth, requireStaff, async (req, res) => {
+  const rows = await db.prepare(
     `SELECT s.staff_id, s.full_name, s.staff_role, s.department,
             (SELECT COUNT(*) FROM staff_badges b WHERE b.staff_id = s.staff_id) AS badge_count
        FROM staff s
@@ -119,11 +119,11 @@ router.get('/team/badges', requireAuth, requireStaff, (req, res) => {
       ORDER BY s.staff_role, s.full_name`
   ).all(req.auth.authority_id);
 
-  const team = rows.map((r) => ({
+  const team = await Promise.all(rows.map(async (r) => ({
     ...r,
-    badges: badgesFor(r.staff_id),
-    recognitions: recognitionsFor(r.staff_id)
-  }));
+    badges: await badgesFor(r.staff_id),
+    recognitions: await recognitionsFor(r.staff_id)
+  })));
 
   res.json({ team });
 });
@@ -132,11 +132,11 @@ router.get('/team/badges', requireAuth, requireStaff, (req, res) => {
  * GET /api/staff/:staffId/badges — one teammate's badges. Restricted to the
  * caller's own authority so badges are never leaked across LGI boundaries.
  */
-router.get('/:staffId/badges', requireAuth, requireStaff, (req, res) => {
+router.get('/:staffId/badges', requireAuth, requireStaff, async (req, res) => {
   const targetId = parseInt(req.params.staffId, 10);
   if (!Number.isInteger(targetId)) return res.status(400).json({ error: 'Invalid staff id' });
 
-  const target = db.prepare('SELECT staff_id, authority_id FROM staff WHERE staff_id = ?').get(targetId);
+  const target = await db.prepare('SELECT staff_id, authority_id FROM staff WHERE staff_id = ?').get(targetId);
   if (!target) return res.status(404).json({ error: 'Staff member not found' });
   if (target.authority_id !== req.auth.authority_id) {
     return res.status(403).json({ error: 'Badge profiles are only visible within your authority' });
@@ -144,8 +144,8 @@ router.get('/:staffId/badges', requireAuth, requireStaff, (req, res) => {
 
   res.json({
     staff_id: target.staff_id,
-    badges: badgesFor(target.staff_id),
-    recognitions: recognitionsFor(target.staff_id)
+    badges: await badgesFor(target.staff_id),
+    recognitions: await recognitionsFor(target.staff_id)
   });
 });
 

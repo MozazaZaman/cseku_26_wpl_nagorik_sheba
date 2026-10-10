@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../auth_provider.dart';
 import '../i18n.dart';
+import '../navigation.dart';
 import '../theme.dart';
 import '../widgets/widgets.dart';
-import 'home_shell.dart';
 import 'landing_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -37,10 +37,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        // Web-like flow: logged-in users land in the app, guests land on the
-        // landing page (which holds login / register / browse actions).
+        // Single destination rule (see navigation.dart): guests land on the
+        // landing page; everyone signed in lands where their role belongs
+        // (super admins land directly on their console).
         pageBuilder: (_, __, ___) =>
-            (auth.ready && auth.user != null) ? const HomeShell(initialTab: 0) : const LandingScreen(),
+            (auth.ready && auth.user != null) ? homeForRole(auth.user) : const LandingScreen(),
         transitionsBuilder: (_, a, __, child) =>
             FadeTransition(opacity: CurvedAnimation(parent: a, curve: Curves.easeOut), child: child),
       ),

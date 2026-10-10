@@ -52,37 +52,37 @@ export function stageFor(status) {
   }
 }
 
-function setStage(complaintId, stage, ownerRole) {
-  db.prepare("UPDATE complaints SET current_stage = ?, stage_owner_role = ?, updated_at = datetime('now') WHERE complaint_id = ?")
+async function setStage(complaintId, stage, ownerRole) {
+  await db.prepare("UPDATE complaints SET current_stage = ?, stage_owner_role = ?, updated_at = NOW() WHERE complaint_id = ?")
     .run(stage, ownerRole, complaintId);
 }
 
-function setStatus(complaintId, status, { etaHours = null, executorStaffId = null, executorName = null, rejectedAtStage = null } = {}) {
-  db.prepare(
+async function setStatus(complaintId, status, { etaHours = null, executorStaffId = null, executorName = null, rejectedAtStage = null } = {}) {
+  await db.prepare(
     `UPDATE complaints SET status = ?,
        eta_hours = COALESCE(?, eta_hours),
        executor_staff_id = COALESCE(?, executor_staff_id),
        executor_name = COALESCE(?, executor_name),
        rejected_at_stage = COALESCE(?, rejected_at_stage),
-       resolved_at = CASE WHEN ? = 'resolved' THEN datetime('now') ELSE resolved_at END,
-       updated_at = datetime('now')
+       resolved_at = CASE WHEN ? = 'resolved' THEN NOW() ELSE resolved_at END,
+       updated_at = NOW()
      WHERE complaint_id = ?`
   ).run(status, etaHours, executorStaffId, executorName, rejectedAtStage, status, complaintId);
   const { stage, owner } = stageFor(status);
-  if (stage) setStage(complaintId, stage, owner);
+  if (stage) await setStage(complaintId, stage, owner);
   // (Re)arm the SLA clock for the new stage (no-op for terminal states)
-  armSla(complaintId);
+  await armSla(complaintId);
 }
 
-function staffOfAuthority(authorityId, staffRole) {
-  return db.prepare(
+async function staffOfAuthority(authorityId, staffRole) {
+  return await db.prepare(
     `SELECT staff_id, full_name, email FROM staff
      WHERE authority_id = ? AND staff_role = ? ORDER BY staff_id LIMIT 1`
   ).get(authorityId, staffRole);
 }
 
-function addHistory(complaintId, oldStatus, newStatus, note, changedBy) {
-  db.prepare(
+async function addHistory(complaintId, oldStatus, newStatus, note, changedBy) {
+  await db.prepare(
     `INSERT INTO status_history (complaint_id, old_status, new_status, note, changed_by)
      VALUES (?, ?, ?, ?, ?)`
   ).run(complaintId, oldStatus, newStatus, note, changedBy);
@@ -90,33 +90,33 @@ function addHistory(complaintId, oldStatus, newStatus, note, changedBy) {
 
 /** Email + in-app notify the staff member(s) of a role in the authority. */
 async function notifyStaffRole(authorityId, staffRole, complaint, headline, type = 'status_change') {
-  const staff = staffOfAuthority(authorityId, staffRole);
+  const staff = await staffOfAuthority(authorityId, staffRole);
   if (!staff) return;
   await sendMail({
     to: staff.email,
     subject: `[Nagorik Sheba] ${headline} — complaint #${complaint.complaint_id}`,
     text: `${headline}\n\nTicket #${complaint.complaint_id}: ${complaint.title}\nOpen your staff console to take action.\n\n— Nagorik Sheba`
   });
-  notify(staff.staff_id, complaint.complaint_id, headline,
+  await notify(staff.staff_id, complaint.complaint_id, headline,
     `#${complaint.complaint_id} "${complaint.title}" is waiting in your queue.`, 'staff', type);
 }
 
 /** Email + in-app notify the citizen (submitter) and every voter. */
 async function notifyCitizenAndVoters(complaint, title, message, type = 'status_change') {
-  const citizen = db.prepare('SELECT user_id, email, full_name FROM users WHERE user_id = ?').get(complaint.user_id);
+  const citizen = await db.prepare('SELECT user_id, email, full_name FROM users WHERE user_id = ?').get(complaint.user_id);
   if (citizen) {
     await sendMail({
       to: citizen.email,
       subject: `[Nagorik Sheba] ${title} — complaint #${complaint.complaint_id}`,
       text: `Dear ${citizen.full_name},\n\n${message}\n\nComplaint: "${complaint.title}" (#${complaint.complaint_id})\nTrack the full lifecycle in the app or on the website.\n\n— Nagorik Sheba`
     });
-    notify(citizen.user_id, complaint.complaint_id, title, message, 'citizen', type);
+    await notify(citizen.user_id, complaint.complaint_id, title, message, 'citizen', type);
   }
-  const voters = db.prepare(
+  const voters = await db.prepare(
     'SELECT DISTINCT user_id FROM votes WHERE complaint_id = ? AND user_id != ?'
   ).all(complaint.complaint_id, complaint.user_id);
   for (const v of voters) {
-    notify(v.user_id, complaint.complaint_id, `Update on an issue you voted for (#${complaint.complaint_id})`,
+    await notify(v.user_id, complaint.complaint_id, `Update on an issue you voted for (#${complaint.complaint_id})`,
       `"${complaint.title}" — ${message}`, 'citizen', type);
   }
 }
@@ -154,12 +154,12 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
   };
   const reject = async (stageKey, stageLabel) => {
     needComment();
-    setStatus(id, 'rejected', { rejectedAtStage: stageKey });
-    logWorkflowStep({
+    await setStatus(id, 'rejected', { rejectedAtStage: stageKey });
+    await logWorkflowStep({
       complaintId: id, stage: stageKey, action: 'rejected',
       actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: role, comment: comment.trim()
     });
-    addHistory(id, status, 'rejected', comment.trim(), actor.full_name);
+    await addHistory(id, status, 'rejected', comment.trim(), actor.full_name);
     await notifyCitizenAndVoters(complaint, `Complaint rejected at ${stageLabel}`,
       `${actor.full_name} rejected the complaint: "${comment.trim()}"`, 'rejected');
     return { status: 'rejected' };
@@ -170,12 +170,12 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
     case 'junior_approve': {
       guard('junior', ['verified', 'junior_review']);
       needComment();
-      setStatus(id, 'senior_review');
-      logWorkflowStep({
+      await setStatus(id, 'senior_review');
+      await logWorkflowStep({
         complaintId: id, stage: 'junior_review', action: 'approved',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'junior', comment: comment.trim()
       });
-      addHistory(id, 'junior_review', 'senior_review', comment.trim(), actor.full_name);
+      await addHistory(id, 'junior_review', 'senior_review', comment.trim(), actor.full_name);
       await notifyStaffRole(complaint.authority_id, 'senior', complaint, 'New complaint needs senior feasibility check', 'forwarded_to_you');
       await notifyCitizenAndVoters(complaint, 'Initial check passed',
         `${actor.full_name} (Junior Staff) completed the initial check: "${comment.trim()}" It is now with the Senior Staff for feasibility review.`, 'status_change');
@@ -189,12 +189,12 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
     case 'senior_approve': {
       guard('senior', 'senior_review');
       needComment();
-      setStatus(id, 'mayor_review');
-      logWorkflowStep({
+      await setStatus(id, 'mayor_review');
+      await logWorkflowStep({
         complaintId: id, stage: 'senior_review', action: 'approved',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'senior', comment: comment.trim()
       });
-      addHistory(id, 'senior_review', 'mayor_review', comment.trim(), actor.full_name);
+      await addHistory(id, 'senior_review', 'mayor_review', comment.trim(), actor.full_name);
       await notifyStaffRole(complaint.authority_id, 'mayor', complaint, 'Complaint awaiting your permission', 'permission_required');
       await notifyCitizenAndVoters(complaint, 'Feasibility passed — awaiting Mayor/Chairman permission',
         `${actor.full_name} (Senior Staff) confirmed the problem is real, solvable, and resources (manpower/budget) are available: "${comment.trim()}" It now awaits the Mayor/Chairman's permission.`, 'status_change');
@@ -208,12 +208,12 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
     case 'mayor_approve': {
       guard('mayor', 'mayor_review');
       needComment();
-      setStatus(id, 'approved');
-      logWorkflowStep({
+      await setStatus(id, 'approved');
+      await logWorkflowStep({
         complaintId: id, stage: 'mayor_review', action: 'approved',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'mayor', comment: comment.trim()
       });
-      addHistory(id, 'mayor_review', 'approved', comment.trim(), actor.full_name);
+      await addHistory(id, 'mayor_review', 'approved', comment.trim(), actor.full_name);
       // Mayor permission flows back to senior staff, who then sends to WIT
       await notifyStaffRole(complaint.authority_id, 'senior', complaint, 'Permission granted — send to Work Inspection Team', 'forwarded_to_you');
       await notifyCitizenAndVoters(complaint, 'Permission granted by Mayor/Chairman',
@@ -228,12 +228,12 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
     case 'send_to_wit': {
       guard('senior', 'approved');
       needComment();
-      setStatus(id, 'wit_review');
-      logWorkflowStep({
+      await setStatus(id, 'wit_review');
+      await logWorkflowStep({
         complaintId: id, stage: 'wit_inspection', action: 'pending',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'senior', comment: comment.trim()
       });
-      addHistory(id, 'approved', 'wit_review', comment.trim(), actor.full_name);
+      await addHistory(id, 'approved', 'wit_review', comment.trim(), actor.full_name);
       await notifyStaffRole(complaint.authority_id, 'wit', complaint, 'Complaint ready for work inspection', 'forwarded_to_you');
       await notifyCitizenAndVoters(complaint, 'Sent to Work Inspection Team',
         `${actor.full_name} (Senior Staff) sent the complaint to the Work Inspection Team: "${comment.trim()}" A field staff will be assigned shortly.`, 'status_change');
@@ -244,23 +244,23 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
     case 'wit_assign': {
       guard('wit', 'wit_review');
       needComment();
-      const executor = db.prepare('SELECT staff_id, full_name, email FROM staff WHERE staff_id = ? AND staff_role = ?')
+      const executor = await db.prepare('SELECT staff_id, full_name, email FROM staff WHERE staff_id = ? AND staff_role = ?')
         .get(executorStaffId, 'field');
       if (!executor) throw new WorkflowError('Executor must be a Field Staff of this authority');
       const eta = parseInt(etaHours);
       if (!eta || eta <= 0) throw new WorkflowError('Please provide an ETA in hours');
-      setStatus(id, 'assigned', { etaHours: eta, executorStaffId: executor.staff_id, executorName: executor.full_name });
-      logWorkflowStep({
+      await setStatus(id, 'assigned', { etaHours: eta, executorStaffId: executor.staff_id, executorName: executor.full_name });
+      await logWorkflowStep({
         complaintId: id, stage: 'assignment', action: 'assigned',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'wit', comment: comment.trim()
       });
-      addHistory(id, 'wit_review', 'assigned', `${executor.full_name} assigned by WIT. ${comment.trim()}`, actor.full_name);
+      await addHistory(id, 'wit_review', 'assigned', `${executor.full_name} assigned by WIT. ${comment.trim()}`, actor.full_name);
       await sendMail({
         to: executor.email,
         subject: `[Nagorik Sheba] Complaint #${id} assigned to you`,
         text: `You have been assigned to solve complaint #${id}: "${complaint.title}"\nETA: ${eta} hours.\n${comment.trim()}\n\n— Nagorik Sheba`
       });
-      notify(executor.staff_id, id, 'Complaint assigned to you',
+      await notify(executor.staff_id, id, 'Complaint assigned to you',
         `#${id} "${complaint.title}" — please start work. ETA ${eta}h.`, 'staff', 'assignment');
       await notifyCitizenAndVoters(complaint, 'Work team assigned',
         `The Work Inspection Team assigned ${executor.full_name} to solve the problem. Estimated time: ${eta} hours.`, 'assignment');
@@ -272,12 +272,12 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
       if (role !== 'field') throw new WorkflowError('Only the assigned Field Staff can start', 403);
       if (status !== 'assigned') throw new WorkflowError(`Cannot start: complaint is "${status}"`);
       if (complaint.executor_staff_id !== actor.staff_id) throw new WorkflowError('Only the assigned executor can start this work', 403);
-      setStatus(id, 'in_process');
-      logWorkflowStep({
+      await setStatus(id, 'in_process');
+      await logWorkflowStep({
         complaintId: id, stage: 'execution', action: 'reviewing',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'field', comment: 'Work started on the ground'
       });
-      addHistory(id, 'assigned', 'in_process', 'Field work started.', actor.full_name);
+      await addHistory(id, 'assigned', 'in_process', 'Field work started.', actor.full_name);
       await notifyStaffRole(complaint.authority_id, 'wit', complaint, 'Field work has started', 'status_change');
       await notifyCitizenAndVoters(complaint, 'Problem solving started',
         `The problem solving is in progress by ${actor.full_name}. Estimated time: ${complaint.eta_hours ?? etaHours ?? '?'} hours.`, 'status_change');
@@ -289,27 +289,27 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
       if (!['assigned', 'in_process'].includes(status)) throw new WorkflowError(`Cannot resolve: complaint is "${status}"`);
       if (complaint.executor_staff_id !== actor.staff_id) throw new WorkflowError('Only the assigned executor can complete this work', 403);
       needComment();
-      setStatus(id, 'resolved');
+      await setStatus(id, 'resolved');
       // Resolution proof + citizen confirmation window
       const confirmDays = parseInt(process.env.RESOLVE_CONFIRM_DAYS || '3', 10);
       const hasProof = resolutionImageUrl
-        || db.prepare('SELECT resolution_image_url FROM complaints WHERE complaint_id = ?').get(id)?.resolution_image_url;
+        || (await db.prepare('SELECT resolution_image_url FROM complaints WHERE complaint_id = ?').get(id))?.resolution_image_url;
       if (hasProof) {
-        db.prepare(
-          `UPDATE complaints SET resolution_image_url = COALESCE(?, resolution_image_url),
-             confirmation_deadline = datetime('now', '+' || ? || ' days'),
+        await db.prepare(
+          `UPDATE complaints SET resolution_image_url = COALESCE($1, resolution_image_url),
+             confirmation_deadline = NOW() + (($2)::text || ' days')::interval,
              resolved_confirmed_by_citizen = 0
-           WHERE complaint_id = ?`
+           WHERE complaint_id = $3`
         ).run(resolutionImageUrl, confirmDays, id);
       }
-      logWorkflowStep({
+      await logWorkflowStep({
         complaintId: id, stage: 'execution', action: 'resolved',
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'field',
         comment: resolutionImageUrl
-          ? `${comment.trim()} [resolution photo: /uploads/${path.basename(resolutionImageUrl)}]`
+          ? (/^https?:\/\//i.test(resolutionImageUrl) ? `${comment.trim()} [resolution photo: ${resolutionImageUrl}]` : `${comment.trim()} [resolution photo: /uploads/${path.basename(resolutionImageUrl)}]`)
           : comment.trim()
       });
-      addHistory(id, status, 'resolved',
+      await addHistory(id, status, 'resolved',
         resolutionImageUrl
           ? `${comment.trim()} (Resolution proof attached)`
           : comment.trim(), actor.full_name);
@@ -324,7 +324,7 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
       await notifyStaffRole(complaint.authority_id, 'mayor', complaint, 'Complaint resolved on the ground', 'resolved');
       // Milestone badges are evaluated promptly at resolution time rather than
       // waiting for the weekly rolling sweep (first10 / century / veteran).
-      try { checkMilestonesOnResolution(id); } catch (e) { console.error('badge milestone check failed:', e.message); }
+      try { await checkMilestonesOnResolution(id); } catch (e) { console.error('badge milestone check failed:', e.message); }
       return { status: 'resolved' };
     }
 
@@ -334,7 +334,7 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
 }
 
 /** Statuses visible in a role's own action queue. */
-export function queueForRole(staffRole) {
+export async function queueForRole(staffRole) {
   switch (staffRole) {
     case 'junior': return ['verified', 'junior_review'];
     case 'senior': return ['senior_review', 'approved'];
@@ -346,32 +346,32 @@ export function queueForRole(staffRole) {
 }
 
 /** All complaints of the authority — for senior staff & mayor oversight. */
-export function allOversightStatuses() {
+export async function allOversightStatuses() {
   return ['verified', 'junior_review', 'senior_review', 'mayor_review', 'approved', 'wit_review', 'assigned', 'in_process', 'resolved', 'rejected'];
 }
 
 export const APPROVER_ROLES = APPROVERS;
 
 /** Record the AI-pipeline handoff: complaint enters junior review. */
-export function enterJuniorReview(complaintId, authorityId, title) {
-  db.prepare(
-    `UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior', updated_at = datetime('now')
+export async function enterJuniorReview(complaintId, authorityId, title) {
+  await db.prepare(
+    `UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior', updated_at = NOW()
      WHERE complaint_id = ?`
   ).run(complaintId);
-  logWorkflowStep({
+  await logWorkflowStep({
     complaintId, stage: 'junior_review', action: 'pending',
     actorName: 'AI Pipeline', actorRole: 'system',
     comment: 'Verified by agents — waiting for Junior Staff initial check'
   });
-  armSla(complaintId);
-  const junior = staffOfAuthority(authorityId, 'junior');
+  await armSla(complaintId);
+  const junior = await staffOfAuthority(authorityId, 'junior');
   if (junior) {
     sendMail({
       to: junior.email,
       subject: `[Nagorik Sheba] New complaint #${complaintId} for initial check`,
       text: `A new complaint passed the AI agent pipeline and is waiting for your initial check.\n\n#${complaintId}: ${title}\n\n— Nagorik Sheba`
     }).catch(() => {});
-    notify(junior.staff_id, complaintId, 'New complaint for initial check',
+    await notify(junior.staff_id, complaintId, 'New complaint for initial check',
       `#${complaintId} "${title}" passed AI verification — please check and forward it to Senior Staff.`, 'staff', 'forwarded_to_you');
   }
 }

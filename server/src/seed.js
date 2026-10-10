@@ -1,15 +1,16 @@
+import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { initDb, db } from './db.js';
+import { initDb, db, closeDb } from './db.js';
 
-initDb();
+await initDb();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const force = process.argv.includes('--force');
-const existing = db.prepare('SELECT COUNT(*) n FROM complaints').get().n;
+const existing = (await db.prepare('SELECT COUNT(*) AS n FROM complaints').get()).n;
 
 if (existing > 0 && !force) {
   console.log('SAFETY LOCK: Database already contains ' + existing + ' complaints.');
@@ -19,15 +20,11 @@ if (existing > 0 && !force) {
   process.exit(0);
 }
 
-const wipe = db.transaction(() => {
-  db.exec(`
-    DELETE FROM agent_logs; DELETE FROM notifications; DELETE FROM status_history;
-    DELETE FROM votes; DELETE FROM complaints; DELETE FROM emergency_services;
-    DELETE FROM staff; DELETE FROM authorities; DELETE FROM users;
-    DELETE FROM sqlite_sequence;
-  `);
-});
-wipe();
+await db.exec(`
+  DELETE FROM agent_logs; DELETE FROM notifications; DELETE FROM status_history;
+  DELETE FROM votes; DELETE FROM complaints; DELETE FROM emergency_services;
+  DELETE FROM staff; DELETE FROM authorities; DELETE FROM users;
+`);
 
 const hash = (p) => bcrypt.hashSync(p, 10);
 
@@ -39,12 +36,12 @@ const insAuth = db.prepare(
 );
 
 const pad = (v, d) => +(v + d).toFixed(4);
-function addAuthority(name, type, division, district, upazila, lat, lng, phone, email) {
+async function addAuthority(name, type, division, district, upazila, lat, lng, phone, email) {
   const d = type === 'CITY_CORPORATION' ? 0.09 : type === 'POUROSHOVA' ? 0.06 : 0.05;
-  return insAuth.run(
+  return (await insAuth.run(
     name, type, pad(lat, -d), pad(lat, d), pad(lng, -d), pad(lng, d), lat, lng,
     division, district, upazila || null, phone, email
-  ).lastInsertRowid;
+  )).lastInsertRowid;
 }
 
 // district center coordinates (used to place authorities when JSON has no lat/lng)
@@ -113,7 +110,7 @@ console.log(`LG JSON: ${lg.city_corporations.length} CC, ${lg.pourashava.length}
 const A = {};
 let globalIdx = 0;
 
-function insertLG(entry, type, nameField, divField, distField, upazilaField) {
+async function insertLG(entry, type, nameField, divField, distField, upazilaField) {
   const rawDiv = entry[divField] || entry.division || entry.division_name;
   const rawDist = entry[distField] || entry.district || entry.district_name;
   const division = normDivision(rawDiv);
@@ -124,7 +121,7 @@ function insertLG(entry, type, nameField, divField, distField, upazilaField) {
   // keep CC name as-is
   const upazila = upazilaField ? (entry[upazilaField] || entry.upazila_name || null) : null;
   const [lat, lng] = coordFor(district, globalIdx++);
-  const id = addAuthority(name, type, division, district, upazila, lat, lng, null, null);
+  const id = await addAuthority(name, type, division, district, upazila, lat, lng, null, null);
   // keep lookup for complaint seeding
   const key = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z_]/g,'');
   if (!A[key]) A[key] = id;
@@ -132,51 +129,45 @@ function insertLG(entry, type, nameField, divField, distField, upazilaField) {
 }
 
 console.log('Seeding authorities from JSON...');
-const lgInsert = db.transaction(() => {
-  for (const e of lg.city_corporations) insertLG(e, 'CITY_CORPORATION', 'name', 'division', 'district', null);
-  for (const e of lg.pourashava) insertLG(e, 'POUROSHOVA', 'name', 'division', 'district', null);
-  for (const e of lg.unions) insertLG(e, 'UNION_PARISHAD', 'name', 'division_name', 'district_name', 'upazila_name');
-});
-lgInsert();
+for (const e of lg.city_corporations) await insertLG(e, 'CITY_CORPORATION', 'name', 'division', 'district', null);
+for (const e of lg.pourashava) await insertLG(e, 'POUROSHOVA', 'name', 'division', 'district', null);
+for (const e of lg.unions) await insertLG(e, 'UNION_PARISHAD', 'name', 'division_name', 'district_name', 'upazila_name');
 console.log('Authorities seeded');
 
 // convenient aliases for demo complaints (lookup by name)
-function findAuth(name) {
-  const row = db.prepare('SELECT authority_id FROM authorities WHERE name=? LIMIT 1').get(name);
+async function findAuth(name) {
+  const row = await db.prepare('SELECT authority_id FROM authorities WHERE name=? LIMIT 1').get(name);
   return row ? row.authority_id : null;
 }
-A.dhakaSouth = findAuth('Dhaka South City Corporation');
-A.dhakaNorth = findAuth('Dhaka North City Corporation');
-A.gazipur = findAuth('Gazipur City Corporation');
-A.narayanganj = findAuth('Narayanganj City Corporation');
-A.chattogram = findAuth('Chattogram City Corporation');
-A.cumilla = findAuth('Cumilla City Corporation');
-A.khulna = findAuth('Khulna City Corporation');
-A.rajshahi = findAuth('Rajshahi City Corporation');
-A.sylhet = findAuth('Sylhet City Corporation');
-A.barishal = findAuth('Barishal City Corporation');
-A.rangpur = findAuth('Rangpur City Corporation');
-A.mymensingh = findAuth('Mymensingh City Corporation');
+A.dhakaSouth = await findAuth('Dhaka South City Corporation');
+A.dhakaNorth = await findAuth('Dhaka North City Corporation');
+A.gazipur = await findAuth('Gazipur City Corporation');
+A.narayanganj = await findAuth('Narayanganj City Corporation');
+A.chattogram = await findAuth('Chattogram City Corporation');
+A.cumilla = await findAuth('Cumilla City Corporation');
+A.khulna = await findAuth('Khulna City Corporation');
+A.rajshahi = await findAuth('Rajshahi City Corporation');
+A.sylhet = await findAuth('Sylhet City Corporation');
+A.barishal = await findAuth('Barishal City Corporation');
+A.rangpur = await findAuth('Rangpur City Corporation');
+A.mymensingh = await findAuth('Mymensingh City Corporation');
 // for backwards compat, pick any representative poura/union if needed
-A.savar = findAuth('Savar Pourashava') || db.prepare("SELECT authority_id FROM authorities WHERE district='Dhaka' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.ruhitpur = db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Ruhitpur%' LIMIT 1").get()?.authority_id || db.prepare("SELECT authority_id FROM authorities WHERE district='Dhaka' AND type='UNION_PARISHAD' LIMIT 1").get()?.authority_id;
-A.dighalia = db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Dighalia%' LIMIT 1").get()?.authority_id || A.khulna;
-A.gowainghat = db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Gowainghat%' LIMIT 1").get()?.authority_id || A.sylhet;
-A.jashore = db.prepare("SELECT authority_id FROM authorities WHERE district='Jashore' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.kushtia = db.prepare("SELECT authority_id FROM authorities WHERE district='Kushtia' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.coxsbazar = db.prepare("SELECT authority_id FROM authorities WHERE district=? AND type='POUROSHOVA' LIMIT 1").get("Cox's Bazar")?.authority_id;
-A.bogura = db.prepare("SELECT authority_id FROM authorities WHERE district='Bogura' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.moulvibazar = db.prepare("SELECT authority_id FROM authorities WHERE district='Moulvibazar' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.bhola = db.prepare("SELECT authority_id FROM authorities WHERE district='Bhola' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.dinajpur = db.prepare("SELECT authority_id FROM authorities WHERE district='Dinajpur' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
-A.jamalpur = db.prepare("SELECT authority_id FROM authorities WHERE district='Jamalpur' AND type='POUROSHOVA' LIMIT 1").get()?.authority_id;
+A.savar = (await findAuth('Savar Pourashava')) || (await db.prepare("SELECT authority_id FROM authorities WHERE district='Dhaka' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.ruhitpur = (await db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Ruhitpur%' LIMIT 1").get())?.authority_id || (await db.prepare("SELECT authority_id FROM authorities WHERE district='Dhaka' AND type='UNION_PARISHAD' LIMIT 1").get())?.authority_id;
+A.dighalia = (await db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Dighalia%' LIMIT 1").get())?.authority_id || A.khulna;
+A.gowainghat = (await db.prepare("SELECT authority_id FROM authorities WHERE name LIKE '%Gowainghat%' LIMIT 1").get())?.authority_id || A.sylhet;
+A.jashore = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Jashore' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.kushtia = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Kushtia' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.coxsbazar = (await db.prepare("SELECT authority_id FROM authorities WHERE district=? AND type='POUROSHOVA' LIMIT 1").get("Cox's Bazar"))?.authority_id;
+A.bogura = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Bogura' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.moulvibazar = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Moulvibazar' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.bhola = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Bhola' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.dinajpur = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Dinajpur' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
+A.jamalpur = (await db.prepare("SELECT authority_id FROM authorities WHERE district='Jamalpur' AND type='POUROSHOVA' LIMIT 1").get())?.authority_id;
 
 // ---------- Staff: 5 roles per authority ----------
 // junior (initial check) → senior (feasibility) → mayor (permission)
 // → wit (work inspection team) → field (executor)
-const insStaff = db.prepare(
-  `INSERT INTO staff (full_name, email, password_hash, department, authority_id, staff_role) VALUES (?, ?, ?, 'general', ?, ?)`
-);
 const staffNames = ['Kamrul Hasan','Shirin Akter','Habibur Rahman','Tanjina Sultana','Mizanur Rahman','Asaduzzaman Noor','Farhana Yasmin','Rakibul Islam','Nusrat Jahan','Shafiqul Alam','Mahmuda Khatun','Arif Chowdhury','Sohel Mahmud','Rehana Parvin','Delwar Hossain','Sabbir Ahmed','Tahmina Begum','Imran Khan','Jahid Hasan','Salma Akter','Nayeem Mia','Ruhul Amin','Jamal Uddin','Ripon Mia','Anika Sultana','Rashid Khan','Farzana Ahmed','Mokbul Hossain','Sonia Akter','Biplob Kumar','Lamia Rahman','Tofayel Ahmed','Nazia Islam','Saiful Alam','Shahnaz Parvin','Khaled Mahmud','Rubina Yasmin','Elias Hossain','Sharmin Akter','Moniruzzaman','Tanvir Ahmed','Fahmida Begum','Ariful Islam','Sultana Rajia','Mahbub Alam','Nasrin Akter','Helal Uddin','Jannatul Ferdous','Abdur Rahim','Moushumi Akter','Shahriar Kabir','Rezaul Karim','Nadira Sultana','Firoz Ahmed','Tasnim Jahan'];
 const staffHash = hash('staff123');
 
@@ -201,49 +192,60 @@ function roleEmail(authSlug, role, authId) {
   return `${role}.${authSlug}.${authId}@nagorik.bd`;
 }
 
-function addHierarchy(authId, authName, authType, district, juniorEmail, juniorName, idx) {
+async function addHierarchy(authId, authName, authType, district, juniorEmail, juniorName, idx, out) {
   const slug = district.toLowerCase().replace(/[^a-z]/g, '') || 'auth';
   const isCC = authType === 'CITY_CORPORATION';
   const headTitle = isCC ? 'Mayor' : authType === 'POUROSHOVA' ? 'Chairman (Pouroshava)' : 'Chairman (Union Parishad)';
-  insStaff.run(juniorName, juniorEmail, staffHash, authId, 'junior');
-  insStaff.run(`${staffNames[idx % staffNames.length]} — Senior Officer`, roleEmail(slug, 'senior', authId), staffHash, authId, 'senior');
-  insStaff.run(`${headTitle} of ${authName}`, roleEmail(slug, 'mayor', authId), staffHash, authId, 'mayor');
-  insStaff.run(`${staffNames[(idx + 1) % staffNames.length]} — Work Inspection Team`, roleEmail(slug, 'wit', authId), staffHash, authId, 'wit');
-  insStaff.run(`${staffNames[(idx + 2) % staffNames.length]} — Field Staff`, roleEmail(slug, 'field', authId), staffHash, authId, 'field');
+  out.push([juniorName, juniorEmail, staffHash, authId, 'junior']);
+  out.push([`${staffNames[idx % staffNames.length]} — Senior Officer`, roleEmail(slug, 'senior', authId), staffHash, authId, 'senior']);
+  out.push([`${headTitle} of ${authName}`, roleEmail(slug, 'mayor', authId), staffHash, authId, 'mayor']);
+  out.push([`${staffNames[(idx + 1) % staffNames.length]} — Work Inspection Team`, roleEmail(slug, 'wit', authId), staffHash, authId, 'wit']);
+  out.push([`${staffNames[(idx + 2) % staffNames.length]} — Field Staff`, roleEmail(slug, 'field', authId), staffHash, authId, 'field']);
 }
 
 console.log('Seeding staff hierarchy (junior/senior/mayor/wit/field) for every authority...');
 const createdAuthorityIds = new Set();
-const staffInsertMany = db.transaction(() => {
+const staffRows = [];
+{
   let idx = 0;
   for (const [fullName, email, authId] of legacyCCStaff) {
     if (!authId) continue;
-    const auth = db.prepare('SELECT name, type, district FROM authorities WHERE authority_id = ?').get(authId);
-    addHierarchy(authId, auth.name, auth.type, auth.district, email, fullName, idx);
+    const auth = await db.prepare('SELECT name, type, district FROM authorities WHERE authority_id = ?').get(authId);
+    await addHierarchy(authId, auth.name, auth.type, auth.district, email, fullName, idx, staffRows);
     createdAuthorityIds.add(authId);
     idx += 3;
   }
-  const allAuthorities = db.prepare('SELECT authority_id, name, type, district FROM authorities').all();
+  const allAuthorities = await db.prepare('SELECT authority_id, name, type, district FROM authorities').all();
   for (const auth of allAuthorities) {
     if (createdAuthorityIds.has(auth.authority_id)) continue;
     const fullName = staffNames[idx % staffNames.length];
     const slug = auth.district.toLowerCase().replace(/[^a-z]/g, '') || 'auth';
-    addHierarchy(auth.authority_id, auth.name, auth.type, auth.district,
-      roleEmail(slug, 'junior', auth.authority_id), `${fullName} - ${auth.name}`, idx);
+    await addHierarchy(auth.authority_id, auth.name, auth.type, auth.district,
+      roleEmail(slug, 'junior', auth.authority_id), `${fullName} - ${auth.name}`, idx, staffRows);
     createdAuthorityIds.add(auth.authority_id);
     idx += 3;
   }
-});
-staffInsertMany();
+}
+{
+  const CH = 250;
+  for (let i = 0; i < staffRows.length; i += CH) {
+    const chunk = staffRows.slice(i, i + CH);
+    const vals = chunk.map((_, j) => `($${j * 5 + 1}, $${j * 5 + 2}, $${j * 5 + 3}, 'general', $${j * 5 + 4}, $${j * 5 + 5})`).join(',');
+    await db.prepare(
+      `INSERT INTO staff (full_name, email, password_hash, department, authority_id, staff_role) VALUES ${vals}`
+    ).run(...chunk.flat());
+    if (i % 2000 === 0) console.log(`  staff rows ${Math.min(i + CH, staffRows.length)}/${staffRows.length}...`);
+  }
+}
 console.log(`Staff seeded: ${createdAuthorityIds.size} authorities x 5 roles (password: staff123)`);
 
 // ---------- Citizens ----------
 const insUser = db.prepare(
   `INSERT INTO users (full_name, email, phone, password_hash) VALUES (?, ?, ?, ?)`
 );
-const rahim = insUser.run('Rahim Ahmed', 'rahim@example.com', '+8801711111111', hash('password123')).lastInsertRowid;
-const karim = insUser.run('Karima Begum', 'karima@example.com', '+8801822222222', hash('password123')).lastInsertRowid;
-const joya = insUser.run('Joya Chowdhury', 'joya@example.com', '+8801933333333', hash('password123')).lastInsertRowid;
+const rahim = (await insUser.run('Rahim Ahmed', 'rahim@example.com', '+8801711111111', hash('password123'))).lastInsertRowid;
+const karim = (await insUser.run('Karima Begum', 'karima@example.com', '+8801822222222', hash('password123'))).lastInsertRowid;
+const joya = (await insUser.run('Joya Chowdhury', 'joya@example.com', '+8801933333333', hash('password123'))).lastInsertRowid;
 
 // ---------- Emergency services: from uploads (osmium extracts) - Task 4 but kept minimal here, full import happens via seed ----------
 const insSvc = db.prepare(
@@ -256,33 +258,33 @@ try {
   const toiletPath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_public_toilets.json');
   const wasaPath = path.join(__dirname, '..', '..', 'uploads', 'bangladesh_wasa_desa_lged.json');
   // osmium extracts are in uploads as JSON with keys like fire_stations / police_stations / toilets / wasa_offices etc
-  function insertSvc(name, type, lat, lng, phone, addr) {
+  async function insertSvc(name, type, lat, lng, phone, addr) {
     lat=parseFloat(lat); lng=parseFloat(lng);
     if(Number.isNaN(lat)||Number.isNaN(lng)||!name) return;
-    try{ insSvc.run(String(name), type, String(phone||'N/A'), String(addr||name), lat, lng); services.push(name);}catch{}
+    try{ await insSvc.run(String(name), type, String(phone||'N/A'), String(addr||name), lat, lng); services.push(name);}catch{}
   }
   if (fs.existsSync(firePath)) {
     const j=JSON.parse(fs.readFileSync(firePath,'utf-8'));
     const arr=j.fire_stations||j.features||j.data||[];
-    for(const f of arr){ const p=f.properties||f; insertSvc(p.name||f.name, 'fire_service', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'102', p.address||`${p.district||''} ${p.division||''}`.trim()); }
+    for(const f of arr){ const p=f.properties||f; await insertSvc(p.name||f.name, 'fire_service', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'102', p.address||`${p.district||''} ${p.division||''}`.trim()); }
   }
   if (fs.existsSync(policePath)) {
     const j=JSON.parse(fs.readFileSync(policePath,'utf-8'));
     const arr=j.police_stations||j.features||[];
-    for(const f of arr){ const p=f.properties||f; insertSvc(p.name||f.name, 'police_station', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'999', p.address||`${p.district||''} ${p.division||''}`.trim()); }
+    for(const f of arr){ const p=f.properties||f; await insertSvc(p.name||f.name, 'police_station', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'999', p.address||`${p.district||''} ${p.division||''}`.trim()); }
   }
   if (fs.existsSync(toiletPath)) {
     const j=JSON.parse(fs.readFileSync(toiletPath,'utf-8'));
     const arr=j.toilets||j.features||[];
-    for(const f of arr){ const p=f.properties||f; insertSvc(p.name||f.name, 'public_toilet', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'N/A', p.address||`${p.district||''} ${p.division||''}`.trim()); }
+    for(const f of arr){ const p=f.properties||f; await insertSvc(p.name||f.name, 'public_toilet', p.latitude||p.lat, p.longitude||p.lon, p.phone_number||'N/A', p.address||`${p.district||''} ${p.division||''}`.trim()); }
   }
   if (fs.existsSync(wasaPath)) {
     const j=JSON.parse(fs.readFileSync(wasaPath,'utf-8'));
-    for(const f of (j.wasa_offices||[])) { const p=f.properties||f; insertSvc(p.name, 'wasa', p.latitude, p.longitude, p.phone_number||'N/A', p.address); }
-    for(const f of (j.desa_successor_offices||[])) { const p=f.properties||f; insertSvc(p.name, 'desa', p.latitude, p.longitude, p.phone_number||'16999', p.address); }
-    for(const f of (j.lged_offices||[])) { const p=f.properties||f; insertSvc(p.name, 'lged', p.latitude, p.longitude, p.phone_number||'N/A', p.address); }
+    for(const f of (j.wasa_offices||[])) { const p=f.properties||f; await insertSvc(p.name, 'wasa', p.latitude, p.longitude, p.phone_number||'N/A', p.address); }
+    for(const f of (j.desa_successor_offices||[])) { const p=f.properties||f; await insertSvc(p.name, 'desa', p.latitude, p.longitude, p.phone_number||'16999', p.address); }
+    for(const f of (j.lged_offices||[])) { const p=f.properties||f; await insertSvc(p.name, 'lged', p.latitude, p.longitude, p.phone_number||'N/A', p.address); }
     // also handle any titas entries if present
-    for(const f of (j.titas_gas||j.titas||[])) { const p=f.properties||f; insertSvc(p.name, 'titas_gas', p.latitude, p.longitude, p.phone_number||'165', p.address); }
+    for(const f of (j.titas_gas||j.titas||[])) { const p=f.properties||f; await insertSvc(p.name, 'titas_gas', p.latitude, p.longitude, p.phone_number||'165', p.address); }
   }
 } catch(e){ console.log('emergency import skipped', e.message); }
 if (services.length === 0) {
@@ -296,7 +298,7 @@ if (services.length === 0) {
     ['DESA Distribution Office', 'desa', '16999', 'DESA Bhaban, Ma Sherani Rd, Dhaka', 23.7580, 90.3910],
     ['Titas Gas Head Office', 'titas_gas', '165', 'Kawran Bazar, Dhaka', 23.7500, 90.3990],
   ];
-  for (const s of fallback) { insSvc.run(...s); services.push(s[0]); }
+  for (const s of fallback) { await insSvc.run(...s); services.push(s[0]); }
 }
 
 // ---------- Demo complaints ----------
@@ -305,10 +307,10 @@ const insComplaint = db.prepare(
      (user_id, authority_id, title, description, latitude, longitude, address_text,
       category, status, priority_score, vote_count, eta_hours, created_at, updated_at, resolved_at,
       division, district, area_text, road, full_address)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', ?), datetime('now', ?), ?, ?, ?, ?, ?, ?)`
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW() + ($13)::interval, NOW() + ($14)::interval, $15, $16, $17, $18, $19, $20)`
 );
 
-const c1 = insComplaint.run(
+const c1 = (await insComplaint.run(
   rahim, A.dhakaSouth,
   'Deep pothole on Fuller Road is causing accidents',
   'There is a very deep pothole near Fuller Road crossing. Two motorbikes already had accidents here yesterday. Dangerous for children going to school.',
@@ -316,9 +318,9 @@ const c1 = insComplaint.run(
   'road', 'senior_review', 34.5, 3, null, '-3 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Shahbagh', 'Fuller Road',
   'Road Fuller Road, Shahbagh, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
-).lastInsertRowid;
+)).lastInsertRowid;
 
-const c2 = insComplaint.run(
+const c2 = (await insComplaint.run(
   karim, A.dhakaSouth,
   'Electric pole leaning dangerously over footpath',
   'An electric pole near TSC is badly tilted after the storm. Live wires are exposed. Very dangerous for students.',
@@ -326,9 +328,9 @@ const c2 = insComplaint.run(
   'electricity', 'in_process', 58.0, 6, 48, '-5 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Dhaka University', 'TSC Road',
   'Road TSC Road, Dhaka University, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
-).lastInsertRowid;
+)).lastInsertRowid;
 
-const c3 = insComplaint.run(
+const c3 = (await insComplaint.run(
   joya, A.dhakaSouth,
   'Water logging drains overflowing at Nilkhet',
   'Drainage water is overflowing on the road at Nilkhet intersection. Mosquitoes are breeding. Whole area smells terrible.',
@@ -336,9 +338,9 @@ const c3 = insComplaint.run(
   'water', 'resolved', 41.0, 4, null, '-12 days', '-2 days', 'now',
   'Dhaka', 'Dhaka', 'Nilkhet', 'Nilkhet Road',
   'Road Nilkhet Road, Nilkhet, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
-).lastInsertRowid;
+)).lastInsertRowid;
 
-const c4 = insComplaint.run(
+const c4 = (await insComplaint.run(
   karim, A.savar,
   'Garbage not collected for two weeks in Savar Bazar',
   'Community bins near Savar Bazar have not been emptied for weeks. Waste is spilling onto the road.',
@@ -346,9 +348,9 @@ const c4 = insComplaint.run(
   'sanitation', 'verified', 18.0, 1, null, '-1 days', '-1 days', null,
   'Dhaka', 'Dhaka', 'Savar Bazar', 'Bazar Road',
   'Road Bazar Road, Savar Bazar, Savar Pourashava, Dhaka, Dhaka, Bangladesh'
-).lastInsertRowid;
+)).lastInsertRowid;
 
-insComplaint.run(
+await insComplaint.run(
   rahim, A.ruhitpur,
   'Tube well broken at Ruhitpur bazaar',
   'The only public tube well at the bazaar is broken for a month. People are drinking unsafe water.',
@@ -358,7 +360,7 @@ insComplaint.run(
   'Road Bazaar Road, Ruhitpur Union Parishad, Dhaka, Dhaka, Bangladesh'
 );
 
-insComplaint.run(
+await insComplaint.run(
   joya, A.dhakaSouth,
   'Street light not working near Curzon Hall',
   'The streetlight opposite Curzon Hall gate has been off for a week. The road is pitch dark at night, unsafe for women.',
@@ -369,7 +371,7 @@ insComplaint.run(
 );
 
 // Fresh complaint at junior check stage for the Dhaka South junior demo
-const c8 = insComplaint.run(
+const c8 = (await insComplaint.run(
   karim, A.dhakaSouth,
   'Broken footpath tiles near Dhaka Medical College',
   'Footpath tiles are broken and lifted near DMCH gate. Elderly patients are tripping and falling every day.',
@@ -377,10 +379,10 @@ const c8 = insComplaint.run(
   'road', 'verified', 22.0, 0, null, '-3 hours', '-3 hours', null,
   'Dhaka', 'Dhaka', 'Bakshibazar', 'Bakshibazar Road',
   'Road Bakshibazar Road, Bakshibazar, Dhaka South City Corporation, Dhaka, Dhaka, Bangladesh'
-).lastInsertRowid;
-db.prepare("UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior' WHERE complaint_id = ?").run(c8);
+)).lastInsertRowid;
+await db.prepare("UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior' WHERE complaint_id = ?").run(c8);
 
-const c7 = insComplaint.run(
+const c7 = (await insComplaint.run(
   rahim, A.khulna,
   'Gas leakage near Shiromoni point is terrifying residents',
   'Strong gas smell near the Titas gas pipeline at Shiromoni crossing since morning. People are afraid to light stoves. Very dangerous.',
@@ -388,9 +390,9 @@ const c7 = insComplaint.run(
   'gas', 'mayor_review', 27.0, 2, null, '-9 hours', '-2 hours', null,
   'Khulna', 'Khulna', 'Shiromoni', 'Khan Jahan Ali Road',
   'Road Khan Jahan Ali Road, Shiromoni, Khulna City Corporation, Khulna, Khulna, Bangladesh'
-).lastInsertRowid;
+)).lastInsertRowid;
 
-insComplaint.run(
+await insComplaint.run(
   karim, A.chattogram,
   'Garbage pile rotting at Reazuddin Bazar for days',
   'A huge pile of garbage is rotting beside the main market entrance. Flies everywhere, shopkeepers are suffering.',
@@ -400,7 +402,7 @@ insComplaint.run(
   'Road Bazar Road, Reazuddin Bazar, Chattogram City Corporation, Chattogram, Chattogram, Bangladesh'
 );
 
-insComplaint.run(
+await insComplaint.run(
   joya, A.sylhet,
   'Road cracked badly near Amberkhana after flood',
   'The road near Amberkhana point has large cracks after the last flood. Buses wobble over it, may collapse anytime.',
@@ -412,126 +414,129 @@ insComplaint.run(
 
 // Votes
 const insVote = db.prepare('INSERT INTO votes (user_id, complaint_id) VALUES (?, ?)');
-insVote.run(karim, c1); insVote.run(joya, c1); insVote.run(rahim, c3); insVote.run(joya, c3);
-insVote.run(rahim, c2); insVote.run(joya, c2); insVote.run(karim, c2); insVote.run(joya, c4);
-insVote.run(karim, c7);
+await insVote.run(karim, c1); await insVote.run(joya, c1); await insVote.run(rahim, c3); await insVote.run(joya, c3);
+await insVote.run(rahim, c2); await insVote.run(joya, c2); await insVote.run(karim, c2); await insVote.run(joya, c4);
+await insVote.run(karim, c7);
 
 // ---------- Workflow chains for demo complaints (5-role hierarchy) ----------
-function staffByRole(authId, role) {
-  return db.prepare('SELECT staff_id, full_name FROM staff WHERE authority_id = ? AND staff_role = ? ORDER BY staff_id LIMIT 1').get(authId, role);
+async function staffByRole(authId, role) {
+  return await db.prepare('SELECT staff_id, full_name FROM staff WHERE authority_id = ? AND staff_role = ? ORDER BY staff_id LIMIT 1').get(authId, role);
 }
 const insStep = db.prepare(
   `INSERT INTO workflow_steps (complaint_id, stage, action, actor_staff_id, actor_name, actor_role, comment, created_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', ?))`
+   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW() + ($8)::interval)`
 );
 const insHist = db.prepare(
   `INSERT INTO status_history (complaint_id, old_status, new_status, note, changed_by)
    VALUES (?, ?, ?, ?, ?)`
 );
-function markStage(id, stage, ownerRole) {
-  db.prepare("UPDATE complaints SET current_stage = ?, stage_owner_role = ? WHERE complaint_id = ?")
+async function markStage(id, stage, ownerRole) {
+  await db.prepare("UPDATE complaints SET current_stage = ?, stage_owner_role = ? WHERE complaint_id = ?")
     .run(stage, ownerRole, id);
 }
 
 // #2 (in_process / execution) — full chain: junior → senior → mayor → WIT → field
 {
-  const j = staffByRole(A.dhakaSouth, 'junior');
-  const s = staffByRole(A.dhakaSouth, 'senior');
-  const may = staffByRole(A.dhakaSouth, 'mayor');
-  const wit = staffByRole(A.dhakaSouth, 'wit');
-  const fld = staffByRole(A.dhakaSouth, 'field');
-  db.prepare('UPDATE complaints SET executor_staff_id = ?, executor_name = ?, assigned_staff_id = ? WHERE complaint_id = ?')
+  const j = await staffByRole(A.dhakaSouth, 'junior');
+  const s = await staffByRole(A.dhakaSouth, 'senior');
+  const may = await staffByRole(A.dhakaSouth, 'mayor');
+  const wit = await staffByRole(A.dhakaSouth, 'wit');
+  const fld = await staffByRole(A.dhakaSouth, 'field');
+  await db.prepare('UPDATE complaints SET executor_staff_id = ?, executor_name = ?, assigned_staff_id = ? WHERE complaint_id = ?')
     .run(fld.staff_id, fld.full_name, wit.staff_id, c2);
-  insStep.run(c2, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-5 days');
-  insStep.run(c2, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Initial check done. Genuine report, forwarded to senior.', '-5 days');
-  insStep.run(c2, 'senior_review', 'approved', s.staff_id, s.full_name, 'senior', 'Real & solvable. Manpower and budget sanctioned.', '-4 days');
-  insStep.run(c2, 'mayor_review', 'approved', may.staff_id, may.full_name, 'mayor', 'Permission granted. Immediate repair, priority 1.', '-4 days');
-  insStep.run(c2, 'wit_inspection', 'pending', wit.staff_id, s.full_name, 'senior', 'Sent to Work Inspection Team for ground inspection.', '-3 days');
-  insStep.run(c2, 'assignment', 'assigned', wit.staff_id, wit.full_name, 'wit', 'Inspected on site. Assigned to field crew with crane truck.', '-3 days');
-  insStep.run(c2, 'execution', 'reviewing', fld.staff_id, fld.full_name, 'field', 'Work started on the ground', '-1 days');
-  insHist.run(c2, 'junior_review', 'senior_review', 'Genuine issue confirmed.', j.full_name);
-  insHist.run(c2, 'senior_review', 'mayor_review', 'Resources sanctioned.', s.full_name);
-  insHist.run(c2, 'mayor_review', 'approved', 'Permission granted.', may.full_name);
-  insHist.run(c2, 'approved', 'wit_review', 'Sent to WIT.', s.full_name);
-  insHist.run(c2, 'wit_review', 'assigned', 'Crew assigned after inspection.', wit.full_name);
-  insHist.run(c2, 'assigned', 'in_process', 'Field work started.', fld.full_name);
-  markStage(c2, 'execution', 'field');
+  await insStep.run(c2, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-5 days');
+  await insStep.run(c2, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Initial check done. Genuine report, forwarded to senior.', '-5 days');
+  await insStep.run(c2, 'senior_review', 'approved', s.staff_id, s.full_name, 'senior', 'Real & solvable. Manpower and budget sanctioned.', '-4 days');
+  await insStep.run(c2, 'mayor_review', 'approved', may.staff_id, may.full_name, 'mayor', 'Permission granted. Immediate repair, priority 1.', '-4 days');
+  await insStep.run(c2, 'wit_inspection', 'pending', wit.staff_id, s.full_name, 'senior', 'Sent to Work Inspection Team for ground inspection.', '-3 days');
+  await insStep.run(c2, 'assignment', 'assigned', wit.staff_id, wit.full_name, 'wit', 'Inspected on site. Assigned to field crew with crane truck.', '-3 days');
+  await insStep.run(c2, 'execution', 'reviewing', fld.staff_id, fld.full_name, 'field', 'Work started on the ground', '-1 days');
+  await insHist.run(c2, 'junior_review', 'senior_review', 'Genuine issue confirmed.', j.full_name);
+  await insHist.run(c2, 'senior_review', 'mayor_review', 'Resources sanctioned.', s.full_name);
+  await insHist.run(c2, 'mayor_review', 'approved', 'Permission granted.', may.full_name);
+  await insHist.run(c2, 'approved', 'wit_review', 'Sent to WIT.', s.full_name);
+  await insHist.run(c2, 'wit_review', 'assigned', 'Crew assigned after inspection.', wit.full_name);
+  await insHist.run(c2, 'assigned', 'in_process', 'Field work started.', fld.full_name);
+  await markStage(c2, 'execution', 'field');
 }
 
 // #1 (senior_review) — junior approved, waiting on feasibility
 {
-  const j = staffByRole(A.dhakaSouth, 'junior');
-  insStep.run(c1, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-3 days');
-  insStep.run(c1, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Initial check passed. Real pothole, road patch needed.', '-2 days');
-  insHist.run(c1, 'junior_review', 'senior_review', 'Genuine pothole, needs repair.', j.full_name);
-  markStage(c1, 'senior_review', 'senior');
+  const j = await staffByRole(A.dhakaSouth, 'junior');
+  await insStep.run(c1, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-3 days');
+  await insStep.run(c1, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Initial check passed. Real pothole, road patch needed.', '-2 days');
+  await insHist.run(c1, 'junior_review', 'senior_review', 'Genuine pothole, needs repair.', j.full_name);
+  await markStage(c1, 'senior_review', 'senior');
 }
 
 // #7 (mayor_review) — junior + senior approved, waiting for permission
 {
-  const j = staffByRole(A.khulna, 'junior');
-  const s = staffByRole(A.khulna, 'senior');
-  insStep.run(c7, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-9 hours');
-  insStep.run(c7, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Gas smell confirmed by call. Forwarded to senior.', '-8 hours');
-  insStep.run(c7, 'senior_review', 'approved', s.staff_id, s.full_name, 'senior', 'Titas coordination arranged, safety budget available.', '-2 hours');
-  insHist.run(c7, 'junior_review', 'senior_review', 'Gas leak confirmed.', j.full_name);
-  insHist.run(c7, 'senior_review', 'mayor_review', 'Resources ready.', s.full_name);
-  markStage(c7, 'mayor_review', 'mayor');
+  const j = await staffByRole(A.khulna, 'junior');
+  const s = await staffByRole(A.khulna, 'senior');
+  await insStep.run(c7, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-9 hours');
+  await insStep.run(c7, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Gas smell confirmed by call. Forwarded to senior.', '-8 hours');
+  await insStep.run(c7, 'senior_review', 'approved', s.staff_id, s.full_name, 'senior', 'Titas coordination arranged, safety budget available.', '-2 hours');
+  await insHist.run(c7, 'junior_review', 'senior_review', 'Gas leak confirmed.', j.full_name);
+  await insHist.run(c7, 'senior_review', 'mayor_review', 'Resources ready.', s.full_name);
+  await markStage(c7, 'mayor_review', 'mayor');
 }
 
 // #3 (resolved) — completed chain
 {
-  const j = staffByRole(A.dhakaSouth, 'junior');
-  const s = staffByRole(A.dhakaSouth, 'senior');
-  const may = staffByRole(A.dhakaSouth, 'mayor');
-  const wit = staffByRole(A.dhakaSouth, 'wit');
-  const fld = staffByRole(A.dhakaSouth, 'field');
-  db.prepare('UPDATE complaints SET executor_staff_id = ?, executor_name = ?, assigned_staff_id = ? WHERE complaint_id = ?')
+  const j = await staffByRole(A.dhakaSouth, 'junior');
+  const s = await staffByRole(A.dhakaSouth, 'senior');
+  const may = await staffByRole(A.dhakaSouth, 'mayor');
+  const wit = await staffByRole(A.dhakaSouth, 'wit');
+  const fld = await staffByRole(A.dhakaSouth, 'field');
+  await db.prepare('UPDATE complaints SET executor_staff_id = ?, executor_name = ?, assigned_staff_id = ? WHERE complaint_id = ?')
     .run(fld.staff_id, fld.full_name, wit.staff_id, c3);
-  insStep.run(c3, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-12 days');
-  insStep.run(c3, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Blockage confirmed by locals.', '-11 days');
-  insStep.run(c3, 'senior_review', 'approved', s.staff_id, s.full_name, 'senior', 'Drain crew available this week.', '-10 days');
-  insStep.run(c3, 'mayor_review', 'approved', may.staff_id, may.full_name, 'mayor', 'Approved.', '-10 days');
-  insStep.run(c3, 'wit_inspection', 'pending', wit.staff_id, s.staff_id ? s.full_name : 'Senior Officer', 'senior', 'Sent to WIT.', '-9 days');
-  insStep.run(c3, 'assignment', 'assigned', wit.staff_id, wit.full_name, 'wit', 'Assigned to drain crew after inspection.', '-9 days');
-  insStep.run(c3, 'execution', 'resolved', fld.staff_id, fld.full_name, 'field', 'Drain cleared and re-cemented.', '-2 days');
-  insHist.run(c3, 'junior_review', 'senior_review', 'Genuine.', j.full_name);
-  insHist.run(c3, 'senior_review', 'mayor_review', 'Resources available.', s.full_name);
-  insHist.run(c3, 'mayor_review', 'approved', 'Permission granted.', may.full_name);
-  insHist.run(c3, 'approved', 'wit_review', 'Sent to WIT.', s.full_name);
-  insHist.run(c3, 'wit_review', 'assigned', 'Crew assigned.', wit.full_name);
-  insHist.run(c3, 'in_process', 'resolved', 'Drain cleared and re-cemented by city corporation crew.', fld.full_name);
-  markStage(c3, 'execution', null);
+  await insStep.run(c3, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-12 days');
+  await insStep.run(c3, 'junior_review', 'approved', j.staff_id, j.full_name, 'junior', 'Blockage confirmed by locals.', '-11 days');
+  await insStep.run(c3, 'senior_review', 'approved', s.staff_id, s.full_name, 'senior', 'Drain crew available this week.', '-10 days');
+  await insStep.run(c3, 'mayor_review', 'approved', may.staff_id, may.full_name, 'mayor', 'Approved.', '-10 days');
+  await insStep.run(c3, 'wit_inspection', 'pending', wit.staff_id, s.staff_id ? s.full_name : 'Senior Officer', 'senior', 'Sent to WIT.', '-9 days');
+  await insStep.run(c3, 'assignment', 'assigned', wit.staff_id, wit.full_name, 'wit', 'Assigned to drain crew after inspection.', '-9 days');
+  await insStep.run(c3, 'execution', 'resolved', fld.staff_id, fld.full_name, 'field', 'Drain cleared and re-cemented.', '-2 days');
+  await insHist.run(c3, 'junior_review', 'senior_review', 'Genuine.', j.full_name);
+  await insHist.run(c3, 'senior_review', 'mayor_review', 'Resources available.', s.full_name);
+  await insHist.run(c3, 'mayor_review', 'approved', 'Permission granted.', may.full_name);
+  await insHist.run(c3, 'approved', 'wit_review', 'Sent to WIT.', s.full_name);
+  await insHist.run(c3, 'wit_review', 'assigned', 'Crew assigned.', wit.full_name);
+  await insHist.run(c3, 'in_process', 'resolved', 'Drain cleared and re-cemented by city corporation crew.', fld.full_name);
+  await markStage(c3, 'execution', null);
 }
 
 // #4 (junior_review) — fresh, waiting for junior staff
 {
-  const j = staffByRole(A.savar, 'junior');
-  insStep.run(c4, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-1 days');
-  markStage(c4, 'junior_review', 'junior');
+  const j = await staffByRole(A.savar, 'junior');
+  await insStep.run(c4, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-1 days');
+  await markStage(c4, 'junior_review', 'junior');
 }
 // #8 (junior_review, Dhaka South) — fresh, waiting for the demo junior
 {
-  const j = staffByRole(A.dhakaSouth, 'junior');
-  insStep.run(c8, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-3 hours');
+  const j = await staffByRole(A.dhakaSouth, 'junior');
+  await insStep.run(c8, 'junior_review', 'pending', j.staff_id, 'AI Pipeline', 'system', 'Verified by agents — waiting for Junior Staff initial check', '-3 hours');
 }
 // #5 stays 'verified' (junior_review) — no steps yet
-db.prepare("UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior' WHERE complaint_id = (SELECT complaint_id FROM complaints WHERE title LIKE 'Tube well broken%')");
+await db.prepare("UPDATE complaints SET current_stage = 'junior_review', stage_owner_role = 'junior' WHERE complaint_id = (SELECT complaint_id FROM complaints WHERE title LIKE 'Tube well broken%')").run();
 
 // Demo notifications
 const insNotif = db.prepare(
   `INSERT INTO notifications (user_id, recipient_type, complaint_id, title, message) VALUES (?, ?, ?, ?, ?)`
 );
-insNotif.run(karim, 'citizen', c2, 'Problem solving started', 'The problem solving is in progress. Estimated time: 48 hours.');
-insNotif.run(joya, 'citizen', c3, 'Problem resolved', 'Your reported problem has been marked as DONE by the authority.');
-insNotif.run(karim, 'citizen', c7, 'Update on an issue you voted for', 'Gas leakage near Shiromoni point is awaiting Mayor approval at Khulna City Corporation.');
-insNotif.run(rahim, 'citizen', c1, 'Initial check passed', 'Your pothole complaint on Fuller Road passed the junior check and is now with Senior Staff.');
+await insNotif.run(karim, 'citizen', c2, 'Problem solving started', 'The problem solving is in progress. Estimated time: 48 hours.');
+await insNotif.run(joya, 'citizen', c3, 'Problem resolved', 'Your reported problem has been marked as DONE by the authority.');
+await insNotif.run(karim, 'citizen', c7, 'Update on an issue you voted for', 'Gas leakage near Shiromoni point is awaiting Mayor approval at Khulna City Corporation.');
+await insNotif.run(rahim, 'citizen', c1, 'Initial check passed', 'Your pothole complaint on Fuller Road passed the junior check and is now with Senior Staff.');
 
-const authCount = db.prepare('SELECT COUNT(*) n FROM authorities').get().n;
+const authCount = (await db.prepare('SELECT COUNT(*) AS n FROM authorities').get()).n;
 console.log('Nationwide seed complete (from bangladesh_local_government_units.json):');
-console.log(`  Authorities : ${authCount} (CC ${db.prepare("SELECT COUNT(*) n FROM authorities WHERE type='CITY_CORPORATION'").get().n} + Pouro ${db.prepare("SELECT COUNT(*) n FROM authorities WHERE type='POUROSHOVA'").get().n} + Union ${db.prepare("SELECT COUNT(*) n FROM authorities WHERE type='UNION_PARISHAD'").get().n})`);
-console.log(`  Staff       : ${db.prepare('SELECT COUNT(*) n FROM staff').get().n} (junior/senior/mayor/wit/field per authority, password: staff123)`);
+console.log(`  Authorities : ${authCount} (CC ${(await db.prepare("SELECT COUNT(*) AS n FROM authorities WHERE type='CITY_CORPORATION'").get()).n} + Pouro ${(await db.prepare("SELECT COUNT(*) AS n FROM authorities WHERE type='POUROSHOVA'").get()).n} + Union ${(await db.prepare("SELECT COUNT(*) AS n FROM authorities WHERE type='UNION_PARISHAD'").get()).n})`);
+console.log(`  Staff       : ${(await db.prepare('SELECT COUNT(*) AS n FROM staff').get()).n} (junior/senior/mayor/wit/field per authority, password: staff123)`);
 console.log('  Staff login : kamrul.city@nagorik.bd (junior) / senior.dhaka.2@nagorik.bd / mayor.dhaka.2@nagorik.bd / wit.dhaka.2@nagorik.bd / field.dhaka.2@nagorik.bd — password staff123');
 console.log('  Citizens    : rahim@example.com / karima@example.com / joya@example.com  (password: password123)');
 console.log(`  Services    : ${services.length} emergency services (osmium extracts)`);
-console.log(`  Complaints  : ${db.prepare('SELECT COUNT(*) n FROM complaints').get().n} (across all workflow stages)`);
+console.log(`  Complaints  : ${(await db.prepare('SELECT COUNT(*) AS n FROM complaints').get()).n} (across all workflow stages)`);
+
+await closeDb();
+process.exit(0);

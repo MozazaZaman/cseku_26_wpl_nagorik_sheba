@@ -10,6 +10,7 @@ import Footer from './components/Footer.jsx';
 import Landing from './pages/Landing.jsx';
 import Explore from './pages/Explore.jsx';
 import Emergency from './pages/Emergency.jsx';
+import Analysis from './pages/Analysis.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
@@ -19,8 +20,15 @@ import Dashboard from './pages/Dashboard.jsx';
 import Submit from './pages/Submit.jsx';
 import ComplaintDetail from './pages/ComplaintDetail.jsx';
 import StaffDashboard from './pages/StaffDashboard.jsx';
+import StaffAdmin from './pages/StaffAdmin.jsx';
 import PublicReviews from './pages/PublicReviews.jsx';
 import TeamBadges from './pages/TeamBadges.jsx';
+import Billing from './pages/Billing.jsx';
+import InvoiceView from './pages/InvoiceView.jsx';
+import BillingReturn from './pages/BillingReturn.jsx';
+import Onboarding from './pages/Onboarding.jsx';
+import StaffJoin from './pages/StaffJoin.jsx';
+import SuperAdmin from './pages/SuperAdmin.jsx';
 import Leaderboard from './pages/Leaderboard.jsx';
 import FAQ from './pages/FAQ.jsx';
 import AboutUs from './pages/AboutUs.jsx';
@@ -38,6 +46,7 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/explore" element={<Explore />} />
               <Route path="/emergency" element={<Emergency />} />
+              <Route path="/analysis" element={<Analysis />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -50,8 +59,15 @@ export default function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/staff" element={<StaffDashboard />} />
+              <Route path="/staff-admin" element={<StaffAdmin />} />
               <Route path="/staff/reviews" element={<PublicReviews />} />
               <Route path="/staff/team-badges" element={<TeamBadges />} />
+              <Route path="/billing" element={<Billing />} />
+              <Route path="/billing/invoices/:id" element={<InvoiceView />} />
+              <Route path="/billing/payment/:id/return" element={<BillingReturn />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/staff-join" element={<StaffJoin />} />
+              <Route path="/superadmin" element={<SuperAdmin />} />
             </Routes>
           </AnimatePresence>
           <Footer />

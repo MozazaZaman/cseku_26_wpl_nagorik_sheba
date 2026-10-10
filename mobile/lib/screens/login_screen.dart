@@ -8,6 +8,7 @@ import '../auth_provider.dart';
 import '../api_service.dart';
 import '../config.dart';
 import '../i18n.dart';
+import '../navigation.dart';
 import '../theme.dart';
 import '../widgets/camera_capture.dart';
 import '../widgets/widgets.dart';
@@ -36,9 +37,11 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await context.read<AuthProvider>().login(_email.text.trim(), _password.text);
       if (!mounted) return;
+      // Single destination rule: super admins land on their console.
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeShell(initialTab: 0)),
+        MaterialPageRoute(
+            builder: (_) => homeForRole(context.read<AuthProvider>().user)),
       );
     } on ApiException catch (e) {
       setState(() => error = e.message);

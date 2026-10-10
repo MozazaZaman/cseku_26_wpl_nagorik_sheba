@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api, fmtDate } from '../lib/api';
+import { api, fmtDate, CATEGORIES } from '../lib/api';
 import { useAuth } from '../store/auth.jsx';
 import { useLang, categoryLabel } from '../lib/i18n.jsx';
 import { SATISFACTION_TIERS, tierByScore } from '../lib/satisfaction.js';
 
-const CAT_ICONS = { road: '🛣️', electricity: '⚡', water: '💧', gas: '🔥', sanitation: '🧹', other: '📌' };
+const CAT_ICONS = { road: '🛣️', electricity: '⚡', water: '💧', gas: '🔥', sanitation: '🧹', encroachment: '🚧', environment: '🌿', public_assets: '🏞️', animals: '🐕', markets: '🏪', drugs: '💊', other: '📌' };
 
 /**
  * Mayor/Chairman "Public Reviews" — the single feedback view for their office.
@@ -25,13 +25,14 @@ export default function PublicReviews() {
   const { t } = useLang();
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
+  const [cat, setCat] = useState('all');
 
   useEffect(() => {
     if (user?.role !== 'staff' || user.staff_role !== 'mayor') return;
-    api.get('/complaints/staff/reviews')
+    api.get('/complaints/staff/reviews', { params: cat === 'all' ? {} : { category: cat } })
       .then(({ data }) => setData(data))
       .catch((e) => setErr(e.response?.data?.error || 'Failed to load public reviews'));
-  }, [user]);
+  }, [user, cat]);
 
   if (!user || user.role !== 'staff' || user.staff_role !== 'mayor') {
     return (
@@ -68,6 +69,20 @@ export default function PublicReviews() {
 
         {data && (
           <>
+            {/* Category filter — heads see reviews category-wise */}
+            <div className="mt-6 flex flex-wrap gap-2">
+              <button onClick={() => setCat('all')}
+                className={`chip ${cat === 'all' ? 'chip-active' : 'chip-idle'}`}>
+                {t('exp.all')}
+              </button>
+              {CATEGORIES.filter((c) => c.key !== 'other').map((c) => (
+                <button key={c.key} onClick={() => setCat(c.key)}
+                  className={`chip ${cat === c.key ? 'chip-active' : 'chip-idle'}`}>
+                  {c.icon} {categoryLabel(c.key, t)}
+                </button>
+              ))}
+            </div>
+
             {/* Aggregate: average + counts */}
             <div className="mt-6 flex flex-wrap items-end gap-8">
               <div>

@@ -55,8 +55,8 @@ export function requireMayor(req, res, next) {
   next();
 }
 
-export function getStaffFromAuth(authId) {
-  return db.prepare(
+export async function getStaffFromAuth(authId) {
+  return await db.prepare(
     `SELECT s.staff_id, s.full_name, s.email, s.department,
             a.authority_id, a.name AS authority_name, a.type AS authority_type
      FROM staff s JOIN authorities a ON a.authority_id = s.authority_id

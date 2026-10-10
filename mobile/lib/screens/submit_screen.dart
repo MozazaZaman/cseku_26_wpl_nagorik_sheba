@@ -259,7 +259,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
 
   Future<void> _geocode() async {
     final lang = context.read<Lang>();
-    if (division == null || district == null || authorityId == null || _road.text.isEmpty ||
+    if (division == null || district == null || authorityId == null ||
         (isUnion && (_village.text.isEmpty || _upazila.text.isEmpty))) {
       setState(() => error = lang.t('sub.completeFields'));
       return;
@@ -300,7 +300,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
   }
 
   bool _addressValid() =>
-      division != null && district != null && authorityId != null && _road.text.isNotEmpty &&
+      division != null && district != null && authorityId != null &&
       (!isUnion || (_village.text.isNotEmpty && _upazila.text.isNotEmpty));
 
   Future<void> _submit() async {
@@ -497,7 +497,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
                 style: TextStyle(color: NSColors.accent, fontSize: 12.5, fontWeight: FontWeight.w800),
                 items: [
                   DropdownMenuItem(value: 'auto', child: Text(lang.t('sub.catAuto'))),
-                  ...['road', 'electricity', 'water', 'gas', 'sanitation', 'other']
+                  ...['road', 'electricity', 'water', 'gas', 'sanitation', 'encroachment', 'environment', 'public_assets', 'animals', 'markets', 'drugs', 'other']
                       .map((k) => DropdownMenuItem(value: k, child: Text(lang.t('cat.$k')))),
                 ],
                 onChanged: (v) => setState(() => categoryHint = v!),

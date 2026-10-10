@@ -1,0 +1,202 @@
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+Initial badge sweep failed: UNIQUE constraint failed: staff_badges.staff_id, staff_badges.badge_type, staff_badges.period_start, staff_badges.period_end
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\@tensorflow\tfjs-backend-wasm\dist\tf-backend-wasm.node.js:8597
+                    throw ex;
+                    ^
+
+Error: listen EADDRINUSE: address already in use :::5000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\express\lib\application.js:635:24)
+    at file:///D:/nagorik-sheba-large-update/nagorik-sheba/server/src/index.js:410:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 5000
+}
+
+Node.js v22.17.0
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\@tensorflow\tfjs-backend-wasm\dist\tf-backend-wasm.node.js:8597
+                    throw ex;
+                    ^
+
+Error: listen EADDRINUSE: address already in use :::5000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\express\lib\application.js:635:24)
+    at file:///D:/nagorik-sheba-large-update/nagorik-sheba/server/src/index.js:410:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 5000
+}
+
+Node.js v22.17.0
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\@tensorflow\tfjs-backend-wasm\dist\tf-backend-wasm.node.js:8597
+                    throw ex;
+                    ^
+
+Error: listen EADDRINUSE: address already in use :::5000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\express\lib\application.js:635:24)
+    at file:///D:/nagorik-sheba-large-update/nagorik-sheba/server/src/index.js:410:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 5000
+}
+
+Node.js v22.17.0
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+file:///D:/nagorik-sheba-large-update/nagorik-sheba/server/src/routes/billing.js:105
+router.get\('/registrations', requireAuth, requireStaff, requireOrgAccess({ allow: ['admin'] }), (req, res) => {
+       ^^^^
+
+SyntaxError: Invalid or unexpected token
+    at compileSourceTextModule (node:internal/modules/esm/utils:344:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18)
+    at #translate (node:internal/modules/esm/loader:534:12)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27)
+
+Node.js v22.17.0
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\@tensorflow\tfjs-backend-wasm\dist\tf-backend-wasm.node.js:8597
+                    throw ex;
+                    ^
+
+Error: listen EADDRINUSE: address already in use :::5000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\express\lib\application.js:635:24)
+    at file:///D:/nagorik-sheba-large-update/nagorik-sheba/server/src/index.js:410:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 5000
+}
+
+Node.js v22.17.0
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+◇ injected env (1) from .env
+D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\@tensorflow\tfjs-backend-wasm\dist\tf-backend-wasm.node.js:8597
+                    throw ex;
+                    ^
+
+Error: listen EADDRINUSE: address already in use :::5000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at Function.listen (D:\nagorik-sheba-large-update\nagorik-sheba\server\node_modules\express\lib\application.js:635:24)
+    at file:///D:/nagorik-sheba-large-update/nagorik-sheba/server/src/index.js:410:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 5000
+}
+
+Node.js v22.17.0
+◇ injected env (1) from .env

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../store/auth.jsx';
+import { useAuth, destinationFor } from '../store/auth.jsx';
 import { useLang } from '../lib/i18n.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 
@@ -20,7 +20,7 @@ export default function Login() {
     setBusy(true);
     try {
       const user = await login(form.email, form.password);
-      nav(user.role === 'staff' ? '/staff' : loc.state?.from || '/dashboard');
+      nav(destinationFor(user, loc.state?.from || '/dashboard'));
     } catch (e2) {
       setErr(e2.response?.data?.error || 'Login failed');
     } finally {

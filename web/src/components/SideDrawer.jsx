@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../store/auth.jsx';
+import { useAuth, destinationFor } from '../store/auth.jsx';
 import { useLang, fullRoleTitle } from '../lib/i18n.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 
@@ -12,13 +12,16 @@ import ThemeToggle from './ThemeToggle.jsx';
 const MOBILE_LINKS = [
   { to: '/explore', label: 'nav.explore' },
   { to: '/emergency', label: 'nav.emergency' },
+  { to: '/analysis', label: 'nav.analysis' },
   { to: '/dashboard', label: 'nav.dashboard', auth: 'citizen' }
 ];
 
 // Staff console was removed from the top bar to keep it uncluttered; staff
 // reach it here instead. Shown at every breakpoint for staff accounts.
 const STAFF_LINKS = [
-  { to: '/staff', label: 'nav.staff' }
+  { to: '/staff', label: 'nav.staff' },
+  { to: '/billing', label: 'nav.billing', roles: ['mayor', 'admin'] },
+  { to: '/staff-admin', label: 'nav.staffAdmin', roles: ['admin'] }
 ];
 
 const MORE_LINKS = [
@@ -38,9 +41,10 @@ function initialsOf(name) {
 }
 
 export default function SideDrawer({ open, onClose }) {
-  const { user, logout } = useAuth();
+  const { user, logout, switchMode } = useAuth();
   const { t, toggle, lang } = useLang();
   const nav = useNavigate();
+  const [switching, setSwitching] = useState(false);
 
   const canSee = (l) => !l.auth || user?.role === l.auth;
 
@@ -115,6 +119,7 @@ export default function SideDrawer({ open, onClose }) {
 
             <div className="flex-1 overflow-y-auto px-3 py-4">
               {user ? (
+                <>
                 <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent3 text-base font-bold text-white">
                     {initialsOf(user.name) || '?'}
@@ -124,6 +129,27 @@ export default function SideDrawer({ open, onClose }) {
                     <p className="mt-0.5 text-xs text-slate-400">{fullRoleTitle(user, t)}</p>
                   </div>
                 </div>
+                {(user.role === 'super_admin' || user.is_system_admin) && (
+                  <button
+                    type="button"
+                    disabled={switching}
+                    onClick={async () => {
+                      setSwitching(true);
+                      try {
+                        // Use the FRESHLY returned user (not the stale closure)
+                        // and land through the single destination rule.
+                        const next = await switchMode(user.role === 'super_admin' ? 'citizen' : 'admin');
+                        onClose();
+                        nav(destinationFor(next, '/'));
+                      } catch {}
+                      setSwitching(false);
+                    }}
+                    className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-violet-400/40 bg-violet-500/10 px-3 py-2.5 text-sm font-bold text-violet-200 transition hover:bg-violet-500/20 disabled:opacity-60"
+                  >
+                    🔀 {user.role === 'super_admin' ? t('auth.switchCitizen') : t('auth.switchAdmin')}
+                  </button>
+                )}
+                </>
               ) : (
                 <div className="mb-4 flex gap-2">
                   <button type="button" onClick={() => go('/login')} className="btn-ghost flex-1">{t('nav.login')}</button>
@@ -143,7 +169,7 @@ export default function SideDrawer({ open, onClose }) {
 
               {user?.role === 'staff' && (
                 <div className="mt-4">
-                  {STAFF_LINKS.map((l) => (
+                  {STAFF_LINKS.filter((l) => !l.roles || l.roles.includes(user.staff_role)).map((l) => (
                     <button key={l.to} type="button" onClick={() => go(l.to)} className={linkClass}>
                       {t(l.label)}
                     </button>

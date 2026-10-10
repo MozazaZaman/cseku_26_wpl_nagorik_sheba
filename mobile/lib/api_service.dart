@@ -63,6 +63,11 @@ class ApiService {
     return _check(await http.get(Uri.parse('$kApiBase$path'), headers: _headers));
   }
 
+  dynamic rawPost(String path, Map<String, dynamic> body) async {
+    return _check(await http.post(Uri.parse('$kApiBase$path'),
+        headers: _headers, body: jsonEncode(body)));
+  }
+
   // ---------- Auth ----------
   Future<User> registerWithFace({
     required String name,
@@ -359,6 +364,19 @@ class ApiService {
     return b as Map<String, dynamic>;
   }
 
+  /// Monthly reported-vs-solved per category + hottest place per category.
+  /// Citizens default to overall; staff pass their authority_id (or a custom
+  /// division/district) — mirrors the web Analysis Issues page.
+  Future<Map<String, dynamic>> categoryTrends(
+      {int? authorityId, String? division, String? district, int months = 12}) async {
+    final params = <String, String>{'months': '$months'};
+    if (authorityId != null) params['authority_id'] = '$authorityId';
+    if (division != null && division.isNotEmpty) params['division'] = division;
+    if (district != null && district.isNotEmpty) params['district'] = district;
+    final uri = Uri.parse('$kApiBase/analytics/category-trends').replace(queryParameters: params);
+    return _check(await http.get(uri, headers: _headers)) as Map<String, dynamic>;
+  }
+
   // ---------- Notifications ----------
   Future<int> unreadCount() async {
     final b = _check(await http.get(Uri.parse('$kApiBase/notifications/unread-count'), headers: _headers));
@@ -408,8 +426,10 @@ class ApiService {
     return (b['team'] as List? ?? []);
   }
 
-  Future<Map<String, dynamic>> staffReviews() async {
-    final b = _check(await http.get(Uri.parse('$kApiBase/complaints/staff/reviews'), headers: _headers));
+  Future<Map<String, dynamic>> staffReviews({String category = 'all'}) async {
+    final uri = Uri.parse('$kApiBase/complaints/staff/reviews')
+        .replace(queryParameters: category == 'all' ? {} : {'category': category});
+    final b = _check(await http.get(uri, headers: _headers));
     return b as Map<String, dynamic>;
   }
 
@@ -441,5 +461,162 @@ class ApiService {
   Future<void> resetPassword(String token, String password) async {
     _check(await http.post(Uri.parse('$kApiBase/auth/reset-password'),
         headers: _headers, body: jsonEncode({'reset_token': token, 'password': password})));
+  }
+
+  // ---------- Institutional billing (LGI subscriptions & licenses) ----------
+  Future<Map<String, dynamic>> billingSummary() async {
+    return _check(await http.get(Uri.parse('$kApiBase/billing/summary'), headers: _headers))
+        as Map<String, dynamic>;
+  }
+
+  Future<List<dynamic>> seatRequests() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/billing/seat-requests'), headers: _headers));
+    return (b['seat_requests'] as List? ?? []);
+  }
+
+  Future<Map<String, dynamic>> createSeatRequest({required int quantity, String reason = ''}) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/billing/seat-requests'),
+        headers: _headers, body: jsonEncode({'quantity': quantity, 'reason': reason})));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<void> seatRequestTransition(int id, String action) async {
+    // action: submit | approve | reject | cancel
+    _check(await http.post(Uri.parse('$kApiBase/billing/seat-requests/$id/$action'),
+        headers: _headers, body: jsonEncode({})));
+  }
+
+  Future<List<dynamic>> billingRegistrations({String status = 'pending'}) async {
+    final uri = Uri.parse('$kApiBase/billing/registrations').replace(queryParameters: {'status': status});
+    final b = _check(await http.get(uri, headers: _headers));
+    return (b['registrations'] as List? ?? []);
+  }
+
+  Future<void> registrationTransition(int id, String action, {String? password, String? reason}) async {
+    // action: verify | approve | reject | activate
+    _check(await http.post(Uri.parse('$kApiBase/billing/registrations/$id/$action'),
+        headers: _headers,
+        body: jsonEncode({if (password != null) 'password': password, if (reason != null) 'reason': reason})));
+  }
+
+  Future<List<dynamic>> billingInvoices() async {
+    // summary payload carries recent invoices; full list via dedicated route
+    final b = await billingSummary();
+    return ((b['recent_invoices'] as List?) ?? []) ;
+  }
+
+  Future<Map<String, dynamic>> invoiceDetail(int id) async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/billing/invoices/$id'), headers: _headers));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> billingCheckout(int invoiceId) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/billing/checkout'),
+        headers: _headers, body: jsonEncode({'invoice_id': invoiceId})));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> billingPayment(int id) async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/billing/payments/$id'), headers: _headers));
+    return (b as Map<String, dynamic>)['payment'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> billingReconcile(int id) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/billing/payments/$id/reconcile'),
+        headers: _headers, body: jsonEncode({})));
+    return b as Map<String, dynamic>;
+  }
+
+  /// Manual settlement evidence (bank / bKash / Nagad / Rocket demo receipt).
+  Future<void> uploadReceipt({
+    required int invoiceId,
+    required String reference,
+    required String method,
+    String senderAccount = '',
+    File? image,
+  }) async {
+    final req = http.MultipartRequest('POST', Uri.parse('$kApiBase/billing/manual-evidence'))
+      ..headers.addAll(_headers)
+      ..fields['invoice_id'] = '$invoiceId'
+      ..fields['reference'] = reference
+      ..fields['method'] = method
+      ..fields['sender_account'] = senderAccount;
+    if (image != null) {
+      req.files.add(await http.MultipartFile.fromPath('receipt', image.path));
+    }
+    final streamed = await req.send();
+    final r = await http.Response.fromStream(streamed);
+    final b = _decode(r);
+    if (r.statusCode >= 400) {
+      throw ApiException(r.statusCode, b is Map ? (b as Map<String, dynamic>) : <String, dynamic>{});
+    }
+  }
+
+  Future<Map<String, dynamic>> billingRenew(int subscriptionId) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/billing/subscriptions/$subscriptionId/renew'),
+        headers: _headers, body: jsonEncode({})));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> staffJoinRequest({
+    required int authorityId,
+    required String name,
+    required String email,
+    String phone = '',
+    String role = 'junior',
+    String department = 'general',
+    String employeeRef = '',
+  }) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/billing/staff-requests'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'authority_id': authorityId, 'full_name': name, 'email': email,
+          'phone': phone, 'staff_role_requested': role, 'department': department,
+          'employee_ref': employeeRef,
+        })));
+    return b as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> billingAnalytics() async {
+    return _check(await http.get(Uri.parse('$kApiBase/billing/analytics/summary'), headers: _headers))
+        as Map<String, dynamic>;
+  }
+
+  // ---------- LGI staff administration (Technical Admin + Mayor) ----------
+  Future<List<dynamic>> billingStaffDirectory() async {
+    final b = _check(await http.get(Uri.parse('$kApiBase/billing/staff'), headers: _headers));
+    return (b['staff'] as List? ?? []);
+  }
+
+  Future<Map<String, dynamic>> createStaffAccount({
+    required String name,
+    required String email,
+    required String password,
+    required String role,
+    String department = 'general',
+  }) async {
+    final b = _check(await http.post(Uri.parse('$kApiBase/billing/staff'),
+        headers: _headers,
+        body: jsonEncode({
+          'full_name': name, 'email': email, 'password': password,
+          'staff_role': role, 'department': department,
+        })));
+    return (b as Map<String, dynamic>)['staff'] as Map<String, dynamic>;
+  }
+
+  Future<void> updateStaffAccount(int id, {String? role, String? department}) async {
+    _check(await http.patch(Uri.parse('$kApiBase/billing/staff/$id'),
+        headers: _headers,
+        body: jsonEncode({if (role != null) 'staff_role': role, if (department != null) 'department': department})));
+  }
+
+  Future<void> resetStaffPassword(int id, String password) async {
+    _check(await http.post(Uri.parse('$kApiBase/billing/staff/$id/reset-password'),
+        headers: _headers, body: jsonEncode({'password': password})));
+  }
+
+  Future<void> setStaffActive(int id, bool active) async {
+    _check(await http.post(Uri.parse('$kApiBase/billing/staff/$id/${active ? 'reactivate' : 'deactivate'}'),
+        headers: _headers, body: jsonEncode({})));
   }
 }

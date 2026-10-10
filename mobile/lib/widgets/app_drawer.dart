@@ -3,12 +3,16 @@ import 'package:provider/provider.dart';
 
 import '../auth_provider.dart';
 import '../i18n.dart';
+import '../navigation.dart';
 import '../theme.dart';
 import '../widgets/widgets.dart';
 import '../screens/about_screen.dart';
+import '../screens/analysis_screen.dart';
+import '../screens/billing_screen.dart';
 import '../screens/faq_screen.dart';
 import '../screens/leaderboard_screen.dart';
 import '../screens/login_screen.dart';
+import '../screens/staff_admin_screen.dart';
 import '../screens/staff_badges_screen.dart';
 import '../screens/staff_reviews_screen.dart';
 import '../screens/landing_screen.dart';
@@ -99,6 +103,10 @@ class AppDrawer extends StatelessWidget {
               close();
               Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen()));
             }),
+            _tile(context, Icons.analytics_rounded, lang.t('menu.analysis'), () {
+              close();
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalysisScreen()));
+            }),
             _tile(context, Icons.quiz_rounded, lang.t('menu.faq'), () {
               close();
               Navigator.push(context, MaterialPageRoute(builder: (_) => const FaqScreen()));
@@ -116,6 +124,18 @@ class AppDrawer extends StatelessWidget {
                 close();
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffBadgesScreen()));
               }, iconColor: NSColors.amber),
+              if (user.staffRole == 'mayor' || user.staffRole == 'admin') ...[
+                _tile(context, Icons.receipt_long_rounded, lang.t('menu.billing'), () {
+                  close();
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const BillingScreen()));
+                }, iconColor: NSColors.mint),
+              ],
+              if (user.staffRole == 'admin') ...[
+                _tile(context, Icons.manage_accounts_rounded, lang.t('menu.staffAdmin'), () {
+                  close();
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffAdminScreen()));
+                }, iconColor: NSColors.accent2),
+              ],
               if (isMayor) ...[
                 _tile(context, Icons.reviews_rounded, lang.t('menu.reviews'), () {
                   close();
@@ -155,6 +175,24 @@ class AppDrawer extends StatelessWidget {
 
             const SizedBox(height: 8),
             // ---- Account ----
+            // Dual-mode switch for the platform owner (citizen ⇄ super admin).
+            // After switching, land through the single destination rule.
+            if (user != null && (user.role == 'super_admin' || user.isSystemAdmin))
+              _tile(context, Icons.swap_horiz_rounded,
+                  user.role == 'super_admin' ? lang.t('auth.switchCitizen') : lang.t('auth.switchAdmin'),
+                  () async {
+                final toAdmin = user.role != 'super_admin';
+                close();
+                try {
+                  await auth.switchMode(toAdmin ? 'admin' : 'citizen');
+                } catch (_) {}
+                if (!context.mounted) return;
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => homeForRole(context.read<AuthProvider>().user)),
+                    (_) => false);
+              }, iconColor: NSColors.accent2),
             if (user != null)
               _tile(context, Icons.logout_rounded, lang.t('menu.logout'), () async {
                 close();
@@ -163,11 +201,12 @@ class AppDrawer extends StatelessWidget {
                 Navigator.pushAndRemoveUntil(
                     context, MaterialPageRoute(builder: (_) => const LoginScreen()), (_) => false);
               }, danger: true)
-            else
+            else ...[
               _tile(context, Icons.login_rounded, lang.t('menu.login'), () {
                 close();
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
               }, iconColor: NSColors.mint),
+            ],
           ],
         ),
       ),

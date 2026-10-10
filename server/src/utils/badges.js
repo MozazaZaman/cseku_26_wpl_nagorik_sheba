@@ -64,7 +64,8 @@ const STEP_STAGE_TO_SLA_STAGE = {
 
 export const ROLLING_BADGE_TYPES = ['volume', 'satisfaction', 'sla', 'accuracy'];
 export const MILESTONE_BADGE_TYPES = ['first10', 'century', 'veteran'];
-export const SPECIALIST_BADGE_TYPES = ['road', 'electricity', 'water', 'gas', 'sanitation']
+export const SPECIALIST_BADGE_TYPES = ['road', 'electricity', 'water', 'gas', 'sanitation',
+  'encroachment', 'environment', 'public_assets', 'animals', 'markets', 'drugs']
   .map((c) => `specialist_${c}`);
 
 /* ------------------------------------------------------------------ *
@@ -76,7 +77,7 @@ export const SPECIALIST_BADGE_TYPES = ['road', 'electricity', 'water', 'gas', 's
  * Returns rows of { staff_id, complaint_id, category, satisfaction_score,
  * resolved_at, priority_score, authority_id }.
  */
-function creditedResolutions({ since } = {}) {
+async function creditedResolutions({ since } = {}) {
   const rows = db.prepare(
     `SELECT ws.actor_staff_id AS staff_id,
             c.complaint_id, c.category, c.satisfaction_score, c.resolved_at,
@@ -93,15 +94,15 @@ function creditedResolutions({ since } = {}) {
   );
   const args = [...CREDITED_ACTIONS];
   if (since) args.push(since);
-  return rows.all(...args);
+  return await rows.all(...args);
 }
 
 /** Complaint ids that were disputed / reopened at any point (negative signal). */
-function reopenedComplaintIds() {
-  const a = db.prepare("SELECT DISTINCT complaint_id FROM workflow_steps WHERE action = 'returned'")
-    .all().map((r) => r.complaint_id);
-  const b = db.prepare("SELECT DISTINCT complaint_id FROM status_history WHERE old_status = 'resolved'")
-    .all().map((r) => r.complaint_id);
+async function reopenedComplaintIds() {
+  const a = (await db.prepare("SELECT DISTINCT complaint_id FROM workflow_steps WHERE action = 'returned'")
+    .all()).map((r) => r.complaint_id);
+  const b = (await db.prepare("SELECT DISTINCT complaint_id FROM status_history WHERE old_status = 'resolved'")
+    .all()).map((r) => r.complaint_id);
   return new Set([...a, ...b]);
 }
 
@@ -112,7 +113,7 @@ function reopenedComplaintIds() {
  * complaint creation for the first step) and the deadline is that moment
  * plus effectiveSlaDays(stage, priority).
  */
-function creditedStepTiming({ since } = {}) {
+async function creditedStepTiming({ since } = {}) {
   const rows = db.prepare(
     `SELECT ws.actor_staff_id AS staff_id,
             ws.step_id, ws.stage, ws.action, ws.created_at AS acted_at,
@@ -134,7 +135,7 @@ function creditedStepTiming({ since } = {}) {
   );
   const args = [...CREDITED_ACTIONS];
   if (since) args.push(since);
-  return rows.all(...args);
+  return await rows.all(...args);
 }
 
 /* ------------------------------------------------------------------ *
@@ -155,23 +156,23 @@ function earnedTier(thresholds, value) {
  * and a tier change overwrites the old row rather than stacking history.
  * The insert is unconditional (tier is NULL for the tierless specialist).
  */
-function replaceRollingBadge({ staff_id, badge_type, tier, period_start, period_end }) {
-  db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
+async function replaceRollingBadge({ staff_id, badge_type, tier, period_start, period_end }) {
+  await db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
     .run(staff_id, badge_type);
-  db.prepare(
+  await db.prepare(
     `INSERT INTO staff_badges (staff_id, badge_type, tier, period_start, period_end)
      VALUES (?, ?, ?, ?, ?)`
   ).run(staff_id, badge_type, tier, period_start, period_end);
 }
 
 /** Milestones are permanent: insert only if not already awarded. */
-function awardMilestone({ staff_id, badge_type }) {
-  const existing = db.prepare(
+async function awardMilestone({ staff_id, badge_type }) {
+  const existing = await db.prepare(
     `SELECT 1 FROM staff_badges
       WHERE staff_id = ? AND badge_type = ? AND period_end IS NULL`
   ).get(staff_id, badge_type);
   if (existing) return false;
-  db.prepare(
+  await db.prepare(
     `INSERT INTO staff_badges (staff_id, badge_type, tier, period_start, period_end)
      VALUES (?, ?, NULL, NULL, NULL)`
   ).run(staff_id, badge_type);
@@ -227,7 +228,7 @@ function aggregateStaff(rows, reopened) {
  * (falls back to role + division for sparse districts), among eligible
  * peers only. top 5% gold / top 15% silver / top 30% bronze.
  */
-function computeVolumeBadges(eligible, staffMeta, period_start, period_end) {
+async function computeVolumeBadges(eligible, staffMeta, period_start, period_end) {
   if (eligible.size === 0) return;
 
   // Attach role + geography to each eligible staff member.
@@ -274,12 +275,12 @@ function computeVolumeBadges(eligible, staffMeta, period_start, period_end) {
       else if (pct >= VOLUME_SILVER_PCT) tier = 'silver';
       else if (pct >= VOLUME_BRONZE_PCT) tier = 'bronze';
       if (tier) {
-        replaceRollingBadge({
+        await replaceRollingBadge({
           staff_id: s.staff_id, badge_type: 'volume', tier, period_start, period_end
         });
       } else {
         // below the bronze cut-off: no badge this period (neutral)
-        db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
+        await db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
           .run(s.staff_id, 'volume');
       }
     }
@@ -287,16 +288,16 @@ function computeVolumeBadges(eligible, staffMeta, period_start, period_end) {
 }
 
 /** b) SATISFACTION — threshold tiers over rated complaints only. */
-function computeSatisfactionBadges(byStaff, period_start, period_end) {
+async function computeSatisfactionBadges(byStaff, period_start, period_end) {
   for (const s of byStaff.values()) {
     if (s.rated < MIN_RATED) {
-      db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
+      await db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
         .run(s.staff_id, 'satisfaction');
       continue;
     }
     const avg = s.satSum / s.rated;
     const tier = earnedTier(SAT_TIERS, avg);
-    replaceRollingBadge({
+    await replaceRollingBadge({
       staff_id: s.staff_id, badge_type: 'satisfaction', tier, period_start, period_end
     });
   }
@@ -305,7 +306,7 @@ function computeSatisfactionBadges(byStaff, period_start, period_end) {
 /** c) SLA COMPLIANCE — % of credited actions taken within the stage budget.
  *  Each complaint counts once per staff member, using the earliest credited
  *  action on it (a disputed-then-re-resolved complaint is one measurement). */
-function computeSlaBadges(timing, period_start, period_end) {
+async function computeSlaBadges(timing, period_start, period_end) {
   const byStaff = new Map();
   for (const t of timing) {
     let s = byStaff.get(t.staff_id);
@@ -327,30 +328,30 @@ function computeSlaBadges(timing, period_start, period_end) {
       if (acted <= deadline) s.onTime += 1;
     }
     if (s.total < MIN_RESOLVED) {
-      db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
+      await db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
         .run(s.staff_id, 'sla');
       continue;
     }
     const pct = (s.onTime / s.total) * 100;
     const tier = earnedTier(SLA_TIERS, pct);
-    replaceRollingBadge({
+    await replaceRollingBadge({
       staff_id: s.staff_id, badge_type: 'sla', tier, period_start, period_end
     });
   }
 }
 
 /** d) ACCURACY — % of credited resolutions never disputed / reopened. */
-function computeAccuracyBadges(byStaff, period_start, period_end) {
+async function computeAccuracyBadges(byStaff, period_start, period_end) {
   for (const s of byStaff.values()) {
     if (s.resolved < MIN_RESOLVED) {
-      db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
+      await db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
         .run(s.staff_id, 'accuracy');
       continue;
     }
     const ok = s.resolved - s.reopenedCount;
     const pct = (ok / s.resolved) * 100;
     const tier = earnedTier(ACC_TIERS, pct);
-    replaceRollingBadge({
+    await replaceRollingBadge({
       staff_id: s.staff_id, badge_type: 'accuracy', tier, period_start, period_end
     });
   }
@@ -361,7 +362,7 @@ function computeAccuracyBadges(byStaff, period_start, period_end) {
  * 20+ resolved in a single category AND a 4.0+ satisfaction average there.
  * Multiple categories can be held at once; each is re-evaluated per period.
  */
-function computeSpecialistBadges(eligible, period_start, period_end) {
+async function computeSpecialistBadges(eligible, period_start, period_end) {
   for (const s of eligible.values()) {
     for (const [category, c] of s.byCategory) {
       if (!SPECIALIST_BADGE_TYPES.includes(`specialist_${category}`)) continue;
@@ -369,11 +370,11 @@ function computeSpecialistBadges(eligible, period_start, period_end) {
       const qualifies = c.resolved >= MIN_CATEGORY_RESOLVED && avg != null && avg >= MIN_CATEGORY_SAT;
       const badge_type = `specialist_${category}`;
       if (qualifies) {
-        replaceRollingBadge({
+        await replaceRollingBadge({
           staff_id: s.staff_id, badge_type, tier: null, period_start, period_end
         });
       } else {
-        db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
+        await db.prepare('DELETE FROM staff_badges WHERE staff_id = ? AND badge_type = ?')
           .run(s.staff_id, badge_type);
       }
     }
@@ -385,19 +386,19 @@ function computeSpecialistBadges(eligible, period_start, period_end) {
  * ------------------------------------------------------------------ */
 
 /** Staff ids with a credited action on a given complaint. */
-function contributorsForComplaint(complaintId) {
-  return db.prepare(
+async function contributorsForComplaint(complaintId) {
+  return (await db.prepare(
     `SELECT DISTINCT actor_staff_id AS staff_id
        FROM workflow_steps
       WHERE complaint_id = ?
         AND action IN (${CREDITED_ACTIONS.map(() => '?').join(',')})
         AND actor_staff_id IS NOT NULL`
-  ).all(complaintId, ...CREDITED_ACTIONS).map((r) => r.staff_id);
+  ).all(complaintId, ...CREDITED_ACTIONS)).map((r) => r.staff_id);
 }
 
-function lifetimeStatsFor(staffIds) {
+async function lifetimeStatsFor(staffIds) {
   if (staffIds.length === 0) return new Map();
-  const rows = creditedResolutions({});
+  const rows = await creditedResolutions({});
   const byStaff = new Map();
   for (const r of rows) {
     if (!staffIds.includes(r.staff_id)) continue;
@@ -415,14 +416,14 @@ function lifetimeStatsFor(staffIds) {
   return byStaff;
 }
 
-function computeMilestonesFor(staffIds, now = new Date()) {
-  const stats = lifetimeStatsFor(staffIds);
+async function computeMilestonesFor(staffIds, now = new Date()) {
+  const stats = await lifetimeStatsFor(staffIds);
   let awarded = 0;
   for (const s of stats.values()) {
     // "First 10" — first 10 lifetime credited resolutions.
-    if (s.resolved >= FIRST_10_COUNT && awardMilestone({ staff_id: s.staff_id, badge_type: 'first10' })) awarded += 1;
+    if (s.resolved >= FIRST_10_COUNT && await awardMilestone({ staff_id: s.staff_id, badge_type: 'first10' })) awarded += 1;
     // "Century Club" — 100 lifetime credited resolutions.
-    if (s.resolved >= CENTURY_COUNT && awardMilestone({ staff_id: s.staff_id, badge_type: 'century' })) awarded += 1;
+    if (s.resolved >= CENTURY_COUNT && await awardMilestone({ staff_id: s.staff_id, badge_type: 'century' })) awarded += 1;
     // "Veteran" — 6+ months since first resolution AND at least one
     // resolution in each of the last 3 calendar months (consistent activity).
     if (s.firstResolvedAt) {
@@ -437,7 +438,7 @@ function computeMilestonesFor(staffIds, now = new Date()) {
             break;
           }
         }
-        if (active && awardMilestone({ staff_id: s.staff_id, badge_type: 'veteran' })) awarded += 1;
+        if (active && await awardMilestone({ staff_id: s.staff_id, badge_type: 'veteran' })) awarded += 1;
       }
     }
   }
@@ -449,8 +450,8 @@ function computeMilestonesFor(staffIds, now = new Date()) {
  * ------------------------------------------------------------------ */
 
 /** Staff role + geography, for peer grouping. */
-function staffMetaMap() {
-  const rows = db.prepare(
+async function staffMetaMap() {
+  const rows = await db.prepare(
     `SELECT s.staff_id, s.staff_role, a.district, a.division
        FROM staff s JOIN authorities a ON a.authority_id = s.authority_id`
   ).all();
@@ -461,24 +462,24 @@ function staffMetaMap() {
  * Recompute every rolling badge for the trailing window. Safe to run
  * repeatedly — each badge row is replaced with the current verdict.
  */
-export function computeRollingBadges(now = new Date()) {
+export async function computeRollingBadges(now = new Date()) {
   const period_end = now.toISOString().slice(0, 19).replace('T', ' ');
   const since = new Date(now.getTime() - ROLLING_WINDOW_DAYS * 86400000)
     .toISOString().slice(0, 19).replace('T', ' ');
 
-  const rows = creditedResolutions({ since });
-  const reopened = reopenedComplaintIds();
+  const rows = await creditedResolutions({ since });
+  const reopened = await reopenedComplaintIds();
   const byStaff = aggregateStaff(rows, reopened);
 
   const eligible = new Map();
   for (const s of byStaff.values()) if (s.resolved >= MIN_RESOLVED) eligible.set(s.staff_id, s);
 
-  const staffMeta = staffMetaMap();
-  computeVolumeBadges(eligible, staffMeta, since, period_end);
-  computeSatisfactionBadges(byStaff, since, period_end);
-  computeSlaBadges(creditedStepTiming({ since }), since, period_end);
-  computeAccuracyBadges(byStaff, since, period_end);
-  computeSpecialistBadges(byStaff, since, period_end);
+  const staffMeta = await staffMetaMap();
+  await computeVolumeBadges(eligible, staffMeta, since, period_end);
+  await computeSatisfactionBadges(byStaff, since, period_end);
+  await computeSlaBadges(await creditedStepTiming({ since }), since, period_end);
+  await computeAccuracyBadges(byStaff, since, period_end);
+  await computeSpecialistBadges(byStaff, since, period_end);
 
   return {
     window: { start: since, end: period_end },
@@ -488,10 +489,10 @@ export function computeRollingBadges(now = new Date()) {
 }
 
 /** Rolling + milestone sweep over every staff member (seed / manual run). */
-export function computeAllBadges(now = new Date()) {
-  const rolling = computeRollingBadges(now);
-  const staffIds = db.prepare('SELECT staff_id FROM staff').all().map((r) => r.staff_id);
-  const milestones = computeMilestonesFor(staffIds, now);
+export async function computeAllBadges(now = new Date()) {
+  const rolling = await computeRollingBadges(now);
+  const staffIds = (await db.prepare('SELECT staff_id FROM staff').all()).map((r) => r.staff_id);
+  const milestones = await computeMilestonesFor(staffIds, now);
   return { ...rolling, milestonesAwarded: milestones };
 }
 
@@ -499,8 +500,8 @@ export function computeAllBadges(now = new Date()) {
  * Lightweight milestone check triggered when a complaint is resolved.
  * Evaluates only the staff who contributed to that complaint.
  */
-export function checkMilestonesOnResolution(complaintId, now = new Date()) {
-  const staffIds = contributorsForComplaint(complaintId);
+export async function checkMilestonesOnResolution(complaintId, now = new Date()) {
+  const staffIds = await contributorsForComplaint(complaintId);
   if (staffIds.length === 0) return 0;
-  return computeMilestonesFor(staffIds, now);
+  return await computeMilestonesFor(staffIds, now);
 }

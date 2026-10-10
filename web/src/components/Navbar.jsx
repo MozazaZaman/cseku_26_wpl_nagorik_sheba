@@ -6,12 +6,13 @@ import NotificationBell from './NotificationBell.jsx';
 import IdentityPill from './IdentityPill.jsx';
 import SideDrawer from './SideDrawer.jsx';
 
-// Kept inline in the top bar at every breakpoint. Leaderboard, FAQ and the
-// staff console moved to the side drawer; the staff console appears there
-// only for staff accounts.
+// Kept inline in the top bar at every breakpoint. Leaderboard, Analysis,
+// FAQ and the staff console moved to the side drawer; the staff console
+// appears there only for staff accounts.
 const links = [
   { to: '/explore', label: 'nav.explore' },
   { to: '/emergency', label: 'nav.emergency' },
+  { to: '/analysis', label: 'nav.analysis' },
   { to: '/dashboard', label: 'nav.dashboard', auth: 'citizen' }
 ];
 

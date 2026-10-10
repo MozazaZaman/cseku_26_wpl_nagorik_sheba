@@ -45,9 +45,30 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  return <AuthCtx.Provider value={{ user, login, register, registerWithFace, logout }}>{children}</AuthCtx.Provider>;
+  // Dual-mode sessions for system administrators: the same person keeps a
+  // normal citizen account and may switch into/out of super_admin at will.
+  const switchMode = async (mode) => {
+    const { data } = await api.post('/auth/mode', { mode });
+    localStorage.setItem('ns_token', data.token);
+    setUser(data.user);
+    return data.user;
+  };
+
+  return <AuthCtx.Provider value={{ user, login, register, registerWithFace, logout, switchMode }}>{children}</AuthCtx.Provider>;
 }
 
 export function useAuth() {
   return useContext(AuthCtx);
+}
+
+/**
+ * Single destination rule for every entry point (login, drawer switch):
+ * super admins land on their console, staff on the console, everyone else
+ * on the citizen home (or a redirect target). One path, no duplicates.
+ */
+export function destinationFor(user, fallback = '/dashboard') {
+  if (!user) return '/login';
+  if (user.role === 'super_admin') return '/superadmin';
+  if (user.role === 'staff') return '/staff';
+  return fallback;
 }

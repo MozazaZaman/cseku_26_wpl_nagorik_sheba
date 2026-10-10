@@ -288,9 +288,15 @@ describe('Category Constants', () => {
     expect(CATEGORIES).toContain('gas');
     expect(CATEGORIES).toContain('sanitation');
     expect(CATEGORIES).toContain('other');
+    expect(CATEGORIES).toContain('encroachment');
+    expect(CATEGORIES).toContain('environment');
+    expect(CATEGORIES).toContain('public_assets');
+    expect(CATEGORIES).toContain('animals');
+    expect(CATEGORIES).toContain('markets');
+    expect(CATEGORIES).toContain('drugs');
   });
 
-  it('should have exactly 6 categories', () => {
-    expect(CATEGORIES.length).toBe(6);
+  it('should have exactly 12 categories', () => {
+    expect(CATEGORIES.length).toBe(12);
   });
 });

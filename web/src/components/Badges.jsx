@@ -32,7 +32,8 @@ export function StatusBadge({ status }) {
 }
 
 const CAT_ICONS = {
-  road: '🛣️', electricity: '⚡', water: '💧', gas: '🔥', sanitation: '🧹', other: '📌'
+  road: '🛣️', electricity: '⚡', water: '💧', gas: '🔥', sanitation: '🧹',
+  encroachment: '🚧', environment: '🌿', public_assets: '🏞️', animals: '🐕', markets: '🏪', drugs: '💊', other: '📌'
 };
 
 export function CategoryChip({ category }) {

@@ -14,18 +14,23 @@ import {
   enterJuniorReview, APPROVER_ROLES
 } from '../utils/workflow.js';
 import { initEmailer } from '../utils/emailer.js';
+import { billingWriteGate } from '../billing/service.js';
+import { uploadsUseCloudinary, uploadBufferToCloudinary, isAbsoluteUrl } from '../utils/cloudinary.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname || '') || '.jpg';
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
-  }
-});
+const useCloud = uploadsUseCloudinary();
+const storage = useCloud
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadsDir),
+      filename: (_req, file, cb) => {
+        const ext = path.extname(file.originalname || '') || '.jpg';
+        cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+      }
+    });
 const upload = multer({
   storage,
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -49,37 +54,43 @@ const COMPLAINT_SELECT = `
 
 const ACTIVE_STATUSES = "('submitted','verified','junior_review','senior_review','mayor_review','approved','wit_review','assigned','in_process')";
 
-function refreshPriority(complaintId) {
-  const c = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(complaintId);
+async function refreshPriority(complaintId) {
+  const c = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(complaintId);
   if (!c) return;
-  db.prepare("UPDATE complaints SET priority_score = ?, updated_at = datetime('now') WHERE complaint_id = ?")
-    .run(agentRank(c), complaintId);
+  await db.prepare("UPDATE complaints SET priority_score = ?, updated_at = NOW() WHERE complaint_id = ?")
+    .run(await agentRank(c), complaintId);
 }
 
 /** In-app notify the staff member(s) of a role in an authority (disputes etc). */
-function notifyStaffOfRole(authorityId, staffRole, complaint, headline, type = 'status_change') {
-  const staff = db.prepare(
+async function notifyStaffOfRole(authorityId, staffRole, complaint, headline, type = 'status_change') {
+  const staff = await db.prepare(
     `SELECT staff_id, email FROM staff WHERE authority_id = ? AND staff_role = ? ORDER BY staff_id LIMIT 1`
   ).get(authorityId, staffRole);
   if (!staff) return;
-  notify(staff.staff_id, complaint.complaint_id, headline,
+  await notify(staff.staff_id, complaint.complaint_id, headline,
     `#${complaint.complaint_id} "${complaint.title}" needs attention.`, 'staff', type);
 }
 
-function serializeComplaint(row, viewer) {
+async function serializeComplaint(row, viewer) {
   if (!row) return null;
+  const toUrl = (v) => {
+    if (!v) return null;
+    if (isAbsoluteUrl(v)) return v;
+    return `/uploads/${path.basename(v)}`;
+  };
   const base = {
     ...row,
-    image_url: row.image_url ? `/uploads/${path.basename(row.image_url)}` : null,
-    resolution_image_url: row.resolution_image_url ? `/uploads/${path.basename(row.resolution_image_url)}` : null
+    image_url: toUrl(row.image_url),
+    resolution_image_url: toUrl(row.resolution_image_url)
   };
-  // Satisfaction feedback is private: visible only to the citizen who gave it
-  // and to staff of the authority that owns the complaint (mayor oversight).
-  // Never exposed to other citizens or anonymous viewers — only aggregates go
-  // public (via the analytics endpoints).
+  // Satisfaction feedback is private while work is in flight: visible only
+  // to the citizen who gave it and to staff of the owning authority.
+  // Once a complaint is RESOLVED, the rating becomes public — every user
+  // can see how the work was rated (transparency + accountability).
   const canSeeSatisfaction = viewer && (
     row.user_id === viewer.id ||
-    (viewer.role === 'staff' && viewer.authority_id === row.authority_id)
+    (viewer.role === 'staff' && viewer.authority_id === row.authority_id) ||
+    row.status === 'resolved'
   );
   if (!canSeeSatisfaction) {
     delete base.satisfaction_score;
@@ -87,8 +98,8 @@ function serializeComplaint(row, viewer) {
     delete base.satisfaction_submitted_at;
   }
   if (viewer?.role === 'citizen') {
-    base.voted_by_me = !!db.prepare('SELECT 1 FROM votes WHERE user_id = ? AND complaint_id = ?')
-      .get(viewer.id, row.complaint_id);
+    base.voted_by_me = !!(await db.prepare('SELECT 1 FROM votes WHERE user_id = ? AND complaint_id = ?')
+      .get(viewer.id, row.complaint_id));
     base.is_mine = row.user_id === viewer.id;
   }
   return base;
@@ -121,36 +132,48 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
     return res.status(400).json({ error: 'Title, description and GPS location are required' });
   }
 
-  const imagePath = req.file ? req.file.filename : null;
+  let imagePath = null;
+  if (req.file) {
+    if (uploadsUseCloudinary()) {
+      try {
+        const up = await uploadBufferToCloudinary(req.file.buffer, { folder: `${process.env.CLOUDINARY_FOLDER || 'nagorik-sheba'}/complaints` });
+        imagePath = up.secure_url;
+      } catch (e) {
+        return res.status(502).json({ error: 'Image upload failed, please retry' });
+      }
+    } else {
+      imagePath = req.file.filename;
+    }
+  }
   const me = req.auth;
 
   // AGENT 1 — Photo / content verifier
-  const verdict = agentVerify({ description, image: req.file });
+  const verdict = await agentVerify({ description, image: req.file });
   if (!verdict.passed) {
-    const info = db.prepare(
+    const info = await db.prepare(
       `INSERT INTO complaints (user_id, title, description, image_url, latitude, longitude, address_text, category, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'other', 'rejected')`
     ).run(me.id, title.trim(), description.trim(), imagePath, lat, lng, address_text || null);
     const id = info.lastInsertRowid;
-    logAgent({
+    await logAgent({
       complaintId: id, agentName: 'agent_1_photo_verifier', decision: 'rejected',
       inputSummary: `title="${title}" photo=${imagePath ? 'yes' : 'no'}`,
       outputSummary: verdict.reason
     });
-    notify(me.id, id, 'Complaint rejected',
+    await notify(me.id, id, 'Complaint rejected',
       `Our verification agent could not accept your report: ${verdict.reason}`, 'citizen', 'verification_rejected');
     return res.status(202).json({ rejected: true, reason: verdict.reason, complaint_id: id });
   }
 
   // AGENT 2 — Classifier
-  const category = category_hint && category_hint !== 'auto' ? category_hint : agentClassify(`${title} ${description}`);
+  const category = category_hint && category_hint !== 'auto' ? category_hint : await agentClassify(`${title} ${description}`);
 
   // AGENT 3 — Duplicate checker (GPS radius scan)
   try {
-    const original = agentFindDuplicate({ latitude: lat, longitude: lng, category });
+    const original = await agentFindDuplicate({ latitude: lat, longitude: lng, category });
 
     if (original && original.user_id === me.id) {
-      logAgent({
+      await logAgent({
         agentName: 'agent_3_duplicate_checker', decision: 'blocked_own_duplicate',
         inputSummary: `GPS (${lat.toFixed(5)}, ${lng.toFixed(5)}) radius scan by citizen #${me.id}`,
         outputSummary: `Citizen already owns #${original.complaint_id} "${original.title}" ${original.distance_m}m away - no self-merge, no self-vote`
@@ -168,7 +191,7 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
     }
 
     if (original) {
-      const info = db.prepare(
+      const info = await db.prepare(
         `INSERT INTO complaints
            (user_id, authority_id, duplicate_of_id, title, description, image_url,
             latitude, longitude, address_text, category, status)
@@ -177,52 +200,52 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
         title.trim(), description.trim(), imagePath, lat, lng, address_text || null, category);
       const mergedId = info.lastInsertRowid;
 
-      logAgent({
+      await logAgent({
         complaintId: mergedId, agentName: 'agent_3_duplicate_checker', decision: 'duplicate_merged',
         inputSummary: `GPS (${lat.toFixed(5)}, ${lng.toFixed(5)}) radius scan`,
         outputSummary: `Matches #${original.complaint_id} "${original.title}" ${original.distance_m}m away`
       });
-      logAgent({
+      await logAgent({
         complaintId: original.complaint_id, agentName: 'agent_4_priority_ranker', decision: 'rescored',
         inputSummary: 'duplicate merge event',
         outputSummary: `vote_count -> ${original.vote_count + 1}`
       });
 
-      const vote = db.prepare(
-        'INSERT OR IGNORE INTO votes (user_id, complaint_id) VALUES (?, ?)'
+      const vote = await db.prepare(
+        'INSERT INTO votes (user_id, complaint_id) VALUES (?, ?) ON CONFLICT (user_id, complaint_id) DO NOTHING'
       ).run(me.id, original.complaint_id);
       if (vote.changes > 0) {
-        db.prepare('UPDATE complaints SET vote_count = vote_count + 1 WHERE complaint_id = ?')
+        await db.prepare('UPDATE complaints SET vote_count = vote_count + 1 WHERE complaint_id = ?')
           .run(original.complaint_id);
       }
-      refreshPriority(original.complaint_id);
+      await refreshPriority(original.complaint_id);
 
-      const fresh = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(original.complaint_id);
+      const fresh = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(original.complaint_id);
       if (fresh.user_id !== me.id) {
-        notify(fresh.user_id, fresh.complaint_id, 'Your complaint gained a supporter',
+        await notify(fresh.user_id, fresh.complaint_id, 'Your complaint gained a supporter',
           `${me.name} reported the same problem nearby. Vote count is now ${fresh.vote_count}.`);
       }
-      notify(me.id, fresh.complaint_id, 'Merged into an existing complaint',
+      await notify(me.id, fresh.complaint_id, 'Merged into an existing complaint',
         `A similar complaint "${original.title}" already exists ${original.distance_m}m away - your report was counted as a vote.`);
 
       return res.status(200).json({
         merged: true,
-        original: serializeComplaint(
-          db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(fresh.complaint_id),
+        original: await serializeComplaint(
+          await db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(fresh.complaint_id),
           me
         ),
         merged_complaint_id: mergedId
       });
     }
 
-    logAgent({
+    await logAgent({
       agentName: 'agent_3_duplicate_checker', decision: 'unique',
       inputSummary: `GPS (${lat.toFixed(5)}, ${lng.toFixed(5)}) radius scan for "${category}"`,
       outputSummary: 'No similar active complaint found within 250m'
     });
   } catch (err) {
     if (err instanceof DuplicateBlockedError) {
-      logAgent({
+      await logAgent({
         agentName: 'agent_3_duplicate_checker', decision: 'blocked_in_progress',
         inputSummary: `GPS (${lat.toFixed(5)}, ${lng.toFixed(5)}) radius scan`,
         outputSummary: `Original #${err.original.complaint_id} already in process`
@@ -245,7 +268,7 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
   let gpsReverseDetails = {};
   const selectedId = parseInt(req.body.authority_id);
   if (selectedId) {
-    authority = db.prepare('SELECT * FROM authorities WHERE authority_id = ?').get(selectedId) || null;
+    authority = await db.prepare('SELECT * FROM authorities WHERE authority_id = ?').get(selectedId) || null;
     if (authority) routingMode = 'citizen-address-selection';
   }
   if (!authority) {
@@ -268,28 +291,28 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
       // normalize district like "Cumilla District" -> "Cumilla"
       const normRevDistrict = revDistrictRaw.replace(/\s*District\s*$/i, '').trim();
       if (normRevDistrict) {
-        const tryFind = (type, extraWhere = '', extraArgs = []) => {
+        const tryFind = async (type, extraWhere = '', extraArgs = []) => {
           let sql = `SELECT * FROM authorities WHERE type=? AND district LIKE ? ${extraWhere} LIMIT 5`;
           const args = [type, `%${normRevDistrict}%`, ...extraArgs];
-          return db.prepare(sql).all(...args);
+          return await db.prepare(sql).all(...args);
         };
         // For unions: try district+upazila+village match
         if (revVillage) {
-          const cand = db.prepare(`SELECT * FROM authorities WHERE type='UNION_PARISHAD' AND district LIKE ? AND (name LIKE ? OR upazila LIKE ?) LIMIT 1`).get(`%${normRevDistrict}%`, `%${revVillage}%`, `%${revUpazilaRaw}%`);
+          const cand = await db.prepare(`SELECT * FROM authorities WHERE type='UNION_PARISHAD' AND district LIKE ? AND (name LIKE ? OR upazila LIKE ?) LIMIT 1`).get(`%${normRevDistrict}%`, `%${revVillage}%`, `%${revUpazilaRaw}%`);
           if (cand) authority = cand;
         }
         if (!authority) {
           // Try pouro matching town/city
           const town = (gpsReverseDetails.town || gpsReverseDetails.city || revVillage).toLowerCase();
           if (town) {
-            const cand2 = db.prepare(`SELECT * FROM authorities WHERE type='POUROSHOVA' AND district LIKE ? AND name LIKE ? LIMIT 1`).get(`%${normRevDistrict}%`, `%${town}%`);
+            const cand2 = await db.prepare(`SELECT * FROM authorities WHERE type='POUROSHOVA' AND district LIKE ? AND name LIKE ? LIMIT 1`).get(`%${normRevDistrict}%`, `%${town}%`);
             if (cand2) authority = cand2;
           }
         }
       }
     }
     if (!authority) {
-      authority = agentRoute(lat, lng);
+      authority = await agentRoute(lat, lng);
     }
   }
 
@@ -313,7 +336,7 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
     );
   }
 
-  const info = db.prepare(
+  const info = await db.prepare(
     `INSERT INTO complaints
        (user_id, authority_id, title, description, image_url, latitude, longitude,
         address_text, category, status, division, district, area_text, ward, road,
@@ -325,17 +348,17 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
     sector || null, finalVillage || null, finalUpazila || null, fullAddress);
 
   const newId = info.lastInsertRowid;
-  refreshPriority(newId);
+  await refreshPriority(newId);
 
-  logAgent({
+  await logAgent({
     complaintId: newId, agentName: 'agent_2_classifier', decision: `classified:${category}`,
     inputSummary: `"${title}"`, outputSummary: `Category detected: ${category}`
   });
-  logAgent({
+  await logAgent({
     complaintId: newId, agentName: 'agent_4_priority_ranker', decision: 'scored',
     inputSummary: 'new verified complaint', outputSummary: 'Initial priority computed'
   });
-  logAgent({
+  await logAgent({
     complaintId: newId, agentName: 'agent_5_destination_router', decision: `routed:${authority?.type || 'unknown'}`,
     inputSummary: routingMode === 'citizen-address-selection'
       ? `Citizen selected authority from address form (${district || '-'}, ${division || '-'})`
@@ -345,19 +368,19 @@ router.post('/', requireAuth, requireCitizen, upload.single('image'), async (req
 
   // AI pipeline finished — hand off to the human hierarchy (Junior Staff first)
   if (authority?.authority_id) {
-    enterJuniorReview(newId, authority.authority_id, title.trim());
+    await enterJuniorReview(newId, authority.authority_id, title.trim());
   }
 
   res.status(201).json({
-    complaint: serializeComplaint(
-      db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(newId), me
+    complaint: await serializeComplaint(
+      await db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(newId), me
     ),
     routed_to: authority ? `${authority.name}` : 'Unassigned area'
   });
 });
 
 // Public browse / search (no login needed) — searches text AND location
-router.get('/', optionalAuth, (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   const { q, category, status, sort = 'recent', limit = 60 } = req.query;
   let sql = `${COMPLAINT_SELECT} WHERE c.status NOT IN ('merged')`;
   const args = [];
@@ -379,38 +402,40 @@ router.get('/', optionalAuth, (req, res) => {
   sql += ` LIMIT ?`;
   args.push(Math.min(parseInt(limit) || 60, 100));
 
-  const rows = db.prepare(sql).all(...args).map((r) => serializeComplaint(r, req.auth || null));
+  const rowsRaw = await db.prepare(sql).all(...args);
+  const rows = await Promise.all(rowsRaw.map((r) => serializeComplaint(r, req.auth || null)));
   res.json({ complaints: rows });
 });
 
 // Citizen's own complaints
-router.get('/mine', requireAuth, requireCitizen, (req, res) => {
-  const rows = db.prepare(
+router.get('/mine', requireAuth, requireCitizen, async (req, res) => {
+  const rowsRaw = await db.prepare(
     `${COMPLAINT_SELECT} WHERE c.user_id = ? ORDER BY c.created_at DESC`
-  ).all(req.auth.id).map((r) => serializeComplaint(r, req.auth));
+  ).all(req.auth.id);
+  const rows = await Promise.all(rowsRaw.map((r) => serializeComplaint(r, req.auth)));
   res.json({ complaints: rows });
 });
 
 // Complaint detail (public transparency) + timeline + agent trace + workflow chain
-router.get('/:id', optionalAuth, (req, res) => {
-  const row = db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(req.params.id);
+router.get('/:id', optionalAuth, async (req, res) => {
+  const row = await db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Complaint not found' });
 
-  const history = db.prepare(
+  const history = await db.prepare(
     `SELECT * FROM status_history WHERE complaint_id = ? ORDER BY changed_at ASC`
   ).all(row.complaint_id);
-  const agents = db.prepare(
+  const agents = await db.prepare(
     `SELECT agent_name, decision, input_summary, output_summary, created_at
      FROM agent_logs WHERE complaint_id = ? ORDER BY created_at ASC`
   ).all(row.complaint_id);
-  const workflow = db.prepare(
+  const workflow = await db.prepare(
     `SELECT stage, action, actor_name, actor_role, comment, created_at
      FROM workflow_steps WHERE complaint_id = ? ORDER BY created_at ASC`
   ).all(row.complaint_id);
 
   let duplicateReports = [];
   if (['submitted', 'verified', 'junior_review', 'senior_review', 'mayor_review', 'approved', 'wit_review', 'assigned', 'in_process'].includes(row.status)) {
-    duplicateReports = db.prepare(
+    duplicateReports = await db.prepare(
       `SELECT complaint_id, title, created_at FROM complaints
        WHERE duplicate_of_id = ? AND status = 'merged' ORDER BY created_at DESC LIMIT 20`
     ).all(row.complaint_id);
@@ -419,7 +444,7 @@ router.get('/:id', optionalAuth, (req, res) => {
   // What the logged-in staff user can do right now (drives console buttons)
   let my_actions = null;
   if (req.auth?.role === 'staff') {
-    const me = db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
+    const me = await db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
     if (me && (!row.authority_id || row.authority_id === me.authority_id)) {
       const role = me.staff_role || 'junior';
       const map = {
@@ -447,15 +472,15 @@ router.get('/:id', optionalAuth, (req, res) => {
   }
 
   res.json({
-    complaint: serializeComplaint(row, req.auth || null),
+    complaint: await serializeComplaint(row, req.auth || null),
     history, agents, workflow, duplicate_reports: duplicateReports,
     my_actions: my_actions || []
   });
 });
 
 // Vote for a complaint
-router.post('/:id/vote', requireAuth, requireCitizen, (req, res) => {
-  const complaint = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
+router.post('/:id/vote', requireAuth, requireCitizen, async (req, res) => {
+  const complaint = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
   if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
   if (complaint.user_id === req.auth.id) {
@@ -468,7 +493,7 @@ router.post('/:id/vote', requireAuth, requireCitizen, (req, res) => {
     return res.status(409).json({ alert: 'This problem has already been resolved' });
   }
   if (complaint.status === 'merged') {
-    const original = db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`)
+    const original = await db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`)
       .get(complaint.duplicate_of_id);
     return res.status(409).json({
       alert: 'This report was merged - vote the original instead',
@@ -479,23 +504,23 @@ router.post('/:id/vote', requireAuth, requireCitizen, (req, res) => {
     return res.status(409).json({ alert: 'Voting is closed for this complaint' });
   }
 
-  const r = db.prepare('INSERT OR IGNORE INTO votes (user_id, complaint_id) VALUES (?, ?)')
+  const r = await db.prepare('INSERT INTO votes (user_id, complaint_id) VALUES (?, ?) ON CONFLICT (user_id, complaint_id) DO NOTHING')
     .run(req.auth.id, complaint.complaint_id);
   if (r.changes === 0) {
     return res.status(409).json({ alert: 'You already voted for this complaint' });
   }
 
-  db.prepare('UPDATE complaints SET vote_count = vote_count + 1 WHERE complaint_id = ?')
+  await db.prepare('UPDATE complaints SET vote_count = vote_count + 1 WHERE complaint_id = ?')
     .run(complaint.complaint_id);
-  refreshPriority(complaint.complaint_id);
+  await refreshPriority(complaint.complaint_id);
 
-  logAgent({
+  await logAgent({
     complaintId: complaint.complaint_id, agentName: 'agent_4_priority_ranker', decision: 'rescored',
     inputSummary: `vote cast by citizen #${req.auth.id}`,
     outputSummary: `vote_count -> ${complaint.vote_count + 1}`
   });
   if (complaint.user_id !== req.auth.id) {
-    notify(complaint.user_id, complaint.complaint_id, 'Your complaint gained a supporter',
+    await notify(complaint.user_id, complaint.complaint_id, 'Your complaint gained a supporter',
       `${req.auth.name} supported your report. Vote count is now ${complaint.vote_count + 1}.`);
   }
 
@@ -508,7 +533,7 @@ router.post('/:id/vote', requireAuth, requireCitizen, (req, res) => {
 
 // Citizen confirms the resolution (submitter only, within the confirmation window)
 router.post('/:id/confirm', requireAuth, requireCitizen, async (req, res) => {
-  const complaint = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
+  const complaint = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
   if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
   if (complaint.user_id !== req.auth.id) {
     return res.status(403).json({ error: 'Only the citizen who submitted this complaint can confirm the resolution' });
@@ -517,10 +542,10 @@ router.post('/:id/confirm', requireAuth, requireCitizen, async (req, res) => {
     return res.status(409).json({ error: 'This complaint is not in the resolved state' });
   }
 
-  db.prepare(
-    `UPDATE complaints SET resolved_confirmed_by_citizen = 1, updated_at = datetime('now') WHERE complaint_id = ?`
+  await db.prepare(
+    `UPDATE complaints SET resolved_confirmed_by_citizen = 1, updated_at = NOW() WHERE complaint_id = ?`
   ).run(complaint.complaint_id);
-  db.prepare(
+  await db.prepare(
     `INSERT INTO status_history (complaint_id, old_status, new_status, note, changed_by)
      VALUES (?, 'resolved', 'resolved', ?, ?)`
   ).run(complaint.complaint_id, 'Citizen confirmed the work is done.', req.auth.name || 'Citizen');
@@ -535,7 +560,7 @@ router.post('/:id/dispute', requireAuth, requireCitizen, async (req, res) => {
   if (!reason || !reason.trim()) {
     return res.status(400).json({ error: 'Please describe what is still wrong' });
   }
-  const complaint = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
+  const complaint = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
   if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
   if (complaint.user_id !== req.auth.id) {
     return res.status(403).json({ error: 'Only the citizen who submitted this complaint can dispute the resolution' });
@@ -544,26 +569,26 @@ router.post('/:id/dispute', requireAuth, requireCitizen, async (req, res) => {
     return res.status(409).json({ error: 'This complaint is not in the resolved state' });
   }
 
-  db.prepare(
+  await db.prepare(
     `UPDATE complaints SET status = 'wit_review', current_stage = 'wit_inspection', stage_owner_role = 'wit',
-       resolved_confirmed_by_citizen = 0, resolved_at = NULL, confirmation_deadline = NULL, updated_at = datetime('now')
+       resolved_confirmed_by_citizen = 0, resolved_at = NULL, confirmation_deadline = NULL, updated_at = NOW()
      WHERE complaint_id = ?`
   ).run(complaint.complaint_id);
-  db.prepare(
+  await db.prepare(
     `INSERT INTO status_history (complaint_id, old_status, new_status, note, changed_by)
      VALUES (?, 'resolved', 'wit_review', ?, ?)`
   ).run(complaint.complaint_id, `Citizen dispute: ${reason.trim()}`, req.auth.name || 'Citizen');
-  logWorkflowStep({
+  await logWorkflowStep({
     complaintId: complaint.complaint_id, stage: 'execution', action: 'returned',
     actorName: req.auth.name || 'Citizen', actorRole: 'citizen',
     comment: `Resolution disputed by the submitter: ${reason.trim()}`
   });
 
   // WIT re-inspects; senior + mayor keep oversight
-  const notifyRow = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(complaint.complaint_id);
-  notifyStaffOfRole(notifyRow.authority_id, 'wit', notifyRow, 'Resolution disputed — re-inspect the work');
-  notifyStaffOfRole(notifyRow.authority_id, 'senior', notifyRow, 'Citizen disputed a resolved complaint');
-  notifyStaffOfRole(notifyRow.authority_id, 'mayor', notifyRow, 'Citizen disputed a resolved complaint');
+  const notifyRow = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(complaint.complaint_id);
+  await notifyStaffOfRole(notifyRow.authority_id, 'wit', notifyRow, 'Resolution disputed — re-inspect the work');
+  await notifyStaffOfRole(notifyRow.authority_id, 'senior', notifyRow, 'Citizen disputed a resolved complaint');
+  await notifyStaffOfRole(notifyRow.authority_id, 'mayor', notifyRow, 'Citizen disputed a resolved complaint');
 
   res.json({ disputed: true, status: 'wit_review' });
 });
@@ -573,14 +598,14 @@ router.post('/:id/dispute', requireAuth, requireCitizen, async (req, res) => {
 //   - only while the resolution stands (status 'resolved')
 //   - exactly one rating per complaint; this endpoint never overwrites
 //   - score is required (1-5); the comment is always optional
-router.post('/:id/satisfaction', requireAuth, requireCitizen, (req, res) => {
+router.post('/:id/satisfaction', requireAuth, requireCitizen, async (req, res) => {
   const { satisfaction_score, satisfaction_comment } = req.body || {};
   const score = Number(satisfaction_score);
   if (!Number.isInteger(score) || score < 1 || score > 5) {
     return res.status(400).json({ error: 'A satisfaction score from 1 to 5 is required' });
   }
 
-  const complaint = db.prepare(
+  const complaint = await db.prepare(
     `SELECT complaint_id, user_id, status, satisfaction_score FROM complaints WHERE complaint_id = ?`
   ).get(req.params.id);
   if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
@@ -596,10 +621,10 @@ router.post('/:id/satisfaction', requireAuth, requireCitizen, (req, res) => {
   }
 
   const comment = (satisfaction_comment || '').trim() || null;
-  db.prepare(
+  await db.prepare(
     `UPDATE complaints
         SET satisfaction_score = ?, satisfaction_comment = ?,
-            satisfaction_submitted_at = datetime('now'), updated_at = datetime('now')
+            satisfaction_submitted_at = NOW(), updated_at = NOW()
       WHERE complaint_id = ?`
   ).run(score, comment, complaint.complaint_id);
 
@@ -612,12 +637,12 @@ router.post('/:id/satisfaction', requireAuth, requireCitizen, (req, res) => {
 
 // Staff updates status — legacy endpoint kept for old clients.
 // New hierarchical flow should use POST /:id/workflow instead.
-router.patch('/:id/status', requireAuth, requireStaff, async (req, res) => {
+router.patch('/:id/status', requireAuth, requireStaff, billingWriteGate, async (req, res) => {
   const { status, eta_hours, note } = req.body || {};
-  const complaint = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
+  const complaint = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
   if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
-  const actor = db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
+  const actor = await db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
   if (!actor) return res.status(403).json({ error: 'Staff account not found' });
   if (complaint.authority_id && complaint.authority_id !== actor.authority_id) {
     return res.status(403).json({ error: 'This complaint belongs to another authority' });
@@ -649,8 +674,8 @@ router.patch('/:id/status', requireAuth, requireStaff, async (req, res) => {
   }
 
   res.json({
-    complaint: serializeComplaint(
-      db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(complaint.complaint_id),
+    complaint: await serializeComplaint(
+      await db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(complaint.complaint_id),
       req.auth
     )
   });
@@ -663,19 +688,19 @@ router.patch('/:id/status', requireAuth, requireStaff, async (req, res) => {
 //   wit:    wit_review
 //   field:  assigned/in_process (own work; also sees junior queue read-only)
 // Rejected complaints are visible to every role (transparency).
-router.get('/staff/queue', requireAuth, requireStaff, (req, res) => {
+router.get('/staff/queue', requireAuth, requireStaff, async (req, res) => {
   const { category, status, view = 'queue' } = req.query;
   const staffRole = req.auth.staff_role || 'junior';
   let statuses;
   if ((staffRole === 'senior' || staffRole === 'mayor') && view === 'oversight') {
-    statuses = allOversightStatuses(); // full lifecycle oversight
+    statuses = await allOversightStatuses(); // full lifecycle oversight
   } else if ((staffRole === 'senior' || staffRole === 'mayor') && view === 'queue') {
-    statuses = [...queueForRole(staffRole), 'rejected']; // only my actionable items
+    statuses = [...await queueForRole(staffRole), 'rejected']; // only my actionable items
   } else if (staffRole === 'field') {
     // executor's own work OR read-only view of incoming complaints
     statuses = ['verified', 'junior_review', 'assigned', 'in_process'];
   } else {
-    statuses = [...queueForRole(staffRole), 'rejected'];
+    statuses = [...await queueForRole(staffRole), 'rejected'];
   }
   let sql = `${COMPLAINT_SELECT}
      WHERE c.authority_id = ? AND c.status IN (${statuses.map(() => '?').join(',')})`;
@@ -686,16 +711,17 @@ router.get('/staff/queue', requireAuth, requireStaff, (req, res) => {
   sql += ` ORDER BY c.overdue_flag DESC,
               CASE WHEN c.overdue_flag = 1 THEN c.sla_deadline END ASC,
               c.priority_score DESC, c.created_at DESC LIMIT 200`;
-  const rows = db.prepare(sql).all(...args).map((r) => serializeComplaint(r, req.auth));
+  const rowsRaw = await db.prepare(sql).all(...args);
+  const rows = await Promise.all(rowsRaw.map((r) => serializeComplaint(r, req.auth)));
   res.json({ complaints: rows, staff_role: staffRole });
 });
 
 // Field-staff executors available for WIT assignment
-router.get('/staff/executors', requireAuth, requireStaff, (req, res) => {
+router.get('/staff/executors', requireAuth, requireStaff, async (req, res) => {
   if ((req.auth.staff_role || 'junior') !== 'wit') {
     return res.status(403).json({ error: 'Only the Work Inspection Team can view executors' });
   }
-  const executors = db.prepare(
+  const executors = await db.prepare(
     `SELECT staff_id, full_name, email FROM staff
      WHERE authority_id = ? AND staff_role = 'field' ORDER BY full_name`
   ).all(req.auth.authority_id);
@@ -710,13 +736,18 @@ router.get('/staff/executors', requireAuth, requireStaff, (req, res) => {
 // mayor's JWT only, never from the request, so a mayor cannot see another
 // office's reviews. Unrated resolutions are included and flagged so the mayor
 // can see which citizens have not yet given feedback.
-router.get('/staff/reviews', requireAuth, requireMayor, (req, res) => {
-  const rows = db.prepare(
-    `${COMPLAINT_SELECT}
-     WHERE c.authority_id = ? AND c.status = 'resolved'
-     ORDER BY c.satisfaction_submitted_at DESC, c.resolved_at DESC
-     LIMIT 100`
-  ).all(req.auth.authority_id).map((r) => serializeComplaint(r, req.auth));
+router.get('/staff/reviews', requireAuth, requireMayor, async (req, res) => {
+  const { category } = req.query;
+  const args = [req.auth.authority_id];
+  let sql = `${COMPLAINT_SELECT}
+     WHERE c.authority_id = ? AND c.status = 'resolved'`;
+  if (category && category !== 'all') {
+    sql += ' AND c.category = ?';
+    args.push(category);
+  }
+  sql += ` ORDER BY c.satisfaction_submitted_at DESC, c.resolved_at DESC LIMIT 100`;
+  const rowsRaw = await db.prepare(sql).all(...args);
+  const rows = await Promise.all(rowsRaw.map((r) => serializeComplaint(r, req.auth)));
 
   const rated = rows.filter((r) => r.satisfaction_score != null);
   const avg = rated.length
@@ -739,12 +770,12 @@ router.get('/staff/reviews', requireAuth, requireMayor, (req, res) => {
 // multipart/form-data or JSON. body fields: action, comment, eta_hours?, executor_staff_id?
 // field_resolve may include a "resolution_photo" file — REQUIRED when the citizen
 // attached evidence to the complaint (before/after proof).
-router.post('/:id/workflow', requireAuth, requireStaff, upload.single('resolution_photo'), async (req, res) => {
+router.post('/:id/workflow', requireAuth, requireStaff, billingWriteGate, upload.single('resolution_photo'), async (req, res) => {
   const { action, comment, eta_hours, executor_staff_id } = req.body || {};
-  const complaint = db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
+  const complaint = await db.prepare('SELECT * FROM complaints WHERE complaint_id = ?').get(req.params.id);
   if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
 
-  const actor = db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
+  const actor = await db.prepare('SELECT * FROM staff WHERE staff_id = ?').get(req.auth.id);
   if (!actor) return res.status(403).json({ error: 'Staff account not found' });
   if (complaint.authority_id && complaint.authority_id !== actor.authority_id) {
     return res.status(403).json({ error: 'This complaint belongs to another authority' });
@@ -758,15 +789,28 @@ router.post('/:id/workflow', requireAuth, requireStaff, upload.single('resolutio
   }
 
   try {
+    let resolutionImageUrl = null;
+    if (req.file) {
+      if (uploadsUseCloudinary()) {
+        try {
+          const up = await uploadBufferToCloudinary(req.file.buffer, { folder: `${process.env.CLOUDINARY_FOLDER || 'nagorik-sheba'}/resolutions` });
+          resolutionImageUrl = up.secure_url;
+        } catch (e) {
+          return res.status(502).json({ error: 'Resolution photo upload failed, please retry' });
+        }
+      } else {
+        resolutionImageUrl = req.file.filename;
+      }
+    }
     const result = await applyWorkflowAction({
       complaint, action, actor,
       comment, etaHours: eta_hours, executorStaffId: executor_staff_id,
-      resolutionImageUrl: req.file ? req.file.filename : null
+      resolutionImageUrl
     });
     res.json({
       status: result.status,
-      complaint: serializeComplaint(
-        db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(complaint.complaint_id),
+      complaint: await serializeComplaint(
+        await db.prepare(`${COMPLAINT_SELECT} WHERE c.complaint_id = ?`).get(complaint.complaint_id),
         req.auth
       )
     });

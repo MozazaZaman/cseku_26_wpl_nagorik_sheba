@@ -72,23 +72,23 @@ export const SLA_FORWARD_MAP = {
  * stage transition (staff action or auto-forward) — sets stage_entered_at,
  * recomputes sla_deadline from the CURRENT priority score, clears the flag.
  */
-export function armSla(complaintId) {
-  const c = db.prepare('SELECT status, priority_score FROM complaints WHERE complaint_id = ?').get(complaintId);
+export async function armSla(complaintId) {
+  const c = await db.prepare('SELECT status, priority_score FROM complaints WHERE complaint_id = ?').get(complaintId);
   if (!c) return;
   const cfg = SLA_STAGES[c.status];
   if (!cfg) {
-    db.prepare('UPDATE complaints SET stage_entered_at = NULL, sla_deadline = NULL, overdue_flag = 0 WHERE complaint_id = ?')
+    await db.prepare('UPDATE complaints SET stage_entered_at = NULL, sla_deadline = NULL, overdue_flag = 0 WHERE complaint_id = ?')
       .run(complaintId);
     return;
   }
   const days = effectiveSlaDays(cfg.stage, c.priority_score);
-  db.prepare(
+  await db.prepare(
     `UPDATE complaints
-     SET stage_entered_at = datetime('now'),
-         sla_deadline = datetime('now', '+' || ? || ' days'),
+     SET stage_entered_at = NOW(),
+         sla_deadline = NOW() + (($1)::text || ' days')::interval,
          overdue_flag = 0,
-         updated_at = datetime('now')
-     WHERE complaint_id = ?`
+         updated_at = NOW()
+     WHERE complaint_id = $2`
   ).run(days, complaintId);
 }
 

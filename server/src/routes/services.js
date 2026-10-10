@@ -5,7 +5,7 @@ import { haversineMeters } from '../utils/geo.js';
 const router = Router();
 
 // Public - no login required: find emergency services across the whole country, sorted nearest → farthest
-router.get('/nearby', (req, res) => {
+router.get('/nearby', async (req, res) => {
   const lat = parseFloat(req.query.lat);
   const lng = parseFloat(req.query.lng);
   const type = req.query.type;
@@ -18,7 +18,7 @@ router.get('/nearby', (req, res) => {
     return res.status(400).json({ error: 'lat and lng query parameters are required' });
   }
 
-  let rows = db.prepare('SELECT * FROM emergency_services').all();
+  let rows = await db.prepare('SELECT * FROM emergency_services').all();
   if (type && type !== 'all') rows = rows.filter((r) => r.type === type);
 
   rows = rows

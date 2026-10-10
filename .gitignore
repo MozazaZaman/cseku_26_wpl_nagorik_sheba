@@ -10,3 +10,5 @@ mobile/build/
 .env
 server/.env
 *.env
+.neon
+.env.local

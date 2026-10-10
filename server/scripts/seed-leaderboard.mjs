@@ -10,16 +10,11 @@
  * Safe to re-run: it marks seeded rows via a notifications marker and skips
  * if already applied. Does NOT touch existing demo complaints.
  */
-import Database from 'better-sqlite3';
+import 'dotenv/config';
 import bcrypt from 'bcryptjs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { db, closeDb } from '../src/db.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const db = new Database(path.join(__dirname, '..', 'data', 'nagorik.db'));
-db.pragma('journal_mode = WAL');
-
-const already = db.prepare(
+const already = await db.prepare(
   `SELECT 1 FROM notifications WHERE title = '__leaderboard_seed__' LIMIT 1`
 ).get();
 if (already) {
@@ -41,11 +36,12 @@ const citizens = [
   ['Rashedul Islam', 'rashed.bd@example.com', '+8801710000107'],
   ['Parul Akter', 'parul.bd@example.com', '+8801710000108']
 ];
-const userIds = citizens.map((c) => {
-  const existing = db.prepare('SELECT user_id FROM users WHERE email = ?').get(c[1]);
-  if (existing) return existing.user_id;
-  return insUser.run(...c, citHash).lastInsertRowid;
-});
+const userIds = [];
+for (const c of citizens) {
+  const existing = await db.prepare('SELECT user_id FROM users WHERE email = ?').get(c[1]);
+  if (existing) { userIds.push(existing.user_id); continue; }
+  userIds.push((await insUser.run(...c, citHash)).lastInsertRowid);
+}
 
 // ---------- target authorities (one per division region, mix of types) ----------
 const TARGETS = [
@@ -58,7 +54,7 @@ const TARGETS = [
   'Ruhitpur Union Parishad', 'Sagardari Union Parishad', 'Gowainghat Union Parishad', 'Dighalia Union Parishad'
 ];
 const placeholders = TARGETS.map(() => '?').join(',');
-const auths = db.prepare(
+const auths = await db.prepare(
   `SELECT authority_id, name, type, district, division, center_lat, center_lng FROM authorities
    WHERE name IN (${placeholders})`
 ).all(...TARGETS);
@@ -103,50 +99,50 @@ const sqliteDate = (d) => {
 const daysAgo = (n) => sqliteDate(new Date(Date.now() - n * 86400000));
 
 let n = 0;
-const seedAll = db.transaction(() => {
-  auths.forEach((auth, ai) => {
-    const [daysBase, rate] = profiles[ai % profiles.length];
-    const lat = auth.center_lat || 23.7, lng = auth.center_lng || 90.4;
-    const count = 4 + rnd(3); // 4-6 complaints each -> 24 auths * ~5 = ~110
-    for (let k = 0; k < count; k++) {
-      const cat = CATS[rnd(CATS.length)];
-      const title = TITLES[cat][rnd(TITLES[cat].length)];
-      const ageDays = -rnd(75) - 2;             // within window
-      const roll = Math.random();
-      let status, resolveDaysAfter;
-      if (roll < rate) {                         // resolved
-        const d = Math.max(0.5, jitter(daysBase, 2));
-        status = 'resolved';
-        resolveDaysAfter = d;
-      } else if (roll < rate + 0.12) {           // rejected
-        status = 'rejected';
-        resolveDaysAfter = 0.5;
-      } else {                                   // still in pipeline
-        status = ['assigned', 'in_process', 'wit_review'][rnd(3)];
-        resolveDaysAfter = null;
-      }
-      const createdOffset = Math.abs(ageDays);   // positive days ago
-      insComplaint.run(
-        userIds[rnd(userIds.length)], auth.authority_id,
-        `${title} (${auth.district})`,
-        `${title} reported by a local resident of ${auth.district}. Situation observed over several days before reporting to the authority.`,
-        cat, jitter(lat, 0.05).toFixed(5), jitter(lng, 0.05).toFixed(5),
-        `${auth.district} area`, status,
-        (20 + rnd(60)).toFixed(1), rnd(25),
-        daysAgo(createdOffset),                                  // created_at
-        daysAgo(resolveDaysAfter != null ? Math.max(0, createdOffset - resolveDaysAfter) : 0), // updated_at
-        resolveDaysAfter != null ? daysAgo(Math.max(0, createdOffset - resolveDaysAfter)) : null, // resolved_at
-        auth.division, auth.district,
-        `${title}, ${auth.name}, ${auth.district}, ${auth.division}, Bangladesh`,
-        daysAgo(Math.max(0, createdOffset - (resolveDaysAfter ?? 0))) // stage_entered_at
-      );
-      n++;
+for (const [ai, auth] of auths.entries()) {
+  const [daysBase, rate] = profiles[ai % profiles.length];
+  const lat = auth.center_lat || 23.7, lng = auth.center_lng || 90.4;
+  const count = 4 + rnd(3); // 4-6 complaints each -> 24 auths * ~5 = ~110
+  for (let k = 0; k < count; k++) {
+    const cat = CATS[rnd(CATS.length)];
+    const title = TITLES[cat][rnd(TITLES[cat].length)];
+    const ageDays = -rnd(75) - 2;             // within window
+    const roll = Math.random();
+    let status, resolveDaysAfter;
+    if (roll < rate) {                         // resolved
+      const d = Math.max(0.5, jitter(daysBase, 2));
+      status = 'resolved';
+      resolveDaysAfter = d;
+    } else if (roll < rate + 0.12) {           // rejected
+      status = 'rejected';
+      resolveDaysAfter = 0.5;
+    } else {                                   // still in pipeline
+      status = ['assigned', 'in_process', 'wit_review'][rnd(3)];
+      resolveDaysAfter = null;
     }
-  });
-  // marker so re-runs are no-ops
-  db.prepare(
-    `INSERT INTO notifications (user_id, recipient_type, title, message) VALUES (1, 'citizen', '__leaderboard_seed__', 'internal marker')`
-  ).run();
-});
-seedAll();
+    const createdOffset = Math.abs(ageDays);   // positive days ago
+    await insComplaint.run(
+      userIds[rnd(userIds.length)], auth.authority_id,
+      `${title} (${auth.district})`,
+      `${title} reported by a local resident of ${auth.district}. Situation observed over several days before reporting to the authority.`,
+      cat, jitter(lat, 0.05).toFixed(5), jitter(lng, 0.05).toFixed(5),
+      `${auth.district} area`, status,
+      (20 + rnd(60)).toFixed(1), rnd(25),
+      daysAgo(createdOffset),                                  // created_at
+      daysAgo(resolveDaysAfter != null ? Math.max(0, createdOffset - resolveDaysAfter) : 0), // updated_at
+      resolveDaysAfter != null ? daysAgo(Math.max(0, createdOffset - resolveDaysAfter)) : null, // resolved_at
+      auth.division, auth.district,
+      `${title}, ${auth.name}, ${auth.district}, ${auth.division}, Bangladesh`,
+      daysAgo(Math.max(0, createdOffset - (resolveDaysAfter ?? 0))) // stage_entered_at
+    );
+    n++;
+  }
+}
+// marker so re-runs are no-ops
+await db.prepare(
+  `INSERT INTO notifications (user_id, recipient_type, title, message) VALUES (1, 'citizen', '__leaderboard_seed__', 'internal marker')`
+).run();
 console.log(`Seeded ${n} complaints across ${auths.length} authorities (leaderboard window=90d).`);
+
+await closeDb();
+process.exit(0);

@@ -137,6 +137,7 @@ export async function finalizePayment(paymentId, verification, { actor_type = 's
 
 async function applyCapacity(inv, pay, { actor_type, actor_id }) {
   const notes = [];
+  let seatsAddedViaRequest = false;
   if (inv.seat_request_id) {
     const req = await db.prepare('SELECT * FROM billing_seat_requests WHERE request_id = ?').get(inv.seat_request_id);
     if (req && req.status !== 'COMPLETED') {
@@ -149,15 +150,16 @@ async function applyCapacity(inv, pay, { actor_type, actor_id }) {
       notes.push(`${req.quantity} additional seat(s) activated`);
       await audit('seats.allocated', { actor_type, actor_id, authority_id: inv.authority_id, target_type: 'seat_request', target_id: req.request_id, meta: { quantity: req.quantity } });
       await autoActivateWaiting(inv.authority_id, actor_id);
+      seatsAddedViaRequest = true;
     }
   }
   if (inv.type === 'initial' || inv.type === 'renewal' || inv.type === 'upgrade') {
-    await activateOrRenewSubscription(inv, pay, { actor_type, actor_id }, notes);
+    await activateOrRenewSubscription(inv, pay, { actor_type, actor_id }, notes, seatsAddedViaRequest);
   }
   return { note: notes.join('; ') || 'Payment recorded' };
 }
 
-async function activateOrRenewSubscription(inv, pay, { actor_type, actor_id }, notes) {
+async function activateOrRenewSubscription(inv, pay, { actor_type, actor_id }, notes, seatsAlreadyAdded = false) {
   const lines = JSON.parse(inv.lines_json || '[]');
   const seatLine = lines.find((l) => l.kind === 'seats' || l.kind === 'band_seats');
   const qty = seatLine ? seatLine.qty : 0;
@@ -186,9 +188,12 @@ async function activateOrRenewSubscription(inv, pay, { actor_type, actor_id }, n
     notes.push(`Subscription activated with ${qty} seat(s) until ${end.slice(0, 10)}`);
     await audit('subscription.activated', { actor_type, actor_id, authority_id: inv.authority_id, target_type: 'subscription', target_id: sub.subscription_id, meta: { seats: qty } });
   } else if (inv.type === 'initial' && sub.status === 'PENDING') {
+    const add = seatsAlreadyAdded ? 0 : qty;
     await db.prepare(`UPDATE billing_subscriptions SET plan_id = ?, status = 'ACTIVE', paid_seats = paid_seats + ?, starts_at = ?, expires_at = ?, grace_until = ?, last_renewal_at = NOW(), updated_at = NOW() WHERE subscription_id = ?`)
-      .run(plan.plan_id, qty, start, end, grace, sub.subscription_id);
-    notes.push(`Subscription activated with ${qty} seat(s) until ${end.slice(0, 10)}`);
+      .run(plan.plan_id, add, start, end, grace, sub.subscription_id);
+    notes.push(seatsAlreadyAdded
+      ? `Subscription activated with ${qty} seat(s) until ${end.slice(0, 10)} (seats already counted from the linked seat request — not double-added)`
+      : `Subscription activated with ${qty} seat(s) until ${end.slice(0, 10)}`);
     await audit('subscription.activated', { actor_type, actor_id, authority_id: inv.authority_id, target_type: 'subscription', target_id: sub.subscription_id, meta: { seats: qty } });
   } else if (inv.type === 'renewal') {
     if (qty < await activeStaffCount(sub.authority_id)) {
@@ -199,9 +204,12 @@ async function activateOrRenewSubscription(inv, pay, { actor_type, actor_id }, n
     notes.push(`Subscription renewed with ${qty} seat(s) until ${end.slice(0, 10)}`);
     await audit('subscription.renewed', { actor_type, actor_id, authority_id: inv.authority_id, target_type: 'subscription', target_id: sub.subscription_id, meta: { seats: qty } });
   } else if (inv.type === 'upgrade') {
+    const add = seatsAlreadyAdded ? 0 : qty;
     await db.prepare(`UPDATE billing_subscriptions SET plan_id = ?, status = 'ACTIVE', paid_seats = paid_seats + ?, expires_at = ?, grace_until = ?, updated_at = NOW() WHERE subscription_id = ?`)
-      .run(plan.plan_id, qty, end, grace, sub.subscription_id);
-    notes.push(`Plan upgraded; ${qty} seat(s) added`);
+      .run(plan.plan_id, add, end, grace, sub.subscription_id);
+    notes.push(seatsAlreadyAdded
+      ? `Plan upgraded; ${qty} seat(s) already counted from the linked seat request`
+      : `Plan upgraded; ${qty} seat(s) added`);
     await audit('subscription.upgraded', { actor_type, actor_id, authority_id: inv.authority_id, target_type: 'subscription', target_id: sub.subscription_id, meta: { added: qty } });
   }
   await tellAuthority(inv.authority_id, ['mayor', 'admin'], 'Subscription active', notes.join('; '));

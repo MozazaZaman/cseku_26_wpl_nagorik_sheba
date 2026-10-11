@@ -158,6 +158,30 @@ describe('Seat allocation, idempotency and concurrency guard', () => {
     expect(usage.allocated).toBe(1);
     expect(usage.available).toBe(0);
   });
+  it('initial invoice linked to a seat request adds seats exactly once (no double-count)', async () => {
+    await getOrCreateSubscription(AUTH_ID, PLAN_ID);
+    await db.prepare(`UPDATE billing_subscriptions SET status = 'PENDING', paid_seats = 0 WHERE authority_id = ?`).run(AUTH_ID);
+    const sub = await db.prepare('SELECT * FROM billing_subscriptions WHERE authority_id = ?').get(AUTH_ID);
+    const plan = await db.prepare('SELECT * FROM billing_plans WHERE plan_id = ?').get(sub.plan_id);
+    const req = await createSeatRequest({ authority_id: AUTH_ID, type: 'initial', quantity: 2, reason: 'onboarding' });
+    const inv = await issueInvoice({ authority_id: AUTH_ID, subscription_id: sub.subscription_id, seat_request_id: req.request_id, type: 'initial', quote: quote(plan, 2) });
+    const payInfo = await db.prepare(
+      `INSERT INTO billing_payments (txn_id, gateway, invoice_id, authority_id, amount, currency, status)
+       VALUES (?, 'manual', ?, ?, ?, ?, 'CREATED')`
+    ).run(`ZZTEST-${Date.now()}-init2`, inv.invoice_id, AUTH_ID, inv.total, inv.currency);
+    try {
+      const out = await finalizePayment(payInfo.lastInsertRowid, { ok: true, amountMinor: inv.total, currency: inv.currency, provider: 'manual' });
+      expect(out.payment.status).toBe('SUCCESS');
+      expect((await db.prepare('SELECT paid_seats FROM billing_subscriptions WHERE authority_id = ?').get(AUTH_ID)).paid_seats).toBe(2);
+      expect((await db.prepare('SELECT status FROM billing_seat_requests WHERE request_id = ?').get(req.request_id)).status).toBe('COMPLETED');
+    } finally {
+      await db.prepare('DELETE FROM billing_payment_events WHERE payment_id = ?').run(payInfo.lastInsertRowid);
+      await db.prepare('DELETE FROM billing_payments WHERE payment_id = ?').run(payInfo.lastInsertRowid);
+      await db.prepare('DELETE FROM billing_invoices WHERE invoice_id = ?').run(inv.invoice_id);
+      await db.prepare('DELETE FROM billing_seat_requests WHERE request_id = ?').run(req.request_id);
+      await db.prepare(`UPDATE billing_subscriptions SET status = 'ACTIVE', paid_seats = 1 WHERE authority_id = ?`).run(AUTH_ID);
+    }
+  });
 
   it('concurrent reads share the pg pool without blocking', async () => {
     const [a, b] = await Promise.all([

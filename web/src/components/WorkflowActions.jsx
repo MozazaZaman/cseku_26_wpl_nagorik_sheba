@@ -17,6 +17,7 @@ export default function WorkflowActions({ complaint, myActions, executors = [], 
   const [executor, setExecutor] = useState(executors[0]?.staff_id ?? '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [okMsg, setOkMsg] = useState('');
   const [photo, setPhoto] = useState(null); // resolution proof (before/after rule)
 
   // Keep the selected executor valid once the executors list loads async
@@ -42,27 +43,30 @@ export default function WorkflowActions({ complaint, myActions, executors = [], 
     }
     setBusy(true);
     setErr('');
+    setOkMsg('');
     try {
+      let result = null;
       if (action === 'field_resolve' && photo) {
         const fd = new FormData();
         fd.append('action', action);
         fd.append('comment', comment.trim());
         fd.append('resolution_photo', photo);
-        await api.post(`/complaints/${complaint.complaint_id}/workflow`, fd, {
+        ({ data: result } = await api.post(`/complaints/${complaint.complaint_id}/workflow`, fd, {
           headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        }));
       } else {
         const body = { action, comment: comment.trim() };
         if (action === 'wit_assign') {
           body.eta_hours = parseInt(eta) || 48;
           body.executor_staff_id = parseInt(executor);
         }
-        await api.post(`/complaints/${complaint.complaint_id}/workflow`, body);
+        ({ data: result } = await api.post(`/complaints/${complaint.complaint_id}/workflow`, body));
       }
       setOpen(false);
       setComment('');
       setPhoto(null);
-      onDone?.();
+      setOkMsg(t('act.done'));
+      onDone?.(result);
     } catch (e) {
       setErr(e.response?.data?.error || 'Action failed');
     } finally {
@@ -71,7 +75,7 @@ export default function WorkflowActions({ complaint, myActions, executors = [], 
   }
 
   const quick = (action, cls, primary = false) => (
-    <button key={action} onClick={() => { setOpen(action); setErr(''); setPhoto(null); }}
+    <button key={action} onClick={() => { setOpen(action); setErr(''); setOkMsg(''); setPhoto(null); }}
       className={`min-h-[40px] rounded-xl px-4 py-2.5 text-xs font-bold transition ${primary ? 'btn-primary !px-4 !py-2.5 text-xs' : cls}`}>
       {t(`act.${action}`)}
     </button>
@@ -80,7 +84,9 @@ export default function WorkflowActions({ complaint, myActions, executors = [], 
   return (
     <>
       <div className={`flex flex-wrap gap-2 ${compact ? '' : 'mt-3'}`}>
-        {myActions.map((a) => {
+        {okMsg && (
+          <p className="w-full rounded-lg bg-mint/10 px-3 py-2 text-xs font-semibold text-mint">✓ {okMsg}</p>
+        )}        {myActions.map((a) => {
           if (['junior_approve', 'senior_approve', 'mayor_approve', 'send_to_wit'].includes(a)) {
             return quick(a, '', true);
           }

@@ -209,7 +209,7 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute right-0 z-50 mt-2 max-w-[calc(100vw-2rem)] w-[min(92vw,24rem)] overflow-hidden rounded-2xl border border-white/10 bg-night/95 shadow-2xl shadow-black/40 backdrop-blur-2xl"
+            className="fixed left-4 right-4 top-[4.25rem] z-50 overflow-hidden rounded-2xl border border-white/10 bg-night/95 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[min(92vw,24rem)]"
           >
             <div className="flex items-center justify-between gap-3 border-b border-white/5 px-3 py-2.5">
               <p className="text-sm font-semibold text-white">{t('notif.title')}</p>
@@ -255,7 +255,7 @@ export default function NotificationBell() {
                       <span className={`block truncate text-sm ${unread ? 'font-semibold text-white' : 'text-slate-300'}`}>
                         {notification.title}
                       </span>
-                      <span className="mt-0.5 block max-h-10 overflow-hidden text-xs leading-relaxed text-slate-400">
+                      <span className="mt-0.5 block max-h-10 overflow-hidden break-words text-xs leading-relaxed text-slate-400">
                         {notification.message}
                       </span>
                       <span className="mt-1 block text-[10px] uppercase tracking-wider text-slate-500">

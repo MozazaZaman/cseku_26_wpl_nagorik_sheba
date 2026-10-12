@@ -271,7 +271,7 @@ router.post('/forgot-password', async (req, res) => {
   // The emailer prints the Ethereal preview URL; the console line below
   // makes the code itself visible for local/dev testing.
   console.log(`[otp] code for ${user.email}: ${otp} (expires in ${OTP_TTL_MINUTES} min)`);
-  await sendMail({
+  sendMail({
     to: user.email,
     subject: 'Nagorik Sheba — password reset code',
     text: [
@@ -279,7 +279,7 @@ router.post('/forgot-password', async (req, res) => {
       `It expires in ${OTP_TTL_MINUTES} minutes.`,
       'If you did not request a password reset, you can safely ignore this email.'
     ].join('\n')
-  });
+  }).catch(() => {});
 
   res.json(GENERIC_SENT);
 });

@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../auth_provider.dart';
 import '../i18n.dart';
+import '../services/notify_center.dart';
 import '../theme.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/assistant_widget.dart';
 import '../widgets/notification_bell.dart';
 import '../widgets/widgets.dart';
+import 'complaint_detail_screen.dart';
 import 'explore_screen.dart';
 import 'profile_screen.dart';
 import 'services_screen.dart';
@@ -24,6 +28,49 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   late int _tab = widget.initialTab;
+  IncomingAlert? _floater;
+  Timer? _floaterTimer;
+  StreamSubscription<IncomingAlert>? _alertSub;
+  StreamSubscription<int>? _tapSub;
+
+  @override
+  void initState() {
+    super.initState();
+    NotifyCenter.instance.start(isLoggedIn: () {
+      try {
+        return context.read<AuthProvider>().user != null;
+      } catch (_) {
+        return false;
+      }
+    });
+    _alertSub = NotifyCenter.instance.alerts.listen(_showFloater);
+    _tapSub = NotifyCenter.instance.taps.listen(_openComplaint);
+  }
+
+  @override
+  void dispose() {
+    _alertSub?.cancel();
+    _tapSub?.cancel();
+    _floaterTimer?.cancel();
+    NotifyCenter.instance.stop();
+    super.dispose();
+  }
+
+  void _showFloater(IncomingAlert a) {
+    if (!mounted) return;
+    _floaterTimer?.cancel();
+    setState(() => _floater = a);
+    _floaterTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _floater = null);
+    });
+  }
+
+  void _openComplaint(int id) {
+    if (!mounted) return;
+    _floaterTimer?.cancel();
+    setState(() => _floater = null);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ComplaintDetailScreen(id: id)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +127,47 @@ class _HomeShellState extends State<HomeShell> {
       body: Stack(
         children: [
           IndexedStack(index: _tab.clamp(0, pages.length - 1), children: pages),
+          if (_floater != null)
+            Positioned(
+              top: 10, left: 14, right: 14,
+              child: GestureDetector(
+                onTap: () {
+                  final id = _floater!.complaintId;
+                  _floaterTimer?.cancel();
+                  setState(() => _floater = null);
+                  if (id != null) _openComplaint(id);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: s.card,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: NSColors.accent.withOpacity(0.5)),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 14)],
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.notifications_active_rounded, color: NSColors.accent, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(_floater!.title,
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: s.text, fontWeight: FontWeight.w800, fontSize: 13.5)),
+                      const SizedBox(height: 2),
+                      Text(_floater!.message,
+                          maxLines: 2, overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: s.sub, fontSize: 12)),
+                    ])),
+                    GestureDetector(
+                      onTap: () {
+                        _floaterTimer?.cancel();
+                        setState(() => _floater = null);
+                      },
+                      child: Icon(Icons.close_rounded, color: s.faint, size: 18),
+                    ),
+                  ]),
+                ),
+              ),
+            ),
           if (!isStaff)
             Positioned(
               bottom: 18,

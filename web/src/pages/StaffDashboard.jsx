@@ -287,7 +287,14 @@ export default function StaffDashboard() {
                       </span>
                     </div>
                     {/* INLINE ACTION BUTTONS — forward/reject directly on the card */}
-                    <WorkflowActions complaint={c} myActions={actions} executors={executors} onDone={load} compact />
+                    <WorkflowActions complaint={c} myActions={actions} executors={executors} onDone={(r) => {
+                      if (r?.complaint) {
+                        setItems((prev) => prev.map((item) => (item.complaint_id === r.complaint.complaint_id
+                          ? { ...item, ...r.complaint }
+                          : item)));
+                      }
+                      load();
+                    }} compact />
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <Link to={`/complaints/${c.complaint_id}`} className="btn-ghost !min-h-[40px] !px-4 !py-2.5 text-xs">

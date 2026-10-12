@@ -96,7 +96,7 @@ async function notifyStaffRole(authorityId, staffRole, complaint, headline, type
     to: staff.email,
     subject: `[Nagorik Sheba] ${headline} — complaint #${complaint.complaint_id}`,
     text: `${headline}\n\nTicket #${complaint.complaint_id}: ${complaint.title}\nOpen your staff console to take action.\n\n— Nagorik Sheba`
-  });
+  }).catch(() => {});
   await notify(staff.staff_id, complaint.complaint_id, headline,
     `#${complaint.complaint_id} "${complaint.title}" is waiting in your queue.`, 'staff', type);
 }
@@ -105,11 +105,11 @@ async function notifyStaffRole(authorityId, staffRole, complaint, headline, type
 async function notifyCitizenAndVoters(complaint, title, message, type = 'status_change') {
   const citizen = await db.prepare('SELECT user_id, email, full_name FROM users WHERE user_id = ?').get(complaint.user_id);
   if (citizen) {
-    await sendMail({
+    sendMail({
       to: citizen.email,
       subject: `[Nagorik Sheba] ${title} — complaint #${complaint.complaint_id}`,
       text: `Dear ${citizen.full_name},\n\n${message}\n\nComplaint: "${complaint.title}" (#${complaint.complaint_id})\nTrack the full lifecycle in the app or on the website.\n\n— Nagorik Sheba`
-    });
+    }).catch(() => {});
     await notify(citizen.user_id, complaint.complaint_id, title, message, 'citizen', type);
   }
   const voters = await db.prepare(
@@ -255,11 +255,11 @@ export async function applyWorkflowAction({ complaint, action, actor, comment, e
         actorStaffId: actor.staff_id, actorName: actor.full_name, actorRole: 'wit', comment: comment.trim()
       });
       await addHistory(id, 'wit_review', 'assigned', `${executor.full_name} assigned by WIT. ${comment.trim()}`, actor.full_name);
-      await sendMail({
+      sendMail({
         to: executor.email,
         subject: `[Nagorik Sheba] Complaint #${id} assigned to you`,
         text: `You have been assigned to solve complaint #${id}: "${complaint.title}"\nETA: ${eta} hours.\n${comment.trim()}\n\n— Nagorik Sheba`
-      });
+      }).catch(() => {});
       await notify(executor.staff_id, id, 'Complaint assigned to you',
         `#${id} "${complaint.title}" — please start work. ETA ${eta}h.`, 'staff', 'assignment');
       await notifyCitizenAndVoters(complaint, 'Work team assigned',

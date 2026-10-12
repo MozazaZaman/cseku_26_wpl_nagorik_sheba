@@ -222,7 +222,10 @@ export default function ComplaintDetail() {
           </motion.div>
 
           {user?.role === 'staff' && data.my_actions?.length > 0 && (
-            <WorkflowActions complaint={c} myActions={data.my_actions} executors={executors} onDone={load} />
+            <WorkflowActions complaint={c} myActions={data.my_actions} executors={executors} onDone={(r) => {
+              if (r?.complaint) setData((d) => (d ? { ...d, complaint: { ...d.complaint, ...r.complaint } } : d));
+              load();
+            }} />
           )}
           <LifecycleCard complaint={c} workflow={data.workflow} />
 

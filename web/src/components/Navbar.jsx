@@ -13,6 +13,7 @@ const links = [
   { to: '/explore', label: 'nav.explore' },
   { to: '/emergency', label: 'nav.emergency' },
   { to: '/analysis', label: 'nav.analysis' },
+  { to: '/about', label: 'nav.about' },
   { to: '/dashboard', label: 'nav.dashboard', auth: 'citizen' }
 ];
 

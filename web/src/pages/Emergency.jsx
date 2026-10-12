@@ -116,8 +116,8 @@ export default function Emergency() {
           <p className="mt-2 text-slate-400">{t('em.sub')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link to="/faq" className="btn-ghost !py-2.5 text-sm">❔ {t('nav.faq')}</Link>
-          <button onClick={locate} className="btn-ghost !py-2.5 text-sm">
+          <Link to="/faq" className="btn-ghost !min-h-[40px] !py-2.5 text-sm">❔ {t('nav.faq')}</Link>
+          <button onClick={locate} className="btn-ghost !min-h-[40px] !py-2.5 text-sm">
             📍 {geoState === 'locating' ? t('em.locating') : t('em.refresh')}
           </button>
         </div>
@@ -192,7 +192,7 @@ export default function Emergency() {
                     )}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="ml-auto shrink-0 text-right">
                   <p className="font-display text-lg font-bold text-white">
                     {s.distance_m >= 1000 ? `${(s.distance_m / 1000).toFixed(1)} km` : `${s.distance_m} m`}
                   </p>

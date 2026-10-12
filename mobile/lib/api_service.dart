@@ -380,7 +380,7 @@ class ApiService {
   // ---------- Notifications ----------
   Future<int> unreadCount() async {
     final b = _check(await http.get(Uri.parse('$kApiBase/notifications/unread-count'), headers: _headers));
-    return (b['unread'] ?? b['count'] ?? 0) as int;
+    return (b['unread_count'] ?? b['unread'] ?? b['count'] ?? 0) as int;
   }
 
   Future<void> markNotificationRead(int id) async {

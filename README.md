@@ -2,177 +2,271 @@
 
 **An Agentic Web & Mobile Platform for Transparent Municipal Complaint Management with Citizen Participation.**
 
-Any citizen can find nearby emergency services (fire service, police, WASA, LGED, DESA, Titas Gas, public toilets)
-**without login**. Registration now includes **AI face verification**: a live selfie + NID/Student ID/Passport photo
-are compared by the Photo Verifier Agent — mismatched identities are rejected. Login stays unchanged.
-An autonomous **5-agent pipeline** verifies, classifies, de-duplicates, prioritizes and routes every complaint to the
-correct **City Corporation / Pouroshova / Union Parishad** — now across **all 8 divisions of Bangladesh**.
-Similar reports automatically become **votes**, in-process issues are **locked**, voters receive status updates,
-and staff (one general duty officer per authority) label progress ("in process" + ETA → "done").
+Nagorik Sheba is a civic complaint platform built for Bangladesh's local government structure —
+City Corporation / Pourashava (municipality) / Union Parishad. Citizens report local problems —
+roads, water, electricity, gas, sanitation, streetlights, drainage — through the web or the mobile
+app. An autonomous **5-agent pipeline** verifies, classifies, de-duplicates, prioritizes and routes
+every complaint to the correct authority's dashboard, where a five-role staff hierarchy (junior →
+senior → mayor/chairman → Work Inspection Team → field executor) moves it to resolution under
+time-bound SLAs. Registration is protected by **AI face verification**; similar reports become
+**votes**; resolutions require photo evidence and citizen confirmation.
 
-## What's new in v1.1
-
-- **Face-verified registration** — selfie (front camera) + ID photo are matched server-side by a real biometric
-  engine (face-api.js + TensorFlow WASM). No match → account rejected, try again. Login unchanged.
-- **Smarter classifier** — weighted Bangla + English keyword matching ("gas leak", "gas leak hoyeche",
-  "গ্যাস লিক হয়েছে" → `gas`; "street light not working" → `electricity`). 12/12 test cases pass.
-- **Custom address picker** — Division → District → City Corp/Pouroshova/Union → type-specific fields
-  (area/thana, ward, village, upazila, road, sector) → composed address + **", Bangladesh"** → geocoded via
-  OpenStreetMap Nominatim → map preview. Landmark note still supported.
-- **Nationwide coverage** — 8 divisions, 64 districts, 24 seeded authorities (every division), 21 emergency
-  services. GPS submissions auto-route to the nearest authority in the country.
-- **Clearer maps** — Map / Satellite / Dark layer switcher (OSM standard + Esri World Imagery).
-- **Staff hierarchy** — each authority has junior, senior, mayor/chairman, Work Inspection Team (WIT) and field staff
-  roles. Complaints flow junior → senior → mayor → WIT → field, with per-stage SLA deadlines and auto-escalation.
-- **Notifications auto-delete after 90 days.**
-- **Voters get notified** — everyone who voted for a complaint receives its status updates.
-- **Location search** — search complaints by district/area/village name in Explore.
+> Course project — Web Programming and Mobile Application Development, Dept. of CSE, Khulna University.
+>
+> **Status: Weeks 7–8 — Production deployment, performance, billing, notifications & citizen-engagement sprint.**
+> Weeks 1–6 (SRS, wireframes, architecture, auth, agent pipeline, mobile scaffold, CRUD) are complete
+> and deployed live. Details below.
 
 ---
+
+## Why this project
+
+Existing government complaint systems in South Asia (Pakistan Citizen's Portal, India's
+CPGRAMS/Swachhata, Indonesia's LAPOR!) prove the model works at national scale, but none are built
+specifically around Bangladesh's three-tier local government structure or use an agentic pipeline
+for automated verification and prioritization instead of manual triage alone. Nagorik Sheba is
+scoped to that gap: every stage from submission to approval is logged, time-bound and publicly
+auditable.
+
+## What is implemented (v2 — current)
+
+| Feature | Status |
+|---|---|
+| 5-agent complaint pipeline (verify → classify → de-dupe → rank → route) | ✅ Working |
+| Face-verified citizen registration (selfie ↔ NID/Student ID/Passport) | ✅ Working |
+| 5-role staff workflow with SLA deadlines, overdue flags, auto-escalation | ✅ Working |
+| Nationwide coverage — 8 divisions, 4,880 authorities, 24,400 staff accounts | ✅ Working |
+| Full staff console — priority queue, executor assignment, ETA, rejects, analytics | ✅ Working |
+| Citizen participation — voting, merge-as-vote, confirm/dispute resolution, 1–5 ratings | ✅ Working |
+| Emergency directory — 355 services, distance, click-to-call, OSRM/Google directions | ✅ Working |
+| Location search — Division → District → City Corp/Pouro/Union → ward/village picker | ✅ Working |
+| Billing & seat licensing — plans, subscriptions, seat top-ups, invoices | ✅ Working |
+| SSLCommerz payments + manual bank/bKash/Nagad/Rocket settlement with verification | ✅ Working |
+| Super-admin console — onboarding, staff CRUD, payments/refunds verification, audit log | ✅ Working |
+| Staff achievement badges, Mayor's commendations, authority leaderboard | ✅ Working |
+| Firebase-style live notifications — web bell + mobile banner, tap routing, app-icon badge | ✅ Working |
+| Cloudinary image pipeline (complaints, resolutions, face images, payment receipts) | ✅ Working |
+| Public transparency — agent trace, department scorecards, resolution-photo evidence | ✅ Working |
+| Instant UI refresh after every staff workflow action (web + mobile) | ✅ Working |
+| Fully responsive web (mobile phones through desktop) | ✅ Working |
+| Bangla + English UI, Web Speech voice input (Bangla + English) | ✅ Working |
+| Flutter mobile app — submit, track, vote, staff console, notifications | ✅ Working |
+| Automated billing test suite (27 tests) | ✅ Passing |
+| Live deployment — Render (API) + Netlify (web) + Neon PostgreSQL | ✅ In production |
+| SMS complaint channel | ⏳ Planned |
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Node.js, Express, PostgreSQL (Neon, pooled) |
+| Auth | JWT, bcryptjs, face verification (face-api.js + TensorFlow WASM) |
+| File uploads | Cloudinary (complaints / resolutions / faces / receipts) |
+| Geo | OpenStreetMap + Nominatim geocoding + Leaflet.js, haversine duplicate scan |
+| Payments | SSLCommerz + manual settlement queue |
+| Web frontend | React 18 + Vite + Tailwind + Framer Motion (cinematic dark UI) |
+| Mobile | Flutter (Android + iOS), Material 3 |
+| Voice input | Web Speech API (Bangla + English) |
+| AI agents | Deterministic rule pipeline, every decision logged for public audit |
+| Citizen assistant | Gemini LLM (complaint-scoped chat) |
+| Notifications | In-app bell + polling, mobile system banners + launcher badge |
+| Local notifications | flutter_local_notifications + app_badge_plus (mobile) |
 
 ## Project structure
 
 ```
 nagorik-sheba/
-├── docs/                  ER diagram (Mermaid + printable HTML viewer)
-├── server/                Node.js + Express + SQLite REST API (agent pipeline)
-├── web/                   React 18 + Vite + Tailwind + Framer Motion (cinematic UI)
-└── mobile/                Flutter app (Android/iOS client)
+├── docs/                  # ER diagram, billing documentation
+├── server/                # Node.js + Express + PostgreSQL REST API
+│   ├── src/
+│   │   ├── index.js       # Main server entry point (port 5000)
+│   │   ├── db.js          # Neon PostgreSQL connection (async)
+│   │   ├── routes/        # auth, complaints, services, notifications, workflow…
+│   │   ├── billing/       # plans, seats, payments (SSLCommerz + manual)
+│   │   ├── agents.js      # 5-agent pipeline
+│   │   ├── faceEngine.js  # face verification engine
+│   │   └── utils/         # workflow, emails, geometry, cloudinary
+│   ├── scripts/           # seed helpers, geometry/address migrations
+│   ├── models/            # TensorFlow face detection models
+│   ├── test/              # vitest suites (billing: 27 tests)
+│   └── data/              # local SQLite artifact from earlier phases (unused)
+├── web/                   # React 18 + Vite + Tailwind + Framer Motion
+├── mobile/                # Flutter app (Android + iOS)
+├── netlify.toml           # Netlify build config (web/)
+├── render.yaml            # Render deployment config (server/)
+└── uploads/               # local upload fallback (production uses Cloudinary)
 ```
 
----
-
-## 1) Run the backend API
+## Getting started
 
 ```bash
+# Backend (local dev or production)
 cd server
 npm install
-npm run seed     # ONE TIME ONLY - creates SQLite DB + demo data
+npm run seed     # ONE TIME ONLY - seeds 4,880 authorities + 24,400 staff + 355 services
 npm run dev      # -> http://localhost:5000
+
+# Web frontend
+cd web
+npm install
+npm run dev      # -> http://localhost:5173
+
+# Mobile
+cd mobile
+flutter pub get
+flutter run      # or: flutter build apk --release --dart-define=API_BASE=<render-url>/api
 ```
 
-> **Important:** `npm run seed` is needed **only the first time**. All complaints, votes and accounts
-> are stored permanently in `server/data/nagorik.db` and survive restarts — closing the terminal
-> never deletes data. The seed script now has a safety lock: if the DB already has data it refuses
-> to run unless you explicitly pass `--force` (i.e. `npm run seed -- --force`).
+> **Warning:** `npm run seed` wipes and re-seeds the database. It has a safety lock and refuses
+> to run when the DB already has data (pass `--force` explicitly). **Never run it against a
+> production database.**
 
 ### Demo accounts
 
-| Role | Email | Password |
+**Citizen accounts** (password `password123`)
+- `rahim@example.com`, `karima@example.com`, `joya@example.com`
+
+**Staff accounts** (password `staff123`)
+- Dhaka South City Corp (ID 14316): `shirin.city@nagorik.bd`, plus
+  `senior|mayor|wit|field.dhaka.14316@nagorik.bd`
+- Khulna City Corp (ID 14321): `staff.khulna@nagorik.bd`, plus
+  `senior|mayor|wit|field.khulna.14321@nagorik.bd`
+- Deluti Union Parishad (ID 16536): `junior|senior|mayor|wit|field.khulna.16536@nagorik.bd`
+- Pattern for any seeded authority: `<role>.<district>.<authorityId>@nagorik.bd`
+- Super admin: `superadmin@nagorik.bd` / `heisenberg14`
+
+## The 5-agent pipeline
+
+| Agent | Responsibility | Mechanism |
 |---|---|---|
-| Citizen | `rahim@example.com` | `password123` |
-| Citizen | `karima@example.com` | `password123` |
-| Staff — Dhaka South City Corporation | `kamrul.city@nagorik.bd` | `staff123` |
-| Staff — Khulna City Corporation | `staff.khulna@nagorik.bd` | `staff123` |
-| Staff — Savar Pouroshova | `jamal.savar@nagorik.bd` | `staff123` |
-| Staff — Ruhitpur Union Parishad | `ripon.union@nagorik.bd` | `staff123` |
+| 1. Verifier | Reject spam/empty/photo-less junk | Length, pattern, MIME and size checks |
+| 2. Classifier | Categorize into 12 classes | Bilingual (Bangla/English/romanized) weighted keyword expert system |
+| 3. Duplicate checker | Merge repeats into votes | 250 m haversine scan against open same-category complaints |
+| 4. Priority ranker | Order staff queues | `votes×4 + severity×12 + freshness`, recomputed on every vote |
+| 5. Destination router | Pick the right authority | Nominatim place-name match, then smallest containing jurisdiction box |
 
-Every one of the 24 authorities has one general staff account: `staff.<slug>@nagorik.bd` / `staff123`
-(slugs: dhakanorth, gazipur, narayanganj, chattogram, cumilla, coxsbazar, jashore, kushtia, dighalia,
-rajshahi, bogura, sylhet, moulvibazar, gowainghat, barishal, bhola, rangpur, dinajpur, mymensingh, jamalpur).
+Every agent decision is written to an audit table and rendered on the complaint page as a public
+**Agent trace**. The pipeline is deterministic by design — routing public complaints through a
+nondeterministic model would be unexplainable to citizens; the learned models in the system are
+the biometric face-matching nets and the Gemini citizen assistant.
 
-> **Note:** new citizen registration requires the face verification photos. The seeded demo citizens above
-> were created before verification existed and login normally.
+## The complaint lifecycle
 
-### Demo GPS coordinates for testing the router
+`submitted → verified → junior_review → senior_review → mayor_review → approved → wit_review →
+assigned → in_process → resolved` (plus `rejected` and `merged` states).
 
-- City Corporation area: `23.7365, 90.3985` (Shahbagh/DU area)
-- Pouroshova area: `23.8580, 90.2660` (Savar)
-- Union Parishad area: `23.6740, 90.2870` (Ruhitpur)
+- Per-stage owners, SLA deadlines, overdue flags and automatic forwarding past stalled staff.
+- WIT assigns an executor + ETA; field staff must upload a resolution photo when the citizen
+  attached evidence, before resolution.
+- Citizens confirm or dispute the resolution within a window; silence auto-reopens with a
+  second chance, then final.
+- Voters and the reporter are notified at every transition (web + mobile).
 
-### The agent pipeline (runs on every submission)
+## Billing & the business model
 
-1. **Agent 01 — Photo/Content Verifier**: rejects spam text or invalid images.
-2. **Agent 02 — Classifier**: keyword AI (Bangla+English) → road / electricity / water / gas / sanitation.
-3. **Agent 03 — Duplicate Checker**: scans a 250 m GPS radius; exact-similar report = **vote** on the original;
-   if the original is already *in process* → citizen sees **"The problem solving is in progress"**.
-4. **Agent 04 — Priority Ranker**: score = votes × 4 + severity keywords × 12 + age.
-5. **Agent 05 — Destination Router**: matches GPS against authority jurisdiction bounds.
+Citizens use the platform free. Local Government Institutions (LGIs) pay an annual per-seat
+license (e.g. Standard Annual ৳50,000/seat):
 
-Every decision is stored in `agent_logs` and shown publicly on the complaint page (transparency).
+- Super admin reviews LGI onboarding requests; approved LGIs get a plan subscription.
+- Tech admins buy seats via SSLCommerz (sandbox now, live-ready) or manual bank/bKash/Nagad/Rocket
+  settlement with receipt evidence, verified or rejected by the super admin.
+- Staff-join registrations consume seats; seat exhaustion blocks new staff activations;
+  expired/suspended LGIs lose staff-write rights (citizens are never blocked).
+- Invoices + refunds + audit trail + CSV exports + business analytics for the super admin.
 
----
+## Engagement & trust systems
 
-## 2) Run the web app
+- Staff achievement badges — rolling volume/satisfaction/SLA/accuracy/specialist + lifetime
+  milestones + manual Mayor's commendations.
+- Authority leaderboard & public reviews of every office by citizens they served.
+- Duplicate-report lists per authority (how many reports were merges vs originals).
+- Ward-level department scorecards on the complaint page.
 
-```bash
-cd web
-npm install
-npm run dev      # -> http://localhost:3000  (proxies /api to :5000)
-```
+## Super admin powers
 
-Pages: cinematic landing · explore/search/upvote · emergency nearby (map) · login/register ·
-citizen dashboard (stats, notifications, my complaints) · submit complaint (voice input 🎤 via Web Speech API,
-photo upload, map pin) · complaint detail (timeline + agent trace) · staff console (priority queue,
-start process with ETA, mark done).
+Dual-mode account (citizen ⇄ super_admin, every switch audited): LGI onboarding review, authority
+creation, staff CRUD/activate/deactivate, tech-admin appointment, plan management, subscription
+control, invoice/payment/refund/manual-queue verification, business dashboard, full audit log.
 
-## 3) Run the Flutter mobile app
+## Deployment (live)
 
-> Requires the [Flutter SDK](https://docs.flutter.dev/get-started/install/windows). Check with `flutter doctor`.
+| Piece | Where | Notes |
+|---|---|---|
+| API | Render web service | Root dir `server`, start `node src/index.js`, auto-deploys on push to `main` |
+| Database | Neon PostgreSQL | Pooled connection URL, persistent, survives restarts |
+| Web | Netlify | Repo-root `netlify.toml`, base `web/`, SPA redirect, auto-deploys on `main` |
+| Images | Cloudinary | Complaints, resolutions, face images, payment receipts |
+| Mobile | Release APK | `flutter build apk --release --dart-define=API_BASE=<render-url>/api` |
 
-```bash
-cd mobile
-flutter create . --platforms=android,ios --org bd.nagorik   # generates android/ ios/ folders once
-flutter pub get
-flutter run
-```
+Environment secrets live only in `server/.env` (git-ignored) and the Render dashboard:
+`DATABASE_URL`, Cloudinary keys, `JWT_SECRET`, SSLCommerz sandbox keys.
 
-### Point the app at your API
+## Work completed in weeks 7–8 (this sprint)
 
-The API base URL lives in `lib/config.dart`:
+- Migrated the database from local SQLite to **Neon PostgreSQL** (~360 async queries) with safety
+  lock on seed, timestamp normalization, and a regression test suite (27/27 passing).
+- Moved all image storage from local disk to **Cloudinary**; deployed the API to **Render**, the
+  web app to **Netlify**, purged leaked secrets from git history.
+- Fixed GPS routing (exclusive city-core boxes, deterministic containment, correct union matching),
+  backfilled composed addresses, verified changes live against the production database.
+- Added the **billing engine** (plans, subscriptions, seat top-ups with multi-stage approval,
+  invoices, SSLCommerz + manual settlement verification, refunds, audit log) and fixed a seat
+  double-count bug with a regression test + production-data repair.
+- Made workflow emails fire-and-forget (removed 10–60 s action latency) and added **instant UI
+  refresh** after every staff action on web (state merge + confirmation flash) and mobile.
+- Built live **notifications**: web bell with unread badge, mobile system banner notifications,
+  app-icon badge, in-app floating banners, tap-through routing to the complaint.
+- Batch of UX fixes: responsive notification panel, responsive Emergency page, centered navbar
+  with About Us, mobile About page content parity with web (Bangla + English i18n keys).
+- Android build fixes (core-library desugaring for notification plugins).
 
-- Android emulator default is already correct: `http://10.0.2.2:5000/api`
-- Physical phone: replace with your PC's Wi-Fi IP, e.g. `http://192.168.0.105:5000/api`
-  (run `ipconfig` to find it; phone and PC must be on the same Wi-Fi)
+## Roadmap
 
-Then allow cleartext HTTP on Android — open
-`android/app/src/main/AndroidManifest.xml` and add inside `<manifest>`:
+- [x] **Week 1 — Initiation & SRS** — scope, objectives, roles, SRS draft, GitHub setup
+- [x] **Week 2 — Design & Planning** — UI wireframes, ER diagram, flowcharts, GitHub Projects board
+- [x] **Weeks 3–4 — Sprint 1** — authentication, face verification, 5-agent pipeline, React web, Flutter scaffold, DB seeding
+- [x] **Weeks 5–6 — Sprint 2** — full workflow, voting, notifications, emergency locator, leaderboard, badges
+- [x] **Weeks 7–8 — Sprint 3** — cloud migration + live deployment (Render/Netlify/Neon/Cloudinary), billing engine, seat management, payments, super-admin console, push/banner notifications, responsiveness pass
+- [ ] **Next** — Firebase Cloud Messaging for background push (banner + badge without opening the app), SMS intake channel, LGI-side public dashboards, viva demo script
 
-```xml
-<uses-permission android:name="android.permission.INTERNET"/>
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-<uses-permission android:name="android.permission.RECORD_AUDIO"/>
-<uses-permission android:name="android.permission.CAMERA"/>
-<uses-feature android:name="android.hardware.camera" android:required="false"/>
-```
+## Acknowledgements
 
-and inside `<application ...>` add:
+We are deeply grateful to **Dr. Kazi Masudul Alam**, Professor, CSE Discipline, Khulna University,
+for supervising this project as part of the *Web Programming and Mobile App Development* course.
+His guidance, critical feedback, and high expectations pushed us to build something with real-world
+impact for the people of Bangladesh.
 
-```xml
-android:usesCleartextTraffic="true"
-```
+**Tools and Technologies actually used in this build**
 
-Mobile features: splash → auth → bottom-nav shell (Explore / Emergency / Report FAB / Profile),
-voice-to-text (Bangla & English) via `speech_to_text`, camera photo evidence, GPS capture,
-voting with lock alerts, notifications, and a full staff console with ETA dialogs.
+- [Express](https://expressjs.com/) — REST API framework
+- [PostgreSQL](https://www.postgresql.org/) via [Neon](https://neon.tech/) — serverless spatial-aware database for complaint routing
+- [React](https://react.dev/) + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/) — citizen and staff web frontend
+- [Flutter](https://flutter.dev/) — Android/iOS mobile client
+- [Leaflet.js](https://leafletjs.com/) + [OpenStreetMap](https://www.openstreetmap.org/) + Nominatim / [OSRM](http://project-osrm.org/) — maps, geocoding, routing
+- [face-api.js](https://github.com/vladmandic/face-api) + TensorFlow WASM — biometric face verification
+- [Cloudinary](https://cloudinary.com/) — cloud image storage and delivery
+- [SSLCommerz](https://sslcommerz.com/) — payment gateway
+- [Gemini API](https://ai.google.dev/) — citizen assistant chat
+- [Render](https://render.com/) + [Netlify](https://netlify.com/) — deployment
 
----
+**Inspiration**
 
-## API quick reference
+- Inspired by the civic technology movement in South Asia; referenced
+  [SeeClickFix](https://seeclickfix.com/) and [FixMyStreet](https://www.fixmystreet.com/) as global
+  precedents for citizen-driven civic complaint platforms.
 
-| Method | Endpoint | Auth | Purpose |
-|---|---|---|---|
-| POST | `/api/auth/register` | – | Create citizen account |
-| POST | `/api/auth/login` | – | Login (citizen or staff) |
-| GET | `/api/complaints?q=&category=&sort=` | optional | Public browse/search |
-| GET | `/api/complaints/:id` | optional | Detail + timeline + agent trace |
-| POST | `/api/complaints` | citizen | Submit (multipart, runs agents) |
-| POST | `/api/complaints/:id/vote` | citizen | Upvote (locked if in_process) |
-| PATCH | `/api/complaints/:id/status` | staff | in_process(+ETA) / resolved / rejected |
-| GET | `/api/complaints/staff/queue` | staff | Authority queue by priority |
-| GET | `/api/services/nearby?lat=&lng=` | – | Nearby emergency services |
-| GET | `/api/stats` | – | Landing-page counters |
+**Open Source Community**
 
----
+- We acknowledge the broader open-source community whose freely available libraries, datasets,
+  and documentation made this significantly more accessible for a two-person university team.
 
-## ER Diagram
+## Team
 
-Open **`docs/er-diagram.html`** in a browser (Ctrl+P → save as PDF for your report), or read
-`docs/er-diagram.md` for entity tables, cardinalities and business rules.
-Mermaid source is embedded — also renders at https://mermaid.live
+| Member | Contribution |
+|---|---|
+| Mozaza-Al-Zaman | AI pipeline design, backend architecture, billing engine, ER diagram, system flowchart, project documentation |
+| Md. Tawfiqul Islam | Frontend development, UI wireframes, database schema design, deployment pipeline, use case diagrams |
 
-## Tech stack summary
+## License
 
-- **Backend**: Node.js, Express, better-sqlite3, JWT, bcryptjs, multer
-- **Web**: React 18, Vite, Tailwind CSS, Framer Motion, Leaflet (dark CARTO tiles), Web Speech API
-- **Mobile**: Flutter (Material 3 dark theme), provider, geolocator, image_picker, speech_to_text
+TBD (course project — add a license before any public/production use).
